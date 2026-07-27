@@ -1,20 +1,22 @@
-# Head First LLMs
+# LLMs from the Inside Out
 
-A versioned workspace and browsable website for the illustrated, Head First–inspired LLM and Transformer tutorial.
+A versioned workspace and browsable website for an illustrated LLM and Transformer tutorial.
 
 ## Read the website
 
-Once GitHub Pages is enabled, the book is published at:
+The current GitHub Pages preview is published at:
 
 **https://vgargatgit.github.io/head-first-llm/**
 
 The website renders the chapter Markdown with a responsive book layout and MathJax equations. Each accepted change pushed to `main` triggers a new deployment automatically.
 
+The Pages site includes a browser-side preview login. This is suitable only as a casual access gate: GitHub Pages and the repository remain public, so it is not a substitute for server-side authentication.
+
 ### One-time GitHub Pages setting
 
 1. Open **Settings → Pages** in this repository.
 2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-3. Open the **Actions** tab and run **Deploy Head First LLMs website** if it did not start automatically.
+3. Open the **Actions** tab and run **Deploy LLMs from the Inside Out website** if it did not start automatically.
 
 ## Current chapters
 
@@ -24,14 +26,13 @@ The website renders the chapter Markdown with a responsive book layout and MathJ
 
 ## Repository layout
 
-- `site/` — GitHub Pages home page, chapter reader, styling, and rendering logic
+- `site/` — GitHub Pages home page, login page, chapter reader, styling, and rendering logic
 - `src/` — canonical editable Markdown for each chapter
 - `assets/` — chapter-specific graphics
 - `.github/workflows/pages.yml` — automatic Pages deployment
 - `dist/` — earlier browser distribution pages retained for reference
 - `styles/` — earlier shared chapter styling
 - `CHANGELOG.md` — chronological project updates
-- `manifest.md` — current chapter index
 
 ## Current workspace status
 

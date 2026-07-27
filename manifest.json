@@ -1,0 +1,27 @@
+{
+  "project": "Head First LLMs",
+  "canonical_branch": "main",
+  "updated": "2026-07-27",
+  "output_format": "self-contained HTML with embedded graphics and MathML",
+  "visual_style": "cream-paper, purple-accented, hand-drawn educational cartoon",
+  "chapters": [
+    {
+      "number": 1,
+      "slug": "a-token-enters-the-dating-world",
+      "title": "A Token Enters the Dating World",
+      "status": "current"
+    },
+    {
+      "number": 2,
+      "slug": "meet-the-question-coach",
+      "title": "Meet the Question Coach",
+      "status": "current"
+    },
+    {
+      "number": 3,
+      "slug": "meet-the-profile-writer",
+      "title": "Meet the Profile Writer",
+      "status": "current"
+    }
+  ]
+}

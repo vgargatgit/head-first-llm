@@ -45,6 +45,7 @@ Chapters 4–17 currently use equations, tables, text diagrams, and worked calcu
 - `site/` — GitHub Pages home page, login page, chapter reader, styling, and rendering logic
 - `src/` — canonical editable Markdown for each chapter
 - `assets/` — chapter-specific graphics where available
+- `docs/` — visual-development plans, character bibles, and storyboard source documents
 - `.github/workflows/pages.yml` — automatic Pages deployment
 - `dist/` — earlier browser distribution pages retained for reference
 - `styles/` — earlier shared chapter styling
@@ -66,6 +67,10 @@ Chapters 15–17 expand that one update into a complete model-development system
 - effective token batches, gradient accumulation, data mixtures, learning-rate schedules, validation, and resumable checkpoints;
 - data parallelism, model-state sharding, tensor parallelism, pipeline parallelism, activation checkpointing, and distributed communication;
 - chat templates, supervised fine-tuning, response-only loss, preference data, reward modelling, RLHF, DPO, LoRA, and post-training evaluation.
+
+## Visual development plans
+
+- [`docs/training-loop-scene-master-plan.md`](docs/training-loop-scene-master-plan.md) — canonical character bible, visual metaphor system, and storyboard map for the training loop and Chapters 12–17.
 
 ## Working agreement
 

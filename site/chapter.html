@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Read Head First LLMs online.">
+  <title>Head First LLMs — Chapter</title>
+  <link rel="stylesheet" href="site.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$']],
+        displayMath: [['$$', '$$']],
+        processEscapes: true
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body class="reader-page">
+  <header class="site-header reader-header">
+    <a class="brand" href="./">Head First LLMs</a>
+    <nav class="chapter-nav" aria-label="Chapter navigation">
+      <a href="chapter.html?chapter=1">1</a>
+      <a href="chapter.html?chapter=2">2</a>
+      <a href="chapter.html?chapter=3">3</a>
+    </nav>
+  </header>
+
+  <div class="reader-layout">
+    <aside class="reader-sidebar">
+      <a href="./" class="back-link">← All chapters</a>
+      <p class="sidebar-label">IN THIS CHAPTER</p>
+      <nav id="toc" class="toc" aria-label="Table of contents"></nav>
+    </aside>
+
+    <main class="chapter-shell">
+      <div id="loading" class="loading-card">Opening the chapter…</div>
+      <article id="chapter" class="chapter-content" hidden></article>
+      <div id="error" class="error-card" hidden></div>
+      <nav id="chapter-footer-nav" class="chapter-footer-nav" aria-label="Previous and next chapters"></nav>
+    </main>
+  </div>
+</body>
+</html>

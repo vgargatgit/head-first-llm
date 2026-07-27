@@ -2,6 +2,15 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-27 — Chapter 5 through 17 graphics production plans added
+
+- Added canonical production specifications under `docs/chapter-05/` through `docs/chapter-17/`, completing the detailed scene-plan library for every currently unillustrated chapter.
+- Defined 112 planned artwork targets across Chapters 5–17, each with chapter placement, learning objective, composition, exact labels or numerical references, story-to-mathematics mapping, technical exclusions, alt-text drafts, and acceptance checks.
+- Preserved the Chapter 1–3 visual language and explicit handoffs across the complete narrative: Information Courier, multi-head specialists, Team Lead, MLP rooms, Position Registry, Transformer tower, Final Audition, Answer-Key Clerk, Scorekeeper, Gradient Courier, training factory, distributed workers, and Post-Training Studio.
+- Added per-chapter reusable prop and character specifications, numerical source-of-truth sections, production checklists, and definitions of done.
+- Indexed the master plans and every Chapter 4–17 production plan from the README.
+- Kept final artwork generation, source integration, alt-text insertion, and desktop/mobile visual review as separate pending production steps.
+
 ## 2026-07-27 — Chapter 4 graphics production plan added
 
 - Added `docs/chapter-04/chapter-04-scene-plan.md` as the canonical production specification for **When Queries Meet Keys**.

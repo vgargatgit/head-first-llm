@@ -3,19 +3,34 @@
     1: {
       title: 'A Token Enters the Dating World',
       source: 'src/chapter-01.md',
-      assetFrom: ['chapter_1_graphics/', 'chapter-1-graphics/'],
+      assetFrom: [
+        'chapter_1_graphics/',
+        'chapter-1-graphics/',
+        '../assets/chapter-01/',
+        '/assets/chapter-01/'
+      ],
       assetTo: 'assets/chapter-01/'
     },
     2: {
       title: 'Meet the Question Coach',
       source: 'src/chapter-02.md',
-      assetFrom: ['chapter_2_graphics/', 'chapter-2-graphics/'],
+      assetFrom: [
+        'chapter_2_graphics/',
+        'chapter-2-graphics/',
+        '../assets/chapter-02/',
+        '/assets/chapter-02/'
+      ],
       assetTo: 'assets/chapter-02/'
     },
     3: {
       title: 'Meet the Profile Writer',
       source: 'src/chapter-03.md',
-      assetFrom: ['chapter_3_graphics/', 'chapter-3-graphics/'],
+      assetFrom: [
+        'chapter_3_graphics/',
+        'chapter-3-graphics/',
+        '../assets/chapter-03/',
+        '/assets/chapter-03/'
+      ],
       assetTo: 'assets/chapter-03/'
     }
   };
@@ -103,8 +118,8 @@
         const placeholder = document.createElement('div');
         placeholder.className = 'image-placeholder';
         placeholder.textContent = image.alt
-          ? `Illustration pending in repository assets: ${image.alt}`
-          : 'Illustration pending in repository assets.';
+          ? `Illustration file is missing or empty: ${image.alt}`
+          : 'Illustration file is missing or empty.';
         image.insertAdjacentElement('afterend', placeholder);
       }, { once: true });
     });

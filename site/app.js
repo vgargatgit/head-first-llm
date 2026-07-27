@@ -63,7 +63,7 @@
     return;
   }
 
-  document.title = `Chapter ${chapterNumber}: ${chapter.title} — Head First LLMs`;
+  document.title = `Chapter ${chapterNumber}: ${chapter.title} — LLMs from the Inside Out`;
   document.querySelectorAll('.chapter-nav a').forEach(link => {
     if (link.getAttribute('href').endsWith(`chapter=${chapterNumber}`)) {
       link.classList.add('active');
@@ -106,13 +106,13 @@
     const inlineMath = [];
 
     let protectedMarkdown = markdown.replace(/\$\$([\s\S]*?)\$\$/g, (_match, tex) => {
-      const token = `HFLLMDISPLAYMATH${displayMath.length}TOKEN`;
+      const token = `LLMIODISPLAYMATH${displayMath.length}TOKEN`;
       displayMath.push({ token, tex: tex.trim() });
       return `\n\n${token}\n\n`;
     });
 
     protectedMarkdown = protectedMarkdown.replace(/(^|[^\\])\$([^\n$]+?)\$/g, (_match, prefix, tex) => {
-      const token = `HFLLMINLINEMATH${inlineMath.length}TOKEN`;
+      const token = `LLMIOINLINEMATH${inlineMath.length}TOKEN`;
       inlineMath.push({ token, tex: tex.trim() });
       return `${prefix}${token}`;
     });

@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Read Head First LLMs online.">
-  <title>Head First LLMs — Chapter</title>
+  <meta name="description" content="Read LLMs from the Inside Out online.">
+  <title>LLMs from the Inside Out — Chapter</title>
   <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="auth.css">
+  <script src="auth.js"></script>
   <script>
     window.MathJax = {
       tex: {
@@ -22,12 +24,15 @@
 </head>
 <body class="reader-page">
   <header class="site-header reader-header">
-    <a class="brand" href="./">Head First LLMs</a>
-    <nav class="chapter-nav" aria-label="Chapter navigation">
-      <a href="chapter.html?chapter=1">1</a>
-      <a href="chapter.html?chapter=2">2</a>
-      <a href="chapter.html?chapter=3">3</a>
-    </nav>
+    <a class="brand" href="./">LLMs from the Inside Out</a>
+    <div class="reader-actions">
+      <nav class="chapter-nav" aria-label="Chapter navigation">
+        <a href="chapter.html?chapter=1">1</a>
+        <a href="chapter.html?chapter=2">2</a>
+        <a href="chapter.html?chapter=3">3</a>
+      </nav>
+      <button class="logout-button" type="button" data-logout>Sign out</button>
+    </div>
   </header>
 
   <div class="reader-layout">

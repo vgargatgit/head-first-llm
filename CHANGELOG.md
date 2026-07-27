@@ -2,6 +2,15 @@
 
 All notable changes to **Head First LLMs** are recorded here.
 
+## 2026-07-27 — GitHub Pages book website added
+
+- Added a responsive landing page under `site/index.html`.
+- Added a reusable chapter reader under `site/chapter.html`.
+- Added browser-side Markdown rendering, automatic table-of-contents generation, previous/next navigation, and MathJax equation rendering.
+- Added graceful placeholders for illustration files that have not yet been committed under `assets/`.
+- Added `.github/workflows/pages.yml` so every accepted change on `main` can deploy automatically to GitHub Pages.
+- Documented the expected public URL: `https://vgargatgit.github.io/head-first-llm/`.
+
 ## 2026-07-27 — Chapter workspace populated
 
 - Added canonical editable sources:

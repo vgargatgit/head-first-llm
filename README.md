@@ -31,8 +31,11 @@ The Pages site includes a browser-side preview login. This is suitable only as a
 9. [Every Token Needs an Address](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=9)
 10. [The Residual Stream Climbs the Stack](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=10)
 11. [The Final Audition](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=11)
+12. [The Answer Key Moves One Step Ahead](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=12)
+13. [Meet the Scorekeeper](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=13)
+14. [The Blame Travels Backward](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=14)
 
-Chapters 4–11 currently use equations, tables, text diagrams, and worked calculations without illustration assets. A small set of high-value graphics will be added after technical review.
+Chapters 4–14 currently use equations, tables, text diagrams, and worked calculations without illustration assets. A small set of high-value graphics will be added after technical review.
 
 ## Repository layout
 
@@ -47,7 +50,7 @@ Chapters 4–11 currently use equations, tables, text diagrams, and worked calcu
 
 ## Current workspace status
 
-The complete Chapter 1–11 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites image paths for the illustrated chapters and renders Chapters 4–11 directly without graphics.
+The complete Chapter 1–14 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites image paths for the illustrated chapters and renders Chapters 4–14 directly without graphics.
 
 Chapters 6–8 carry one continuous numerical example through:
 
@@ -63,6 +66,15 @@ Chapters 9–11 complete the forward inference path through:
 - repeated refinement through a Transformer stack and per-layer KV caches;
 - final normalisation and vocabulary projection;
 - logits, output softmax, temperature, top-k, top-p, and autoregressive generation.
+
+Chapters 12–14 begin the learning path through:
+
+- one-position-shifted next-token targets and teacher forcing;
+- causal, padding, and loss masks;
+- cross-entropy, masked token averages, and perplexity;
+- the exact softmax-cross-entropy gradient `p - y`;
+- backpropagation through the vocabulary head, residual paths, MLPs, attention, and embeddings;
+- a worked gradient-descent update and practical notes on AdamW, clipping, accumulation, and mixed precision.
 
 ## Working agreement
 

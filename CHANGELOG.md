@@ -2,6 +2,14 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-27 — Training-loop visual master plan added
+
+- Added `docs/training-loop-scene-master-plan.md` as the canonical character bible, visual metaphor system, and storyboard map for Chapters 12–17.
+- Defined the seven core training personas: Data Librarian, Answer-Key Clerk, Scorekeeper, Gradient Courier, Optimizer Engineer, Validation Inspector, and Checkpoint Archivist.
+- Defined supporting personas for distributed training, supervised fine-tuning, preference optimisation, and LoRA.
+- Established recurring props, places, colour and arrow conventions, technical guardrails, the master training-loop storyboard, and chapter-specific scene inventories.
+- Linked the plan from the README so future illustration work can use it as the visual source of truth.
+
 ## 2026-07-27 — Chapters 15 through 17 added
 
 - Added `src/chapter-15.md`: **The Training Factory Never Sees the Whole Library**.

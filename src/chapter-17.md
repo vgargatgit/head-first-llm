@@ -6,46 +6,27 @@ lang: en
 
 # The question this chapter answers
 
-Chapters 12–16 explained how a decoder-only model learns next-token prediction from large text collections.
+Pretraining teaches a decoder-only model to predict the next token across broad text collections.
 
-That objective can produce a powerful completion model.
+That can produce a powerful completion model, but it does not establish one consistent assistant contract.
 
-But a raw completion model has not necessarily learned to:
+A raw model has not necessarily learned to:
 
 - follow a user's instruction;
 - distinguish user text from assistant text;
 - answer in a requested format;
 - refuse unsafe requests appropriately;
-- prefer a clear and useful response over a merely plausible continuation.
+- prefer a clear response over a merely plausible continuation.
 
-How does post-training turn general next-token capability into assistant-like behaviour?
+How does post-training shape general next-token capability into assistant-like behaviour?
 
 <div class="big-idea">
 
-**Post-training does not replace next-token prediction. It changes the examples and objectives so the model practises desired conversational behaviour, then uses preference signals to distinguish better responses from worse ones.**
+**Post-training keeps the language-model machinery but changes the practice. Demonstrations show desired responses, preference pairs compare alternatives, and parameter-efficient methods restrict where the resulting updates are stored.**
 
 </div>
 
-# Cold open: pretraining saw conversations, not a job description
-
-A pretrained model may have encountered dialogue on the web.
-
-It can continue patterns such as:
-
-```text
-User: Explain gravity simply.
-Assistant:
-```
-
-But ordinary pretraining does not provide one consistent contract saying:
-
-> The text after `User` is an instruction, and the text after `Assistant` should be helpful, truthful, relevant, and safe.
-
-The corpus contains many styles, intentions, and quality levels.
-
-Post-training constructs more deliberate examples.
-
-# Three stages with different roles
+# From pretraining to post-training
 
 A simplified path is:
 
@@ -62,11 +43,11 @@ preference optimisation
 
 Not every model uses exactly these stages, and each stage has many variants.
 
-The distinctions are more important than any one recipe.
+The distinctions matter more than any one recipe.
 
 # Supervised fine-tuning uses demonstrations
 
-A supervised fine-tuning example contains an input and a desired response.
+A supervised example can look like:
 
 ```text
 system: You are a concise science tutor.
@@ -74,17 +55,15 @@ user: Why does the Moon not fall onto Earth?
 assistant: It is continuously falling toward Earth, but its sideways speed makes it keep missing the surface. That curved fall is an orbit.
 ```
 
-After applying the model's chat template and tokenizer, the conversation becomes one token sequence.
+After a chat template and tokenizer serialize the messages, the example becomes one token sequence.
 
-The training system creates shifted next-token targets exactly as in Chapter 12.
+The model still receives shifted next-token targets and cross-entropy loss.
 
-Cross-entropy remains the core objective.
+The new ingredient is the curated behaviour represented by the response.
 
 # Chat templates make roles explicit
 
-A chat model does not receive coloured message bubbles.
-
-The application serialises roles and boundaries into tokens, conceptually like:
+A chat model does not receive coloured message bubbles. The application converts roles and boundaries into tokens, conceptually like:
 
 ```text
 <BOS>
@@ -93,62 +72,56 @@ The application serialises roles and boundaries into tokens, conceptually like:
 <ASSISTANT> It is continuously falling ... <END>
 ```
 
-The exact control tokens are tokenizer- and model-specific.
+The exact tokens are model-specific.
 
 The template determines:
 
 - where each role begins;
 - where each message ends;
-- where the assistant should start generating;
-- which tokens may receive training loss.
+- where assistant generation starts;
+- which labels may receive loss.
 
 <div class="warning">
 
-## The chat template is part of the model interface
+## The chat template is part of the interface
 
 Using a different template at inference can place the model in a token pattern it did not practise during fine-tuning.
 
 </div>
 
-# Which tokens receive supervised loss?
+# Complete-sequence loss versus response-only loss
 
-There are two common conceptual choices.
+Some supervised recipes score every next-token label in the serialized conversation.
 
-## Loss on the complete sequence
+Others keep the prompt as context but score only assistant-response labels.
 
-The model is trained to predict system, user, and assistant tokens.
-
-## Response-only loss
-
-System and user tokens provide context, but only assistant-response tokens contribute directly to the objective.
-
-Let the token-level mask be:
+Let:
 
 $$
-m_i
-\in
-\{0,1\}
+m_i\in\{0,1\}
 $$
 
-The masked loss is:
+be the loss mask for target label \(i\).
+
+The response-only mean can be written as:
 
 $$
 \mathcal{L}_{\mathrm{SFT}}
 =
-\frac{
-\sum_i m_i\mathcal{L}_i
-}{
-\sum_i m_i
-}
+\left(\sum_i m_i\mathcal{L}_i\right)
+\big/
+\left(\sum_i m_i\right)
 $$
 
-The masked prompt still affects assistant hidden states through attention. It simply does not receive direct next-token loss.
+Masked prompt labels do not receive direct loss, but prompt tokens still affect assistant hidden states through attention.
 
-# A response-mask example with exact alignment
+# An exactly aligned response-mask example
 
-Suppose the tokenised sequence is represented as ten conceptual tokens:
+Suppose the sequence has ten conceptual tokens.
 
-| Position | Token | Region | Loss mask |
+The mask below is attached to target tokens: a 1 beside `4` means the prediction of `4` from the preceding position is scored.
+
+| Position | Token | Region | Target-token mask |
 |---:|---|---|---:|
 | 0 | `<SYS>` | System | 0 |
 | 1 | `concise` | System | 0 |
@@ -161,7 +134,7 @@ Suppose the tokenised sequence is represented as ten conceptual tokens:
 | 8 | `4` | Assistant response | 1 |
 | 9 | `<EOS>` | Assistant response | 1 |
 
-If the two included token losses are:
+If the included losses are:
 
 $$
 0.30
@@ -173,69 +146,54 @@ then:
 
 $$
 \mathcal{L}_{\mathrm{SFT}}
-=
-\frac{0.30+0.10}{2}
+=(0.30+0.10)/2
 =0.20
 $$
 
-The prompt and assistant-boundary tokens influence the prediction of `4`, but their own labels are ignored by this response-only mask.
+The boundary token supplies the state used to predict `4`, while the target-token mask selects `4` and `<EOS>` for scoring.
 
-# Demonstration quality matters
+# Demonstration quality becomes behavioural specification
 
 Supervised fine-tuning teaches imitation.
 
-If demonstrations are:
+If demonstrations are verbose, inconsistent, unsupported, or overly narrow, the model practises those traits.
 
-- verbose, the model practises verbosity;
-- inconsistent, the model practises inconsistency;
-- unsupported, the model practises unsupported claims;
-- well structured, the model practises useful structure;
-- narrow, the model can over-specialise.
+High-quality demonstrations can teach:
 
-Data curation is therefore behavioural specification.
-
-# Fine-tuning can change style faster than knowledge
-
-A modest demonstration set can strongly change:
-
-- tone;
-- formatting;
+- tone and formatting;
 - response length;
 - refusal style;
 - tool-call syntax;
-- domain vocabulary.
+- domain terminology;
+- step ordering and structure.
 
-Adding reliable factual knowledge is harder.
-
-A model may memorise new facts, but fine-tuning alone does not guarantee that they are recalled consistently, updated without conflict, cited correctly, or protected from later forgetting.
-
-Post-training should not be described as a database update API.
+Fine-tuning can change style quickly. Reliably installing factual knowledge is harder and should not be treated as a database update operation.
 
 # Why demonstrations are not enough
 
-For many prompts, several responses can be acceptable.
+For many prompts, several responses are acceptable.
 
-A single demonstration says:
+One demonstration says:
 
 > Produce something like this answer.
 
-It does not directly teach fine distinctions between alternatives such as:
+It does not directly distinguish:
 
 - correct but confusing;
 - helpful but too long;
 - concise but incomplete;
 - safe but needlessly refusing;
-- fluent but factually unsupported.
+- fluent but unsupported.
 
 Preference data supplies comparisons.
 
-# Preference pairs
+# Preference pairs and rubrics
 
 A preference example contains:
 
-- a prompt \(x\);
-- a chosen response \(y_c\);
-- a rejected response \(y_r\).
+- prompt \(x\);
+- chosen response \(y_c\);
+- rejected response \(y_r\).
 
 ```text
 prompt: Explain why the sky looks blue.
@@ -245,28 +203,11 @@ chosen: Short-wavelength blue light is scattered more strongly by air molecules 
 rejected: The sky is blue because it reflects the ocean.
 ```
 
-The label says the chosen response is preferred under the annotation criteria.
+A rubric may consider correctness, relevance, clarity, completeness, harmlessness, instruction following, uncertainty, and style.
 
-It does not automatically reveal why unless rationale or rubric information is also collected.
+Different rubrics can rank the same pair differently. Preference data encodes a policy and evaluation process, not one universal definition of goodness.
 
-# Preferences depend on a rubric
-
-A rubric may consider:
-
-- correctness;
-- relevance;
-- clarity;
-- completeness;
-- harmlessness;
-- instruction following;
-- calibrated uncertainty;
-- style requirements.
-
-Different rubrics can rank the same responses differently.
-
-Preference data encodes a particular policy and evaluation process, not one universal definition of goodness.
-
-# The sequence log-probability of a response
+# Response log-probability
 
 For response tokens:
 
@@ -274,23 +215,20 @@ $$
 y=(y_1,y_2,\ldots,y_T)
 $$
 
-conditioned on prompt \(x\), the response log-probability is:
+the policy log-probability is:
 
 $$
 \log\pi_{\theta}(y\mid x)
 =
 \sum_{i=1}^{T}
-\log\pi_{\theta}
-(y_i\mid x,y_{<i})
+\log\pi_{\theta}(y_i\mid x,y_{<i})
 $$
 
-Long responses contain more summed terms, so an implementation must be explicit about sums, averages, length normalisation, and masking.
+Long responses contain more summed terms, so implementations must define masking and length treatment explicitly.
 
 # Reward modelling and RLHF
 
-One family of methods first trains a reward model from comparisons.
-
-The reward model learns a scalar score:
+One family of methods trains a reward model:
 
 $$
 r_{\phi}(x,y)
@@ -310,36 +248,33 @@ $$
 where:
 
 $$
-\sigma(a)=\frac{1}{1+e^{-a}}
+\sigma(a)=1/(1+e^{-a})
 $$
 
-A reinforcement-learning stage can then optimise the policy for higher reward while constraining it from moving too far from a reference policy.
+A reinforcement-learning stage can optimise the policy for higher reward while constraining movement away from a reference policy.
 
-This broad pipeline is commonly called reinforcement learning from human feedback, or RLHF, when humans supply the underlying preference labels.
+This broad pipeline is commonly called reinforcement learning from human feedback, or RLHF, when humans provide the preference labels.
 
 # Why constrain the policy?
 
-If optimisation pursues only a learned reward score, the policy can exploit weaknesses in the reward model.
+A policy optimised only for a learned reward can exploit weaknesses in that reward model.
 
-A reference-policy constraint discourages extreme movement away from a known model.
-
-One conceptual regularised objective is:
+A conceptual regularised objective is:
 
 $$
 \mathrm{reward}
 -
-\beta
-D_{\mathrm{KL}}
+\beta D_{\mathrm{KL}}
 (\pi_{\theta}\,\|\,\pi_{\mathrm{ref}})
 $$
 
-The coefficient \(\beta\) controls the strength of the reference constraint.
+The coefficient \(\beta\) controls how strongly the policy is held near the reference.
 
 # Direct preference optimisation
 
-Direct preference optimisation, or DPO, trains the policy directly from chosen and rejected responses.
+Direct preference optimisation, or DPO, trains directly from chosen and rejected responses.
 
-Define the policy margin:
+Define:
 
 $$
 \Delta_{\theta}
@@ -349,7 +284,7 @@ $$
 \log\pi_{\theta}(y_r\mid x)
 $$
 
-and the reference margin:
+and:
 
 $$
 \Delta_{\mathrm{ref}}
@@ -359,30 +294,27 @@ $$
 \log\pi_{\mathrm{ref}}(y_r\mid x)
 $$
 
-A simplified per-pair DPO loss is:
+A simplified pair loss is:
 
 $$
 \mathcal{L}_{\mathrm{DPO}}
 =
--\log
-\sigma
+-
+\log\sigma
 \left(
-\beta
-(\Delta_{\theta}-\Delta_{\mathrm{ref}})
+\beta(\Delta_{\theta}-\Delta_{\mathrm{ref}})
 \right)
 $$
 
-The policy is rewarded for preferring the chosen response more strongly than the reference policy does.
+The policy is rewarded for preferring the chosen response more strongly than the reference does.
 
 # A small DPO calculation
 
 Suppose:
 
 $$
-\log\pi_{\theta}(y_c\mid x)=-1.2
-$$
-
-$$
+\log\pi_{\theta}(y_c\mid x)=-1.2,
+\qquad
 \log\pi_{\theta}(y_r\mid x)=-2.0
 $$
 
@@ -395,10 +327,8 @@ $$
 Suppose the reference gives:
 
 $$
-\log\pi_{\mathrm{ref}}(y_c\mid x)=-1.4
-$$
-
-$$
+\log\pi_{\mathrm{ref}}(y_c\mid x)=-1.4,
+\qquad
 \log\pi_{\mathrm{ref}}(y_r\mid x)=-1.8
 $$
 
@@ -420,7 +350,7 @@ $$
 0.1(0.8-0.4)=0.04
 $$
 
-Therefore:
+and:
 
 $$
 \mathcal{L}_{\mathrm{DPO}}
@@ -428,13 +358,11 @@ $$
 \approx0.673347
 $$
 
-The policy already prefers the chosen response, but the reference comparison determines how much stronger that preference is relative to the starting point.
-
 <div class="warning">
 
 ## Preference optimisation is not a truth oracle
 
-It optimises the supplied comparisons and objective. Biased labels, weak rubrics, judge errors, or missing edge cases can produce undesirable behaviour even when training loss improves.
+It optimises the supplied comparisons and objective. Weak rubrics, biased labels, judge errors, and missing edge cases can produce undesirable behaviour even when loss improves.
 
 </div>
 
@@ -448,30 +376,30 @@ Preference optimisation says:
 
 > Prefer this response over that alternative, relative to a reference or reward criterion.
 
-A preference method does not remove the need for high-quality demonstrations, and SFT does not make pairwise judgement unnecessary.
+Neither makes the other unnecessary.
 
-# Full fine-tuning updates original weights
+# Full fine-tuning
 
-In full fine-tuning, gradients can update the model's original parameters across embeddings, attention, MLPs, normalisation, and the output head.
+Full fine-tuning can update original parameters across embeddings, attention, MLPs, normalisation, and the output head.
 
-This offers high adaptation capacity but requires substantial gradient and optimiser memory and creates a complete new checkpoint.
+It offers high adaptation capacity but requires substantial gradient and optimiser memory and produces a complete new checkpoint.
 
 # Parameter-efficient fine-tuning
 
-Parameter-efficient methods keep most pretrained parameters frozen and train a much smaller new parameter set.
+Parameter-efficient methods freeze most pretrained parameters and train a smaller new parameter set.
 
 Possible benefits include:
 
 - lower optimiser-state memory;
 - smaller saved adapters;
-- easier storage of many task variants;
+- easier storage of task variants;
 - reduced communication for trainable state.
 
-The frozen base still participates in forward and backward computation because gradients must pass through it to reach the adapters.
+The frozen base still participates in forward and backward computation because signals must pass through it to reach the adapters.
 
 # LoRA adds a low-rank update
 
-For a frozen weight matrix:
+For a frozen matrix:
 
 $$
 W_0
@@ -479,12 +407,12 @@ W_0
 \mathbb{R}^{d_{\mathrm{in}}\mathbin{×}d_{\mathrm{out}}}
 $$
 
-LoRA represents the trainable update as:
+LoRA represents a trainable update as:
 
 $$
 \Delta W
 =
-\frac{\alpha}{r}AB
+\alpha r^{-1}AB
 $$
 
 where:
@@ -510,7 +438,7 @@ y
 =
 x
 \left(
-W_0+rac{\alpha}{r}AB
+W_0+\alpha r^{-1}AB
 \right)
 $$
 
@@ -521,14 +449,12 @@ The base \(W_0\) remains frozen. Gradients update \(A\) and \(B\).
 A square projection with width 4096 contains:
 
 $$
-4096^2
-=
-16777216
+4096^2=16777216
 $$
 
 parameters.
 
-With rank:
+At rank:
 
 $$
 r=16
@@ -537,11 +463,8 @@ $$
 the two adapter matrices contain:
 
 $$
-4096\cdot16
-+
-16\cdot4096
-=
-131072
+4096\cdot16+16\cdot4096
+=131072
 $$
 
 parameters.
@@ -549,7 +472,7 @@ parameters.
 The ratio is:
 
 $$
-\frac{131072}{16777216}
+131072/16777216
 =0.0078125
 $$
 
@@ -557,11 +480,11 @@ or about 0.78125% of the base matrix's parameter count.
 
 This excludes other trainable modules and implementation overhead, but it shows the low-rank saving.
 
-# Rank and module choice control adapter capacity
+# Rank and module choice control capacity
 
 A larger rank increases trainable parameters and the possible rank of the update.
 
-Adapters can be attached to selected modules such as Query and Value projections, all attention projections, MLP projections, or other linear layers.
+Adapters can target selected attention projections, MLP projections, or other linear layers.
 
 Training fewer modules is cheaper but constrains where adaptation can occur.
 
@@ -572,35 +495,28 @@ After training, the update can be merged:
 $$
 W_{\mathrm{merged}}
 =
-W_0+rac{\alpha}{r}AB
+W_0+\alpha r^{-1}AB
 $$
 
 A merged model avoids separate adapter matrix multiplications.
 
 Alternatively, adapters can remain separate so one base model can load different behaviours.
 
-Merging changes deployment packaging, not the intended mathematical result when precision and scaling are handled consistently.
-
 # Quantised bases and adapters
 
-Some systems store the frozen base in a quantised representation while training adapters in a higher precision.
+Some systems store the frozen base in a quantised representation while training adapters in higher precision.
 
-This can reduce memory, but it is not identical to ordinary full-precision LoRA. Quantisation adds approximation, dequantisation behaviour, and kernel constraints.
+This can reduce memory, but quantisation adds approximation, dequantisation behaviour, and kernel constraints.
 
 # Adapters do not eliminate activation memory
 
 Freezing base parameters removes their optimiser-state and parameter-gradient requirements.
 
-Training still needs:
-
-- forward activations;
-- backward signals through the network;
-- adapter gradients;
-- optimiser state for trainable adapters.
+Training still needs forward activations, backward signals, adapter gradients, and optimiser state for trainable parameters.
 
 Long contexts and large microbatches can still make activation memory dominant.
 
-# Behaviour changes can have side effects
+# Evaluate improvements and regressions
 
 Post-training can improve instruction following while causing:
 
@@ -612,25 +528,11 @@ Post-training can improve instruction following while causing:
 - poorer out-of-distribution behaviour;
 - increased confidence without increased correctness.
 
-Evaluation must cover desired improvements and regressions.
-
-# Build separate evaluation sets
-
-A post-training suite can include:
-
-- instruction-following tests;
-- factuality checks;
-- safety and refusal behaviour;
-- coding or reasoning tasks;
-- multilingual prompts;
-- long-context cases;
-- adversarial or ambiguous requests;
-- style and formatting requirements;
-- regression tests from pretraining capabilities.
+A post-training suite should test instruction following, factuality, safety, coding or reasoning, multilingual behaviour, long context, adversarial prompts, formatting, and retained base capabilities.
 
 Training loss alone cannot establish assistant quality.
 
-# Human and automated feedback have different failure modes
+# Human and automated feedback
 
 Human feedback can be expensive, inconsistent, style-sensitive, or limited by annotator expertise.
 
@@ -640,16 +542,7 @@ A reliable process uses clear rubrics, quality control, diverse tests, and appro
 
 # Post-training does not remove runtime controls
 
-A deployed application may still use:
-
-- system instructions;
-- input and output filters;
-- tool permissions;
-- retrieval systems;
-- citation checks;
-- rate limits;
-- monitoring;
-- human escalation.
+A deployed application may still use system instructions, filters, tool permissions, retrieval, citation checks, rate limits, monitoring, and human escalation.
 
 Model training and runtime controls address different layers of behaviour and risk.
 
@@ -666,21 +559,19 @@ pretrained model
     -> full checkpoint or adapter packaging
 ```
 
-The path can contain several rounds of data collection and evaluation.
-
 # Common post-training mistakes
 
 ## Mistake 1: saying pretraining directly creates an assistant
 
-Pretraining learns continuation ability from broad text. Assistant behaviour requires additional conventions and examples.
+Pretraining learns broad continuation behaviour. Assistant conventions require additional examples and objectives.
 
 ## Mistake 2: forgetting the chat template
 
 Role tokens and message boundaries are part of the input distribution.
 
-## Mistake 3: assuming ignored prompt tokens have no effect
+## Mistake 3: assuming ignored prompt labels have no effect
 
-They still provide context through attention.
+Prompt tokens still provide context through attention.
 
 ## Mistake 4: treating one demonstration as the only acceptable answer
 
@@ -760,20 +651,16 @@ Behavioural improvements can reduce capability, calibration, diversity, or safet
 
 # Chapter takeaway
 
-Supervised fine-tuning imitates demonstrations using masked next-token loss:
+Supervised fine-tuning imitates demonstrations with masked next-token loss.
 
-$$
-\mathcal{L}_{\mathrm{SFT}}
-=
-\frac{\sum_i m_i\mathcal{L}_i}{\sum_i m_i}
-$$
+Preference optimisation compares chosen and rejected responses.
 
-Preference optimisation compares chosen and rejected responses. Parameter-efficient methods such as LoRA restrict updates to a small low-rank parameter set:
+LoRA restricts updates to low-rank matrices:
 
 $$
 W
 =
-W_0+rac{\alpha}{r}AB
+W_0+\alpha r^{-1}AB
 $$
 
 In our story:

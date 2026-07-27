@@ -1,4 +1,4 @@
-name: Deploy Head First LLMs website
+name: Deploy LLMs from the Inside Out website
 
 on:
   push:

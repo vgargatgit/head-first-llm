@@ -123,9 +123,22 @@
   .login-shell { padding: 16px; }
   .login-card { padding: 30px 24px; border-radius: 22px; }
   .logout-button { padding: 7px 10px; font-size: .82rem; }
-  .reader-header { justify-content: center; }
+  .reader-header {
+    min-height: auto;
+    justify-content: center;
+    padding-block: 8px;
+  }
   .reader-header .brand { display: none; }
-  .reader-actions { gap: 8px; }
-  .reader-header .chapter-nav { gap: 4px; }
+  .reader-actions {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 7px 10px;
+  }
+  .reader-header .chapter-nav {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
   .reader-header .chapter-nav a { width: 30px; height: 30px; }
 }

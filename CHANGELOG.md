@@ -2,6 +2,19 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-27 — Chapters 9 through 11 added
+
+- Added `src/chapter-09.md`: **Every Token Needs an Address**.
+- Reconstructed the running input matrix from token and absolute-position embeddings, introduced sinusoidal encodings, and added a complete two-dimensional RoPE calculation showing relative-position behaviour.
+- Added `src/chapter-10.md`: **The Residual Stream Climbs the Stack**.
+- Followed SAT through a toy multi-block continuation, calculated a final normalised hidden state, explained repeated contextualisation, and derived per-layer KV-cache shapes and an illustrative memory estimate.
+- Added `src/chapter-11.md`: **The Final Audition**.
+- Projected the Chapter 10 hidden state into a five-token vocabulary, calculated logits and softmax probabilities, and worked through greedy decoding, temperature, top-k, top-p, weight tying, and the autoregressive generation loop.
+- Kept Chapters 9–11 free of image references while recording high-value illustration candidates in the manifest.
+- Extended the landing page, reader registry, numbered navigation, previous/next links, README, and manifest from eight chapters to eleven.
+- Bumped the reader build version to `20260727.5` so browsers load the eleven-chapter registry and current source files.
+- Updated responsive reader navigation so two-digit chapter links wrap cleanly on narrow screens.
+
 ## 2026-07-27 — Chapters 6 through 8 added
 
 - Added `src/chapter-06.md`: **Many Specialists at Work**.

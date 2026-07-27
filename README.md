@@ -1,6 +1,6 @@
 # LLMs from the Inside Out
 
-A versioned workspace and browsable website for an illustrated LLM and Transformer tutorial.
+A versioned workspace and browsable website for a visual LLM and Transformer tutorial.
 
 ## Read the website
 
@@ -23,12 +23,16 @@ The Pages site includes a browser-side preview login. This is suitable only as a
 1. [A Token Enters the Dating World](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=1)
 2. [Meet the Question Coach](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=2)
 3. [Meet the Profile Writer](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=3)
+4. [When Queries Meet Keys](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=4)
+5. [Meet the Information Courier](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=5)
+
+Chapters 4 and 5 currently use equations, tables, and worked calculations without illustration assets.
 
 ## Repository layout
 
 - `site/` — GitHub Pages home page, login page, chapter reader, styling, and rendering logic
 - `src/` — canonical editable Markdown for each chapter
-- `assets/` — chapter-specific graphics
+- `assets/` — chapter-specific graphics where available
 - `.github/workflows/pages.yml` — automatic Pages deployment
 - `dist/` — earlier browser distribution pages retained for reference
 - `styles/` — earlier shared chapter styling
@@ -36,7 +40,7 @@ The Pages site includes a browser-side preview login. This is suitable only as a
 
 ## Current workspace status
 
-The complete Chapter 1–3 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites chapter image paths to `assets/chapter-01`, `assets/chapter-02`, and `assets/chapter-03`. Until the illustration binaries are committed, missing illustrations are shown as clearly labelled placeholders rather than broken-image icons.
+The complete Chapter 1–5 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites image paths for the illustrated chapters and renders Chapters 4–5 directly without graphics.
 
 ## Working agreement
 

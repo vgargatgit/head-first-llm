@@ -2,6 +2,19 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-27 — Chapters 6 through 8 added
+
+- Added `src/chapter-06.md`: **Many Specialists at Work**.
+- Continued the running THE/CAT/SAT example with a second independently learned attention head, a second causal attention matrix, and feature-wise concatenation.
+- Added `src/chapter-07.md`: **The Team Lead Combines the Reports**.
+- Calculated the output projection \(HW^O\), residual addition, and a complete per-token LayerNorm example; distinguished post-norm, pre-norm, LayerNorm, and RMSNorm.
+- Added `src/chapter-08.md`: **The Private Thinking Room**.
+- Calculated a complete position-wise MLP with expansion, ReLU, contraction, a second residual path, and the output of one simplified Transformer block.
+- Kept Chapters 6–8 free of image references while recording the plan to add a small set of high-value graphics after technical review.
+- Extended the landing page, reader registry, numbered navigation, previous/next links, README, and manifest from five chapters to eight.
+- Bumped the reader build version so browsers do not retain the earlier five-chapter registry.
+- Updated the mobile reader header so eight chapter links and the sign-out control can wrap safely.
+
 ## 2026-07-27 — Chapters 4 and 5 added
 
 - Added `src/chapter-04.md`: **When Queries Meet Keys**.

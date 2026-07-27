@@ -129,7 +129,7 @@
   background: var(--purple);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1120px) {
   .reader-header {
     min-height: auto;
     align-items: flex-start;
@@ -140,7 +140,7 @@
     flex-wrap: wrap;
   }
   .reader-header .chapter-nav {
-    max-width: min(470px, 66vw);
+    max-width: min(640px, 72vw);
   }
 }
 

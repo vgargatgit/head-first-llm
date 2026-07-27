@@ -9,7 +9,8 @@
         '../assets/chapter-01/',
         '/assets/chapter-01/'
       ],
-      assetTo: 'assets/chapter-01/'
+      assetTo: 'assets/chapter-01/',
+      assetAliases: {}
     },
     2: {
       title: 'Meet the Question Coach',
@@ -20,7 +21,12 @@
         '../assets/chapter-02/',
         '/assets/chapter-02/'
       ],
-      assetTo: 'assets/chapter-02/'
+      assetTo: 'assets/chapter-02/',
+      assetAliases: {
+        'assets/chapter-02/02_question_coach_story.png': 'assets/chapter-02/02_question_coach_pipeline.png',
+        'assets/chapter-02/04_shared_coach.png': 'assets/chapter-02/04_shared_question_coach.png',
+        'assets/chapter-02/06_handoff_to_keys.png': 'assets/chapter-02/07_handoff_to_keys.png'
+      }
     },
     3: {
       title: 'Meet the Profile Writer',
@@ -31,7 +37,8 @@
         '../assets/chapter-03/',
         '/assets/chapter-03/'
       ],
-      assetTo: 'assets/chapter-03/'
+      assetTo: 'assets/chapter-03/',
+      assetAliases: {}
     }
   };
 
@@ -71,6 +78,10 @@
 
     chapter.assetFrom.forEach(prefix => {
       result = result.split(prefix).join(chapter.assetTo);
+    });
+
+    Object.entries(chapter.assetAliases).forEach(([source, destination]) => {
+      result = result.split(source).join(destination);
     });
 
     return result;
@@ -118,8 +129,8 @@
         const placeholder = document.createElement('div');
         placeholder.className = 'image-placeholder';
         placeholder.textContent = image.alt
-          ? `Illustration file is missing or empty: ${image.alt}`
-          : 'Illustration file is missing or empty.';
+          ? `Illustration file is missing or could not be loaded: ${image.alt}`
+          : 'Illustration file is missing or could not be loaded.';
         image.insertAdjacentElement('afterend', placeholder);
       }, { once: true });
     });

@@ -28,8 +28,11 @@ The Pages site includes a browser-side preview login. This is suitable only as a
 6. [Many Specialists at Work](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=6)
 7. [The Team Lead Combines the Reports](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=7)
 8. [The Private Thinking Room](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=8)
+9. [Every Token Needs an Address](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=9)
+10. [The Residual Stream Climbs the Stack](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=10)
+11. [The Final Audition](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=11)
 
-Chapters 4–8 currently use equations, tables, text diagrams, and worked calculations without illustration assets. High-value graphics can be added after the technical content is reviewed.
+Chapters 4–11 currently use equations, tables, text diagrams, and worked calculations without illustration assets. A small set of high-value graphics will be added after technical review.
 
 ## Repository layout
 
@@ -44,7 +47,7 @@ Chapters 4–8 currently use equations, tables, text diagrams, and worked calcul
 
 ## Current workspace status
 
-The complete Chapter 1–8 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites image paths for the illustrated chapters and renders Chapters 4–8 directly without graphics.
+The complete Chapter 1–11 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites image paths for the illustrated chapters and renders Chapters 4–11 directly without graphics.
 
 Chapters 6–8 carry one continuous numerical example through:
 
@@ -53,6 +56,13 @@ Chapters 6–8 carry one continuous numerical example through:
 - residual addition and LayerNorm;
 - a position-wise MLP;
 - the output of one simplified Transformer block.
+
+Chapters 9–11 complete the forward inference path through:
+
+- token and position representations, including a worked RoPE example;
+- repeated refinement through a Transformer stack and per-layer KV caches;
+- final normalisation and vocabulary projection;
+- logits, output softmax, temperature, top-k, top-p, and autoregressive generation.
 
 ## Working agreement
 

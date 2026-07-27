@@ -2,6 +2,14 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-27 — Chapter 4 graphics production plan added
+
+- Added `docs/chapter-04/chapter-04-scene-plan.md` as the canonical production specification for **When Queries Meet Keys**.
+- Defined eight artwork targets covering the chapter hero, Query–Key dot products, the full score matrix, score scaling, causal masking, row-wise softmax, the completed attention matrix, and misconception guardrails.
+- Added a reusable prop specification for the Matching Desk, Query and Key cards, coordinate-alignment rail, score tiles, calibration station, causal permission gate, softmax ticket counter, attention report, and Information Courier handoff.
+- Recorded exact numerical overlays, asset names, chapter placement, alt-text drafts, technical constraints, review checklists, and the Chapter 4 graphics definition of done.
+- Kept final artwork generation and Chapter 4 image integration as pending work.
+
 ## 2026-07-27 — Training visual plan aligned with illustrated chapters
 
 - Revised `docs/training-loop-scene-master-plan.md` so Chapters 12–17 explicitly inherit the successful cream-paper, purple-accented, hand-drawn visual language of Chapters 1–3.

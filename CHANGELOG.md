@@ -2,6 +2,18 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-27 — Chapters 15 through 17 added
+
+- Added `src/chapter-15.md`: **The Training Factory Never Sees the Whole Library**.
+- Calculated global sequence and token batches across devices and accumulation steps, distinguished valid-token means from unweighted microbatch means, and covered data mixtures, packing, warmup, cosine decay, validation, contamination, throughput, and resumable checkpoints.
+- Added `src/chapter-16.md`: **The Model Outgrows One Machine**.
+- Worked through synchronous data-parallel gradient averaging, an illustrative 16-bytes-per-parameter training-state estimate, sharded state, all-gather, reduce-scatter, tensor parallelism, pipeline scheduling, activation checkpointing, topology, scaling efficiency, and distributed recovery.
+- Added `src/chapter-17.md`: **From Completion Machine to Helpful Assistant**.
+- Explained chat templates, response-only supervised loss, preference pairs, reward modelling, RLHF, a numerical DPO example, full versus parameter-efficient fine-tuning, and a worked LoRA parameter-count comparison.
+- Kept Chapters 15–17 free of image references while recording high-value graphics candidates for effective batches, distributed training, and LoRA.
+- Extended the landing page, reader registry, numbered navigation, previous/next links, README, and manifest from fourteen chapters to seventeen.
+- Bumped the reader build version to `20260727.7` so browsers load the seventeen-chapter registry and current Markdown sources.
+
 ## 2026-07-27 — Chapters 12 through 14 added
 
 - Added `src/chapter-12.md`: **The Answer Key Moves One Step Ahead**.

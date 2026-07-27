@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Sign in to preview LLMs from the Inside Out.">
+  <title>Sign in — LLMs from the Inside Out</title>
+  <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="auth.css">
+  <script src="auth.js"></script>
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-card" aria-labelledby="login-title">
+      <p class="eyebrow">PRIVATE BOOK PREVIEW</p>
+      <h1 id="login-title">LLMs from the Inside Out</h1>
+      <p class="login-copy">Sign in to open the illustrated guide to tokens, attention, and Transformers.</p>
+
+      <form id="login-form" class="login-form" novalidate>
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+        <button id="login-button" class="login-button" type="submit">Sign in</button>
+        <p id="login-error" class="login-error" role="alert" aria-live="polite" hidden></p>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const form = document.getElementById('login-form');
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const loginButton = document.getElementById('login-button');
+      const errorBox = document.getElementById('login-error');
+
+      function safeReturnLocation() {
+        const requested = new URLSearchParams(window.location.search).get('returnTo');
+        if (!requested) return './';
+
+        try {
+          const destination = new URL(requested, window.location.origin);
+          const isSameOrigin = destination.origin === window.location.origin;
+          const isLoginPage = /\/login\.html$/.test(destination.pathname);
+          return isSameOrigin && !isLoginPage
+            ? `${destination.pathname}${destination.search}${destination.hash}`
+            : './';
+        } catch (_error) {
+          return './';
+        }
+      }
+
+      if (window.BookAuth.isAuthenticated()) {
+        window.location.replace(safeReturnLocation());
+        return;
+      }
+
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        errorBox.hidden = true;
+        loginButton.disabled = true;
+        loginButton.textContent = 'Signing in…';
+
+        try {
+          const authenticated = await window.BookAuth.authenticate(
+            usernameInput.value,
+            passwordInput.value
+          );
+
+          if (!authenticated) {
+            passwordInput.value = '';
+            passwordInput.focus();
+            errorBox.textContent = 'The username or password is incorrect.';
+            errorBox.hidden = false;
+            return;
+          }
+
+          window.location.replace(safeReturnLocation());
+        } catch (error) {
+          console.error(error);
+          errorBox.textContent = 'Sign-in is unavailable in this browser.';
+          errorBox.hidden = false;
+        } finally {
+          loginButton.disabled = false;
+          loginButton.textContent = 'Sign in';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

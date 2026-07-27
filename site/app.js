@@ -39,6 +39,20 @@
       ],
       assetTo: 'assets/chapter-03/',
       assetAliases: {}
+    },
+    4: {
+      title: 'When Queries Meet Keys',
+      source: 'src/chapter-04.md',
+      assetFrom: [],
+      assetTo: '',
+      assetAliases: {}
+    },
+    5: {
+      title: 'Meet the Information Courier',
+      source: 'src/chapter-05.md',
+      assetFrom: [],
+      assetTo: '',
+      assetAliases: {}
     }
   };
 
@@ -59,7 +73,7 @@
   }
 
   if (!chapter) {
-    fail('That chapter does not exist yet. Return to the chapter list and choose Chapters 1–3.');
+    fail('That chapter does not exist yet. Return to the chapter list and choose Chapters 1–5.');
     return;
   }
 

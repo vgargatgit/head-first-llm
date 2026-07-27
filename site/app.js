@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260727.4';
+  const BUILD_VERSION = '20260727.5';
   const chapters = {
     1: {
       title: 'A Token Enters the Dating World',
@@ -77,6 +77,27 @@
       assetFrom: [],
       assetTo: '',
       assetAliases: {}
+    },
+    9: {
+      title: 'Every Token Needs an Address',
+      source: 'src/chapter-09.md',
+      assetFrom: [],
+      assetTo: '',
+      assetAliases: {}
+    },
+    10: {
+      title: 'The Residual Stream Climbs the Stack',
+      source: 'src/chapter-10.md',
+      assetFrom: [],
+      assetTo: '',
+      assetAliases: {}
+    },
+    11: {
+      title: 'The Final Audition',
+      source: 'src/chapter-11.md',
+      assetFrom: [],
+      assetTo: '',
+      assetAliases: {}
     }
   };
 
@@ -97,7 +118,7 @@
   }
 
   if (!chapter) {
-    fail('That chapter does not exist yet. Return to the chapter list and choose Chapters 1–8.');
+    fail('That chapter does not exist yet. Return to the chapter list and choose Chapters 1–11.');
     return;
   }
 

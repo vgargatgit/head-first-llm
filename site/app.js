@@ -87,6 +87,56 @@
     return result;
   }
 
+  function escapeHtml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  /*
+   * Marked treats a line containing only "=" as a Setext heading underline.
+   * Several display equations intentionally put "=" on its own line, so the
+   * Markdown pass used to split the TeX and turn part of it into an H1.
+   * Replace all TeX with inert placeholders before parsing Markdown, then
+   * restore it as MathJax delimiters in the generated HTML.
+   */
+  function protectMath(markdown) {
+    const displayMath = [];
+    const inlineMath = [];
+
+    let protectedMarkdown = markdown.replace(/\$\$([\s\S]*?)\$\$/g, (_match, tex) => {
+      const token = `HFLLMDISPLAYMATH${displayMath.length}TOKEN`;
+      displayMath.push({ token, tex: tex.trim() });
+      return `\n\n${token}\n\n`;
+    });
+
+    protectedMarkdown = protectedMarkdown.replace(/(^|[^\\])\$([^\n$]+?)\$/g, (_match, prefix, tex) => {
+      const token = `HFLLMINLINEMATH${inlineMath.length}TOKEN`;
+      inlineMath.push({ token, tex: tex.trim() });
+      return `${prefix}${token}`;
+    });
+
+    return { markdown: protectedMarkdown, displayMath, inlineMath };
+  }
+
+  function restoreMath(html, protectedMath) {
+    let restored = html;
+
+    protectedMath.displayMath.forEach(({ token, tex }) => {
+      const mathHtml = `<div class="math-display">\\[${escapeHtml(tex)}\\]</div>`;
+      const wrappedToken = new RegExp(`<p>\\s*${token}\\s*</p>`, 'g');
+      restored = restored.replace(wrappedToken, mathHtml).split(token).join(mathHtml);
+    });
+
+    protectedMath.inlineMath.forEach(({ token, tex }) => {
+      const mathHtml = `<span class="math-inline">\\(${escapeHtml(tex)}\\)</span>`;
+      restored = restored.split(token).join(mathHtml);
+    });
+
+    return restored;
+  }
+
   function slugify(text) {
     return text
       .toLowerCase()
@@ -129,8 +179,8 @@
         const placeholder = document.createElement('div');
         placeholder.className = 'image-placeholder';
         placeholder.textContent = image.alt
-          ? `Illustration file is missing or could not be loaded: ${image.alt}`
-          : 'Illustration file is missing or could not be loaded.';
+          ? `Illustration file is missing or empty: ${image.alt}`
+          : 'Illustration file is missing or empty.';
         image.insertAdjacentElement('afterend', placeholder);
       }, { once: true });
     });
@@ -160,15 +210,18 @@
     try {
       const response = await fetch(chapter.source, { cache: 'no-cache' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const markdown = prepareMarkdown(await response.text());
+
+      const preparedMarkdown = prepareMarkdown(await response.text());
+      const protectedMath = protectMath(preparedMarkdown);
 
       if (!window.marked) throw new Error('The Markdown renderer did not load.');
-      article.innerHTML = window.marked.parse(markdown, {
+      const renderedMarkdown = window.marked.parse(protectedMath.markdown, {
         gfm: true,
         breaks: false,
         mangle: false,
         headerIds: false
       });
+      article.innerHTML = restoreMath(renderedMarkdown, protectedMath);
 
       buildToc();
       handleMissingImages();
@@ -179,9 +232,10 @@
       if (window.MathJax?.startup?.promise) {
         await window.MathJax.startup.promise;
       }
-      if (window.MathJax?.typesetPromise) {
-        await window.MathJax.typesetPromise([article]);
+      if (!window.MathJax?.typesetPromise) {
+        throw new Error('The equation renderer did not load.');
       }
+      await window.MathJax.typesetPromise([article]);
     } catch (error) {
       console.error(error);
       fail(`Could not open Chapter ${chapterNumber}. ${error.message}`);

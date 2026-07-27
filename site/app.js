@@ -1,29 +1,19 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260727.6';
+  const BUILD_VERSION = '20260727.7';
   const chapters = {
     1: {
       title: 'A Token Enters the Dating World',
       source: 'src/chapter-01.md',
-      assetFrom: [
-        'chapter_1_graphics/',
-        'chapter-1-graphics/',
-        '../assets/chapter-01/',
-        '/assets/chapter-01/'
-      ],
+      assetFrom: ['chapter_1_graphics/', 'chapter-1-graphics/', '../assets/chapter-01/', '/assets/chapter-01/'],
       assetTo: 'assets/chapter-01/',
       assetAliases: {}
     },
     2: {
       title: 'Meet the Question Coach',
       source: 'src/chapter-02.md',
-      assetFrom: [
-        'chapter_2_graphics/',
-        'chapter-2-graphics/',
-        '../assets/chapter-02/',
-        '/assets/chapter-02/'
-      ],
+      assetFrom: ['chapter_2_graphics/', 'chapter-2-graphics/', '../assets/chapter-02/', '/assets/chapter-02/'],
       assetTo: 'assets/chapter-02/',
       assetAliases: {
         'assets/chapter-02/02_question_coach_story.png': 'assets/chapter-02/02_question_coach_pipeline.png',
@@ -34,92 +24,24 @@
     3: {
       title: 'Meet the Profile Writer',
       source: 'src/chapter-03.md',
-      assetFrom: [
-        'chapter_3_graphics/',
-        'chapter-3-graphics/',
-        '../assets/chapter-03/',
-        '/assets/chapter-03/'
-      ],
+      assetFrom: ['chapter_3_graphics/', 'chapter-3-graphics/', '../assets/chapter-03/', '/assets/chapter-03/'],
       assetTo: 'assets/chapter-03/',
       assetAliases: {}
     },
-    4: {
-      title: 'When Queries Meet Keys',
-      source: 'src/chapter-04.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    },
-    5: {
-      title: 'Meet the Information Courier',
-      source: 'src/chapter-05.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    },
-    6: {
-      title: 'Many Specialists at Work',
-      source: 'src/chapter-06.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    },
-    7: {
-      title: 'The Team Lead Combines the Reports',
-      source: 'src/chapter-07.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    },
-    8: {
-      title: 'The Private Thinking Room',
-      source: 'src/chapter-08.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    },
-    9: {
-      title: 'Every Token Needs an Address',
-      source: 'src/chapter-09.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    },
-    10: {
-      title: 'The Residual Stream Climbs the Stack',
-      source: 'src/chapter-10.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    },
-    11: {
-      title: 'The Final Audition',
-      source: 'src/chapter-11.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    },
-    12: {
-      title: 'The Answer Key Moves One Step Ahead',
-      source: 'src/chapter-12.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    },
-    13: {
-      title: 'Meet the Scorekeeper',
-      source: 'src/chapter-13.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    },
-    14: {
-      title: 'The Blame Travels Backward',
-      source: 'src/chapter-14.md',
-      assetFrom: [],
-      assetTo: '',
-      assetAliases: {}
-    }
+    4: { title: 'When Queries Meet Keys', source: 'src/chapter-04.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    5: { title: 'Meet the Information Courier', source: 'src/chapter-05.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    6: { title: 'Many Specialists at Work', source: 'src/chapter-06.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    7: { title: 'The Team Lead Combines the Reports', source: 'src/chapter-07.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    8: { title: 'The Private Thinking Room', source: 'src/chapter-08.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    9: { title: 'Every Token Needs an Address', source: 'src/chapter-09.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    10: { title: 'The Residual Stream Climbs the Stack', source: 'src/chapter-10.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    11: { title: 'The Final Audition', source: 'src/chapter-11.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    12: { title: 'The Answer Key Moves One Step Ahead', source: 'src/chapter-12.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    13: { title: 'Meet the Scorekeeper', source: 'src/chapter-13.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    14: { title: 'The Blame Travels Backward', source: 'src/chapter-14.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    15: { title: 'The Training Factory Never Sees the Whole Library', source: 'src/chapter-15.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    16: { title: 'The Model Outgrows One Machine', source: 'src/chapter-16.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    17: { title: 'From Completion Machine to Helpful Assistant', source: 'src/chapter-17.md', assetFrom: [], assetTo: '', assetAliases: {} }
   };
 
   const params = new URLSearchParams(location.search);
@@ -139,7 +61,7 @@
   }
 
   if (!chapter) {
-    fail('That chapter does not exist yet. Return to the chapter list and choose Chapters 1–14.');
+    fail('That chapter does not exist yet. Return to the chapter list and choose Chapters 1–17.');
     return;
   }
 
@@ -169,19 +91,9 @@
   }
 
   function escapeHtml(text) {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  /*
-   * Marked treats a line containing only "=" as a Setext heading underline.
-   * Several display equations intentionally put "=" on its own line, so the
-   * Markdown pass used to split the TeX and turn part of it into an H1.
-   * Replace all TeX with inert placeholders before parsing Markdown, then
-   * restore it as MathJax delimiters in the generated HTML.
-   */
   function protectMath(markdown) {
     const displayMath = [];
     const inlineMath = [];
@@ -229,10 +141,9 @@
 
   function buildToc() {
     const used = new Map();
-    const headings = [...article.querySelectorAll('h1, h2, h3')];
     const links = [];
 
-    headings.forEach((heading, index) => {
+    [...article.querySelectorAll('h1, h2, h3')].forEach((heading, index) => {
       const base = slugify(heading.textContent);
       const count = used.get(base) || 0;
       used.set(base, count + 1);
@@ -273,6 +184,7 @@
 
   function buildFooterNavigation() {
     const items = [];
+
     if (chapters[chapterNumber - 1]) {
       const previous = document.createElement('a');
       previous.href = chapterUrl(chapterNumber - 1);
@@ -288,21 +200,20 @@
       next.textContent = `Chapter ${chapterNumber + 1}: ${chapters[chapterNumber + 1].title} →`;
       items.push(next);
     }
+
     footerNav.replaceChildren(...items);
   }
 
   async function typesetMath() {
     try {
-      if (window.MathJax?.startup?.promise) {
-        await window.MathJax.startup.promise;
-      }
+      if (window.MathJax?.startup?.promise) await window.MathJax.startup.promise;
       if (window.MathJax?.typesetPromise) {
         await window.MathJax.typesetPromise([article]);
       } else {
-        console.warn('The equation renderer did not load; showing the chapter with raw equation delimiters.');
+        console.warn('The equation renderer did not load; showing raw equation delimiters.');
       }
     } catch (error) {
-      console.error('MathJax could not typeset this chapter. The chapter text remains available.', error);
+      console.error('MathJax could not typeset this chapter. The text remains available.', error);
     }
   }
 
@@ -323,15 +234,14 @@
         mangle: false,
         headerIds: false
       });
-      article.innerHTML = restoreMath(renderedMarkdown, protectedMath);
 
+      article.innerHTML = restoreMath(renderedMarkdown, protectedMath);
       buildToc();
       handleMissingImages();
       buildFooterNavigation();
       loading.hidden = true;
       errorBox.hidden = true;
       article.hidden = false;
-
       await typesetMath();
     } catch (error) {
       console.error(error);

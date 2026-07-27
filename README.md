@@ -38,7 +38,7 @@ The Pages site includes a browser-side preview login. This is suitable only as a
 16. [The Model Outgrows One Machine](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=16)
 17. [From Completion Machine to Helpful Assistant](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=17)
 
-Chapters 4–17 currently use equations, tables, text diagrams, and worked calculations without illustration assets. A small set of high-value graphics will be added after technical review.
+Chapters 4–17 currently use equations, tables, text diagrams, and worked calculations without final illustration assets. Detailed production specifications are complete for the planned graphics.
 
 ## Repository layout
 
@@ -70,8 +70,29 @@ Chapters 15–17 expand that one update into a complete model-development system
 
 ## Visual development plans
 
-- [`docs/inference-loop-scene-master-plan.md`](docs/inference-loop-scene-master-plan.md) — canonical visual reference for Chapters 1–11, grounded in the implemented Chapters 1–3 artwork and extended into scene briefs for Chapters 4–11.
-- [`docs/training-loop-scene-master-plan.md`](docs/training-loop-scene-master-plan.md) — canonical character bible, visual metaphor system, and storyboard map for the training loop and Chapters 12–17.
+- [`docs/inference-loop-scene-master-plan.md`](docs/inference-loop-scene-master-plan.md) — canonical visual reference for Chapters 1–11, grounded in the implemented Chapters 1–3 artwork.
+- [`docs/training-loop-scene-master-plan.md`](docs/training-loop-scene-master-plan.md) — canonical character bible and storyboard map for Chapters 12–17.
+
+### Chapter production specifications
+
+Each chapter plan defines the chapter hero, recurring props, every planned asset, intended placement, exact numerical overlays, story-to-mathematics mapping, technical exclusions, alt-text drafts, review checklist, and definition of done.
+
+- [Chapter 4](docs/chapter-04/chapter-04-scene-plan.md)
+- [Chapter 5](docs/chapter-05/chapter-05-scene-plan.md)
+- [Chapter 6](docs/chapter-06/chapter-06-scene-plan.md)
+- [Chapter 7](docs/chapter-07/chapter-07-scene-plan.md)
+- [Chapter 8](docs/chapter-08/chapter-08-scene-plan.md)
+- [Chapter 9](docs/chapter-09/chapter-09-scene-plan.md)
+- [Chapter 10](docs/chapter-10/chapter-10-scene-plan.md)
+- [Chapter 11](docs/chapter-11/chapter-11-scene-plan.md)
+- [Chapter 12](docs/chapter-12/chapter-12-scene-plan.md)
+- [Chapter 13](docs/chapter-13/chapter-13-scene-plan.md)
+- [Chapter 14](docs/chapter-14/chapter-14-scene-plan.md)
+- [Chapter 15](docs/chapter-15/chapter-15-scene-plan.md)
+- [Chapter 16](docs/chapter-16/chapter-16-scene-plan.md)
+- [Chapter 17](docs/chapter-17/chapter-17-scene-plan.md)
+
+The Chapter 5–17 plans contain 112 planned artwork targets in total. Final image generation and chapter integration remain separate production steps.
 
 ## Working agreement
 

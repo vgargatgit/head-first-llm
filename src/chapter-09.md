@@ -410,7 +410,7 @@ R(\phi)=
 \end{bmatrix}
 $$
 
-At position \(m\), a frequency \(	heta\) gives angle:
+At position \(m\), a frequency parameter \(	heta\) gives angle:
 
 $$
 m\theta

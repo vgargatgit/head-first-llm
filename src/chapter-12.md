@@ -18,7 +18,7 @@ current token sequence
 
 That explains how a trained model generates.
 
-But training begins with a different question:
+Training begins with a different question:
 
 > Given ordinary text, where do the questions and correct answers come from?
 
@@ -55,9 +55,7 @@ The model can turn this one sequence into several next-token questions:
 | `<BOS> The cat sat on the mat` | `.` |
 | `<BOS> The cat sat on the mat .` | `<EOS>` |
 
-The training document did not need a human to label eight separate questions.
-
-Its ordering created the labels automatically.
+One short sequence created eight prediction targets without a human writing eight separate labels.
 
 # Shift the sequence by one position
 
@@ -70,15 +68,15 @@ $$
 The model inputs are:
 
 $$
-X_{	ext{ids}}
+X_{\mathrm{ids}}
 =
 [t_0,t_1,t_2,\ldots,t_7]
 $$
 
-The targets are the same sequence shifted one step to the left:
+The targets are the same sequence shifted one step ahead:
 
 $$
-Y_{	ext{ids}}
+Y_{\mathrm{ids}}
 =
 [t_1,t_2,t_3,\ldots,t_8]
 $$
@@ -86,17 +84,17 @@ $$
 For our sentence:
 
 $$
-X_{	ext{ids}}
+X_{\mathrm{ids}}
 =
-[	exttt{<BOS>},	exttt{The},	exttt{cat},	exttt{sat},	exttt{on},	exttt{the},	exttt{mat},	exttt{.}]
+[\mathtt{<BOS>},\mathtt{The},\mathtt{cat},\mathtt{sat},\mathtt{on},\mathtt{the},\mathtt{mat},\mathtt{.}]
 $$
 
 and:
 
 $$
-Y_{	ext{ids}}
+Y_{\mathrm{ids}}
 =
-[	exttt{The},	exttt{cat},	exttt{sat},	exttt{on},	exttt{the},	exttt{mat},	exttt{.},	exttt{<EOS>}]
+[\mathtt{The},\mathtt{cat},\mathtt{sat},\mathtt{on},\mathtt{the},\mathtt{mat},\mathtt{.},\mathtt{<EOS>}]
 $$
 
 The alignment is:
@@ -140,29 +138,27 @@ Use this tiny vocabulary:
 | 7 | `.` |
 | 8 | `<EOS>` |
 
-Then the model input is:
+Then:
 
 $$
-X_{	ext{ids}}=[0,1,2,3,4,5,6,7]
+X_{\mathrm{ids}}=[0,1,2,3,4,5,6,7]
 $$
 
-and the label sequence is:
+and:
 
 $$
-Y_{	ext{ids}}=[1,2,3,4,5,6,7,8]
+Y_{\mathrm{ids}}=[1,2,3,4,5,6,7,8]
 $$
 
-Nothing in this shift changes the vocabulary.
-
-It changes which token ID is treated as the answer for each prediction row.
+The shift changes the answer associated with each row. It does not change the vocabulary.
 
 # One forward pass creates all prediction rows
 
-Chapter 11 used the final row because generation needed only the token after the current prefix.
+Chapter 11 used only the final row because generation needed the token after the current prefix.
 
-Training uses all valid rows at once.
+Training uses every valid row at once.
 
-For a sequence length:
+For sequence length:
 
 $$
 T=8
@@ -171,7 +167,7 @@ $$
 and model width:
 
 $$
-d_{	ext{model}}
+d_{\mathrm{model}}
 $$
 
 the Transformer stack produces:
@@ -179,15 +175,13 @@ the Transformer stack produces:
 $$
 H
 \in
-\mathbb{R}^{T	imes d_{	ext{model}}}
+\mathbb{R}^{T\mathbin{×}d_{\mathrm{model}}}
 $$
 
 The vocabulary projection produces:
 
 $$
-L
-=
-HW_{	ext{vocab}}+b
+L=HW_{\mathrm{vocab}}+b
 $$
 
 with:
@@ -195,7 +189,7 @@ with:
 $$
 L
 \in
-\mathbb{R}^{T	imes|\mathcal{V}|}
+\mathbb{R}^{T\mathbin{×}|\mathcal{V}|}
 $$
 
 Each row of \(L\) scores the vocabulary for one next-token target.
@@ -234,21 +228,21 @@ So the hidden state at input position 3 can use:
 <BOS> | The | cat | sat
 ```
 
-but it cannot use:
+but cannot use:
 
 ```text
 on | the | mat | .
 ```
 
-The target `on` is used only by the loss function after the model has produced position 3's logits.
+The target `on` is used by the loss function only after position 3's logits have been produced.
 
 <div class="warning">
 
 ## The answer is present in the batch, not visible through attention
 
-Training software stores the complete sequence and its shifted labels together.
+Training software stores the complete sequence and shifted labels together. Causal masking prevents a prediction row from consulting future hidden states.
 
-Causal masking prevents a prediction position from consulting future token states. The target participates in scoring the prediction; it is not supplied as an input feature to that prediction row.
+The label scores the prediction; it is not an input feature to that prediction.
 
 </div>
 
@@ -256,36 +250,30 @@ Causal masking prevents a prediction position from consulting future token state
 
 During standard next-token pretraining, each position receives the true earlier tokens from the training sequence.
 
-For the question whose answer is `mat`, the model is given the true prefix:
+For the question whose answer is `mat`, the model receives the true prefix:
 
 ```text
 <BOS> The cat sat on the
 ```
 
-It is not forced to continue from mistakes it may have predicted at previous training positions.
+It is not required to continue from mistakes it may have predicted at earlier training positions.
 
 This practice is commonly called **teacher forcing**.
 
-The teacher supplies the correct history; the model predicts the next item in that history.
-
-# Teacher forcing is not the same as copying the answer
-
 For position \(i\):
 
-- input token \(t_i\) is visible at that position;
-- previous tokens \(t_0,\ldots,t_{i-1}\) are visible through causal attention;
-- target token \(t_{i+1}\) is not visible through the forward path;
-- the loss compares the model's prediction with \(t_{i+1}\).
-
-The model must infer the next token from the allowed prefix.
+- token \(t_i\) is the current input token;
+- tokens \(t_0,\ldots,t_{i-1}\) are visible through causal attention;
+- token \(t_{i+1}\) is the target;
+- the loss compares the model's row-\(i\) distribution with \(t_{i+1}\).
 
 # Training and generation use prefixes differently
 
 During training:
 
 ```text
-true prefix from dataset
-    -> predict every next token in parallel
+true prefix from the dataset
+    -> predict all next-token targets in parallel
 ```
 
 During generation:
@@ -297,34 +285,30 @@ prompt plus previously selected model tokens
     -> repeat
 ```
 
-This creates an important difference.
-
 During training, the model normally sees clean ground-truth histories.
 
-During generation, it may have to continue from its own imperfect earlier selections.
+During generation, it may need to continue from its own imperfect earlier selections.
 
-This difference is sometimes called **exposure bias**. It does not invalidate teacher forcing, but it explains why next-token accuracy on training-like prefixes is not the whole story of long-form generation quality.
+This difference is often called **exposure bias**. It does not invalidate teacher forcing, but it helps explain why low next-token loss is not the whole story of long-form generation quality.
 
 # The batch dimension
-
-Training rarely processes only one sequence.
 
 Suppose a batch contains \(B\) sequences, each with training length \(T\).
 
 Input IDs have shape:
 
 $$
-X_{	ext{ids}}
+X_{\mathrm{ids}}
 \in
-\mathbb{N}^{B	imes T}
+\mathbb{N}^{B\mathbin{×}T}
 $$
 
 Labels have shape:
 
 $$
-Y_{	ext{ids}}
+Y_{\mathrm{ids}}
 \in
-\mathbb{N}^{B	imes T}
+\mathbb{N}^{B\mathbin{×}T}
 $$
 
 Final hidden states have shape:
@@ -332,7 +316,7 @@ Final hidden states have shape:
 $$
 H
 \in
-\mathbb{R}^{B	imes T	imes d_{	ext{model}}}
+\mathbb{R}^{B\mathbin{×}T\mathbin{×}d_{\mathrm{model}}}
 $$
 
 Vocabulary logits have shape:
@@ -340,52 +324,48 @@ Vocabulary logits have shape:
 $$
 L
 \in
-\mathbb{R}^{B	imes T	imes|\mathcal{V}|}
+\mathbb{R}^{B\mathbin{×}T\mathbin{×}|\mathcal{V}|}
 $$
 
-The loss function compares every valid \((b,t)\) logit row with one target token ID.
+The loss compares every valid \((b,t)\) logit row with one target token ID.
 
 # Variable-length sequences and padding
 
 Sequences in one batch may have different lengths.
 
-A common solution pads shorter sequences to a shared length:
+A common solution pads shorter sequences to a shared tensor length:
 
 ```text
 Sequence A: <BOS> The cat sat . <EOS>
 Sequence B: <BOS> The cat sat <PAD> <PAD>
 ```
 
-Padding helps create rectangular tensors, but padding tokens should not normally contribute to the language-model loss.
+Padding creates rectangular tensors, but padding positions should not normally contribute to the language-model loss.
 
 A loss mask can mark valid target positions:
 
 $$
-m_{b,t}
-\in
-\{0,1\}
+m_{b,t}\in\{0,1\}
 $$
 
 where:
 
-- \(m_{b,t}=1\) means score this target;
-- \(m_{b,t}=0\) means ignore this target.
+- \(m_{b,t}=1\): score this target;
+- \(m_{b,t}=0\): ignore this target.
 
-Many software libraries use a special ignored label value, often `-100`, to express the same idea. That number is a library convention, not a vocabulary token that the model must predict.
+Many software libraries use a special ignored label value, often `-100`. That is a library convention, not a vocabulary token the model must predict.
 
 # Attention masks and loss masks solve different problems
-
-These masks are related but not interchangeable.
 
 | Mask | Purpose |
 |---|---|
 | Causal attention mask | Prevent a position from attending to future positions |
 | Padding attention mask | Prevent attention from treating padding as meaningful context |
-| Loss mask | Prevent selected target positions from contributing to the loss |
+| Loss mask | Prevent selected target positions from contributing to the objective |
 
-A correct training pipeline may need more than one of them.
+A padding position may need to be blocked in attention and ignored in the loss.
 
-For example, a padding position might be blocked in attention and also ignored in the loss.
+The two actions are related, but they are not the same operation.
 
 # Document boundaries matter
 
@@ -397,37 +377,28 @@ Document A ends here. Document B begins here.
 
 Without a boundary convention, the model may be trained to predict the first token of Document B directly after the final token of Document A.
 
-Training pipelines can use:
+Pipelines can use:
 
-- end-of-sequence tokens;
-- beginning-of-sequence tokens;
+- beginning- and end-of-sequence tokens;
 - attention segmentation;
 - packing metadata;
-- loss masks around boundaries.
+- loss masks around selected boundaries.
 
-The exact choice depends on the model and data pipeline.
+The tokenizer, model, and data pipeline must agree on the convention.
 
 <div class="warning">
 
-## Efficient packing must preserve meaning
+## Efficient packing must preserve the intended task
 
-Packing several short examples into one fixed-length tensor can reduce wasted padding.
+Packing several short examples into one fixed-length tensor reduces wasted padding.
 
-But the implementation must decide whether examples may attend across boundaries and whether cross-boundary next-token targets should be scored. Efficiency should not silently change the intended training task.
+But the implementation must decide whether examples may attend across boundaries and whether cross-boundary targets should be scored. Efficiency should not silently change the supervision.
 
 </div>
 
 # Long documents become context windows
 
-If a document contains more tokens than the model's training context length \(C\), it must be divided into windows.
-
-One possible decomposition is:
-
-```text
-window 1: t0 ... tC
-window 2: tC ... t2C
-window 3: t2C ... t3C
-```
+If a document contains more tokens than the training context length \(C\), it must be divided into windows.
 
 Pipelines may use:
 
@@ -436,30 +407,28 @@ Pipelines may use:
 - document-aware packing;
 - variable sequence lengths.
 
-Every choice affects which token relationships appear together during training and which targets contribute to the objective.
+These choices affect which relationships appear together and which targets contribute to the objective.
 
-# Boundary tokens are part of the learning task
+# Boundary tokens are learnable events
 
-The `<BOS>` token can teach the model about sequence beginnings.
+The `<BOS>` token can mark a sequence beginning.
 
 The `<EOS>` token can teach the model when a sequence or document should end.
 
-For our example, the final training pair is:
+For our example, the final pair is:
 
 ```text
 input row:  .
 target:     <EOS>
 ```
 
-Without an end target, the model would have less direct supervision about stopping at that boundary.
-
-Not every architecture uses the same set of boundary tokens, so the tokenizer and training pipeline must agree.
+Not every model uses the same special tokens, so this behaviour is architecture- and tokenizer-specific.
 
 # A probability record for the next chapter
 
-Suppose one forward pass assigns these probabilities to the correct targets:
+Suppose a separate illustrative forward pass assigns these probabilities to the correct targets:
 
-| Input token | Correct target | Probability assigned to correct target |
+| Input token | Correct target | Correct-target probability |
 |---|---|---:|
 | `<BOS>` | `The` | 0.50 |
 | `The` | `cat` | 0.25 |
@@ -470,45 +439,41 @@ Suppose one forward pass assigns these probabilities to the correct targets:
 | `mat` | `.` | 0.80 |
 | `.` | `<EOS>` | 0.50 |
 
+This full-sequence table is deliberately separate from Chapter 11's focused five-token distribution. Chapter 13 will use both examples for different calculations.
+
 A model that assigns higher probability to the correct target should receive a better score.
 
-But how should eight probabilities be turned into one scalar training objective?
-
-That is the job of cross-entropy loss.
+How should these probabilities become one scalar objective?
 
 # Common training-example mistakes
 
-## Mistake 1: using the same token as both input and target
+## Mistake 1: using the same token as input and target
 
-The target is normally the token one position ahead, not the token already occupying the input row.
+The target is normally the token one position ahead.
 
-## Mistake 2: shifting inputs and labels in the same direction
+## Mistake 2: shifting inputs and labels together
 
-If both arrays are shifted together, the alignment does not change. The labels must be offset relative to the inputs.
+If both arrays move by the same amount, their relative alignment does not change.
 
 ## Mistake 3: believing parallel training reveals future tokens
 
-Parallel tensor computation and causal visibility are different concepts. The causal mask still blocks future attention.
+Parallel tensor execution and causal visibility are different concepts.
 
 ## Mistake 4: scoring padding tokens
 
-Padding is usually structural filler, not a desired language target. Invalid positions should be masked from the loss.
+Padding is structural filler, not normally a genuine language target.
 
-## Mistake 5: confusing the attention mask with the loss mask
+## Mistake 5: confusing attention masks with loss masks
 
-One controls information flow inside the model. The other controls which predictions contribute to the objective.
+One controls information flow. The other controls which predictions contribute to the objective.
 
-## Mistake 6: using model-generated tokens as the standard pretraining prefix
+## Mistake 6: forgetting document boundaries
 
-Standard teacher-forced next-token pretraining uses ground-truth previous tokens from the dataset.
+Blind concatenation can create unintended contexts and targets.
 
-## Mistake 7: forgetting document boundaries
+## Mistake 7: assuming one sequence creates one label
 
-Blind concatenation can create unintended cross-document contexts and targets.
-
-## Mistake 8: assuming one text sequence creates one training label
-
-A length-\(T+1\) token segment can produce up to \(T\) next-token labels.
+A segment containing \(T+1\) ordered tokens can supply up to \(T\) next-token targets.
 
 # Checkpoint
 
@@ -516,45 +481,45 @@ A length-\(T+1\) token segment can produce up to \(T\) next-token labels.
 
 ## 1. How are next-token labels created?
 
-Copy the token sequence and shift the target sequence one position ahead relative to the inputs.
+Shift the target sequence one position ahead relative to the inputs.
 
-## 2. What is the target for the input row containing `sat`?
+## 2. What is the target for the row containing `sat`?
 
 `on`.
 
-## 3. Why can all positions be processed in parallel during training?
+## 3. Why can all rows be processed in parallel?
 
-The causal mask enforces permitted information flow even though tensor operations for all rows run together.
+The causal mask still restricts which positions each row can use.
 
 ## 4. What is teacher forcing?
 
-Supplying the true previous tokens from the training data as the prefix for each next-token prediction.
+Supplying the true previous tokens from the training data as the prediction prefix.
 
-## 5. Does teacher forcing reveal the current target to the predicting row?
+## 5. Does teacher forcing reveal the current target to the prediction row?
 
-No. The target is used to score the output after the causally restricted forward calculation.
+No. The target is used only to score the causally restricted output.
 
-## 6. What is the logit tensor shape for batch size \(B\), sequence length \(T\), and vocabulary size \(|\mathcal{V}|\)?
+## 6. What is the logit tensor shape for batch size \(B\), length \(T\), and vocabulary size \(|\mathcal{V}|\)?
 
 $$
-B	imes T	imes|\mathcal{V}|
+B\mathbin{×}T\mathbin{×}|\mathcal{V}|
 $$
 
-## 7. Why are padding labels ignored?
+## 7. Why ignore padding labels?
 
-They do not represent genuine next-token learning targets.
+They do not represent genuine next-token targets.
 
 ## 8. What is the difference between an attention mask and a loss mask?
 
-An attention mask controls what information a position can use. A loss mask controls whether that position's prediction contributes to the training objective.
+An attention mask controls accessible information. A loss mask controls whether a prediction is scored.
 
 ## 9. Why include an end-of-sequence target?
 
-It gives the model direct supervision about sequence or document termination.
+It provides direct supervision about termination at that boundary.
 
 ## 10. How many targets can nine ordered tokens provide after a one-position shift?
 
-Eight targets.
+Eight.
 
 </div>
 
@@ -566,7 +531,7 @@ $$
 [t_0,t_1,\ldots,t_T]
 $$
 
-the training input is:
+the input is:
 
 $$
 [t_0,t_1,\ldots,t_{T-1}]
@@ -588,7 +553,7 @@ In our story:
 
 # Coming next: meet the scorekeeper
 
-The model now produces one probability distribution per training position, and each position has one correct target ID.
+The model now produces one distribution per training position, and each position has one correct target.
 
 The next chapter will turn those predictions into:
 
@@ -596,4 +561,4 @@ The next chapter will turn those predictions into:
 - cross-entropy loss;
 - a masked batch average;
 - perplexity;
-- the first gradient signal that tells the model which logits should move.
+- the first gradient signal telling the model which logits should move.

@@ -1,4 +1,7 @@
 (() => {
+  'use strict';
+
+  const BUILD_VERSION = '20260727.3';
   const chapters = {
     1: {
       title: 'A Token Enters the Dating World',
@@ -79,7 +82,8 @@
 
   document.title = `Chapter ${chapterNumber}: ${chapter.title} — LLMs from the Inside Out`;
   document.querySelectorAll('.chapter-nav a').forEach(link => {
-    if (link.getAttribute('href').endsWith(`chapter=${chapterNumber}`)) {
+    const linkedChapter = Number(new URL(link.href, window.location.href).searchParams.get('chapter'));
+    if (linkedChapter === chapterNumber) {
       link.classList.add('active');
       link.setAttribute('aria-current', 'page');
     }
@@ -200,11 +204,15 @@
     });
   }
 
+  function chapterUrl(number) {
+    return `chapter.html?chapter=${number}&v=${encodeURIComponent(BUILD_VERSION)}`;
+  }
+
   function buildFooterNavigation() {
     const items = [];
     if (chapters[chapterNumber - 1]) {
       const previous = document.createElement('a');
-      previous.href = `chapter.html?chapter=${chapterNumber - 1}`;
+      previous.href = chapterUrl(chapterNumber - 1);
       previous.textContent = `← Chapter ${chapterNumber - 1}: ${chapters[chapterNumber - 1].title}`;
       items.push(previous);
     } else {
@@ -213,17 +221,34 @@
 
     if (chapters[chapterNumber + 1]) {
       const next = document.createElement('a');
-      next.href = `chapter.html?chapter=${chapterNumber + 1}`;
+      next.href = chapterUrl(chapterNumber + 1);
       next.textContent = `Chapter ${chapterNumber + 1}: ${chapters[chapterNumber + 1].title} →`;
       items.push(next);
     }
     footerNav.replaceChildren(...items);
   }
 
+  async function typesetMath() {
+    try {
+      if (window.MathJax?.startup?.promise) {
+        await window.MathJax.startup.promise;
+      }
+      if (window.MathJax?.typesetPromise) {
+        await window.MathJax.typesetPromise([article]);
+      } else {
+        console.warn('The equation renderer did not load; showing the chapter with raw equation delimiters.');
+      }
+    } catch (error) {
+      console.error('MathJax could not typeset this chapter. The chapter text remains available.', error);
+    }
+  }
+
   async function render() {
     try {
-      const response = await fetch(chapter.source, { cache: 'no-cache' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const sourceUrl = new URL(chapter.source, window.location.href);
+      sourceUrl.searchParams.set('v', BUILD_VERSION);
+      const response = await fetch(sourceUrl, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`chapter source returned HTTP ${response.status}`);
 
       const preparedMarkdown = prepareMarkdown(await response.text());
       const protectedMath = protectMath(preparedMarkdown);
@@ -241,15 +266,10 @@
       handleMissingImages();
       buildFooterNavigation();
       loading.hidden = true;
+      errorBox.hidden = true;
       article.hidden = false;
 
-      if (window.MathJax?.startup?.promise) {
-        await window.MathJax.startup.promise;
-      }
-      if (!window.MathJax?.typesetPromise) {
-        throw new Error('The equation renderer did not load.');
-      }
-      await window.MathJax.typesetPromise([article]);
+      await typesetMath();
     } catch (error) {
       console.error(error);
       fail(`Could not open Chapter ${chapterNumber}. ${error.message}`);

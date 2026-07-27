@@ -2,6 +2,15 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-27 — Inference-loop visual master plan added
+
+- Added `docs/inference-loop-scene-master-plan.md` as the canonical character bible, visual metaphor system, and storyboard map for Chapters 1–11.
+- Documented the implemented Chapter 1–3 scene inventories from the existing Markdown and asset plans, including hidden-state cards, the evolving passport, the Question Coach, the Profile Writer, exact calculation panels, shared-parameter scenes, and chapter handoffs.
+- Defined recurring inference characters, props, machines, places, colour and arrow conventions, and the distinction between the book’s teaching order and the model’s actual computational order.
+- Added a complete decoding-step storyboard from identity and position through attention, Values, multiple heads, residual and MLP updates, the Transformer stack, per-layer KV caches, vocabulary logits, decoding, and token-by-token repetition.
+- Added production-ready scene briefs and proposed asset names for Chapters 4–11, plus technical guardrails, a scene specification template, and an illustration definition of done.
+- Linked both inference and training scene master plans from the README.
+
 ## 2026-07-27 — Training-loop visual master plan added
 
 - Added `docs/training-loop-scene-master-plan.md` as the canonical character bible, visual metaphor system, and storyboard map for Chapters 12–17.

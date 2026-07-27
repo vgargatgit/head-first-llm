@@ -34,8 +34,11 @@ The Pages site includes a browser-side preview login. This is suitable only as a
 12. [The Answer Key Moves One Step Ahead](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=12)
 13. [Meet the Scorekeeper](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=13)
 14. [The Blame Travels Backward](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=14)
+15. [The Training Factory Never Sees the Whole Library](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=15)
+16. [The Model Outgrows One Machine](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=16)
+17. [From Completion Machine to Helpful Assistant](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=17)
 
-Chapters 4–14 currently use equations, tables, text diagrams, and worked calculations without illustration assets. A small set of high-value graphics will be added after technical review.
+Chapters 4–17 currently use equations, tables, text diagrams, and worked calculations without illustration assets. A small set of high-value graphics will be added after technical review.
 
 ## Repository layout
 
@@ -50,31 +53,19 @@ Chapters 4–14 currently use equations, tables, text diagrams, and worked calcu
 
 ## Current workspace status
 
-The complete Chapter 1–14 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites image paths for the illustrated chapters and renders Chapters 4–14 directly without graphics.
+The complete Chapter 1–17 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites image paths for the illustrated chapters and renders Chapters 4–17 directly without graphics.
 
-Chapters 6–8 carry one continuous numerical example through:
+Chapters 1–8 build one Transformer block from hidden states, Query/Key/Value projections, causal attention, multiple heads, residual paths, normalisation, and the MLP.
 
-- two-head causal self-attention;
-- concatenation and the output projection;
-- residual addition and LayerNorm;
-- a position-wise MLP;
-- the output of one simplified Transformer block.
+Chapters 9–11 complete inference through positional information, stacked blocks, KV caches, vocabulary logits, decoding, and autoregressive generation.
 
-Chapters 9–11 complete the forward inference path through:
+Chapters 12–14 begin learning through shifted targets, teacher forcing, cross-entropy, perplexity, backpropagation, and optimiser updates.
 
-- token and position representations, including a worked RoPE example;
-- repeated refinement through a Transformer stack and per-layer KV caches;
-- final normalisation and vocabulary projection;
-- logits, output softmax, temperature, top-k, top-p, and autoregressive generation.
+Chapters 15–17 expand that one update into a complete model-development system:
 
-Chapters 12–14 begin the learning path through:
-
-- one-position-shifted next-token targets and teacher forcing;
-- causal, padding, and loss masks;
-- cross-entropy, masked token averages, and perplexity;
-- the exact softmax-cross-entropy gradient `p - y`;
-- backpropagation through the vocabulary head, residual paths, MLPs, attention, and embeddings;
-- a worked gradient-descent update and practical notes on AdamW, clipping, accumulation, and mixed precision.
+- effective token batches, gradient accumulation, data mixtures, learning-rate schedules, validation, and resumable checkpoints;
+- data parallelism, model-state sharding, tensor parallelism, pipeline parallelism, activation checkpointing, and distributed communication;
+- chat templates, supervised fine-tuning, response-only loss, preference data, reward modelling, RLHF, DPO, LoRA, and post-training evaluation.
 
 ## Working agreement
 

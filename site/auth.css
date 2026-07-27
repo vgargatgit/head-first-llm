@@ -1,0 +1,126 @@
+.login-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(101, 70, 168, .18), transparent 30%),
+    radial-gradient(circle at 86% 82%, rgba(47, 124, 83, .13), transparent 28%),
+    var(--canvas);
+}
+
+.login-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 28px;
+}
+
+.login-card {
+  width: min(520px, 100%);
+  padding: clamp(32px, 7vw, 58px);
+  background: var(--paper);
+  border: 1px solid rgba(101, 70, 168, .18);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+
+.login-card h1 {
+  margin: 0;
+  color: var(--purple-dark);
+  font-family: "Comic Sans MS", "Segoe Print", ui-rounded, sans-serif;
+  font-size: clamp(2.25rem, 7vw, 3.8rem);
+  line-height: 1.05;
+  letter-spacing: -.03em;
+}
+
+.login-copy {
+  margin: 20px 0 30px;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.login-form {
+  display: grid;
+  gap: 10px;
+}
+
+.login-form label {
+  margin-top: 8px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 13px 15px;
+  color: var(--ink);
+  background: white;
+  border: 1px solid #cfc5dd;
+  border-radius: 12px;
+  font: inherit;
+  outline: none;
+}
+
+.login-form input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 4px rgba(101, 70, 168, .14);
+}
+
+.login-button,
+.logout-button {
+  border: 0;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.login-button {
+  margin-top: 18px;
+  padding: 13px 20px;
+  color: white;
+  background: var(--purple);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(101, 70, 168, .22);
+}
+
+.login-button:hover {
+  background: var(--purple-dark);
+}
+
+.login-button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.login-error {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  color: #8d2d3c;
+  background: var(--red-pale);
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.header-actions,
+.reader-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logout-button {
+  padding: 8px 13px;
+  color: var(--purple);
+  background: var(--purple-pale);
+  border: 1px solid rgba(101, 70, 168, .2);
+  border-radius: 999px;
+}
+
+.logout-button:hover {
+  color: white;
+  background: var(--purple);
+}
+
+@media (max-width: 620px) {
+  .login-shell { padding: 16px; }
+  .login-card { padding: 30px 24px; border-radius: 22px; }
+  .logout-button { padding: 7px 10px; font-size: .82rem; }
+}

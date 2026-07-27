@@ -47,7 +47,7 @@ Post-training constructs more deliberate examples.
 
 # Three stages with different roles
 
-A simplified modern training path can be described as:
+A simplified path is:
 
 ```text
 pretraining
@@ -120,9 +120,9 @@ The model is trained to predict system, user, and assistant tokens.
 
 ## Response-only loss
 
-System and user tokens provide context, but only assistant-response tokens contribute to the objective.
+System and user tokens provide context, but only assistant-response tokens contribute directly to the objective.
 
-Let a token-level mask be:
+Let the token-level mask be:
 
 $$
 m_i
@@ -142,31 +142,26 @@ $$
 }
 $$
 
-For response-only training:
+The masked prompt still affects assistant hidden states through attention. It simply does not receive direct next-token loss.
 
-```text
-system tokens:    mask 0
-user tokens:      mask 0
-assistant tokens: mask 1
-```
+# A response-mask example with exact alignment
 
-The masked prompt still affects the assistant hidden states through attention. It simply does not receive direct next-token loss.
+Suppose the tokenised sequence is represented as ten conceptual tokens:
 
-# A small response-mask example
+| Position | Token | Region | Loss mask |
+|---:|---|---|---:|
+| 0 | `<SYS>` | System | 0 |
+| 1 | `concise` | System | 0 |
+| 2 | `<USR>` | User | 0 |
+| 3 | `2` | User | 0 |
+| 4 | `+` | User | 0 |
+| 5 | `2` | User | 0 |
+| 6 | `?` | User | 0 |
+| 7 | `<AST>` | Assistant boundary | 0 |
+| 8 | `4` | Assistant response | 1 |
+| 9 | `<EOS>` | Assistant response | 1 |
 
-Suppose the tokenised conversation is:
-
-```text
-<SYS> concise <USR> 2 + 2 ? <AST> 4 <EOS>
-```
-
-Use the mask:
-
-```text
-0     0       0     0 0 0   0     1 1
-```
-
-If the two assistant-region token losses are:
+If the two included token losses are:
 
 $$
 0.30
@@ -183,7 +178,7 @@ $$
 =0.20
 $$
 
-The prompt tokens influence the prediction of `4`, but their own labels are ignored by this objective.
+The prompt and assistant-boundary tokens influence the prediction of `4`, but their own labels are ignored by this response-only mask.
 
 # Demonstration quality matters
 
@@ -201,7 +196,7 @@ Data curation is therefore behavioural specification.
 
 # Fine-tuning can change style faster than knowledge
 
-A small set of demonstrations can strongly change:
+A modest demonstration set can strongly change:
 
 - tone;
 - formatting;
@@ -212,12 +207,7 @@ A small set of demonstrations can strongly change:
 
 Adding reliable factual knowledge is harder.
 
-A model may memorise new facts, but fine-tuning alone does not guarantee that facts are:
-
-- recalled consistently;
-- updated cleanly without conflicts;
-- cited correctly;
-- protected from later forgetting.
+A model may memorise new facts, but fine-tuning alone does not guarantee that they are recalled consistently, updated without conflict, cited correctly, or protected from later forgetting.
 
 Post-training should not be described as a database update API.
 
@@ -261,8 +251,6 @@ It does not automatically reveal why unless rationale or rubric information is a
 
 # Preferences depend on a rubric
 
-Annotators or automated judges need criteria.
-
 A rubric may consider:
 
 - correctness;
@@ -274,9 +262,9 @@ A rubric may consider:
 - calibrated uncertainty;
 - style requirements.
 
-Different rubrics can rank the same two responses differently.
+Different rubrics can rank the same responses differently.
 
-Preference data is therefore not a universal measure of goodness. It encodes a particular policy and evaluation process.
+Preference data encodes a particular policy and evaluation process, not one universal definition of goodness.
 
 # The sequence log-probability of a response
 
@@ -286,7 +274,7 @@ $$
 y=(y_1,y_2,\ldots,y_T)
 $$
 
-conditioned on prompt \(x\), the model's response log-probability is:
+conditioned on prompt \(x\), the response log-probability is:
 
 $$
 \log\pi_{\theta}(y\mid x)
@@ -296,7 +284,7 @@ $$
 (y_i\mid x,y_{<i})
 $$
 
-Long responses contain more summed terms, so implementations must be explicit about whether they use sums, averages, length normalisation, or other adjustments.
+Long responses contain more summed terms, so an implementation must be explicit about sums, averages, length normalisation, and masking.
 
 # Reward modelling and RLHF
 
@@ -308,7 +296,7 @@ $$
 r_{\phi}(x,y)
 $$
 
-A preference likelihood can be written using the chosen and rejected reward difference:
+A preference likelihood can be written as:
 
 $$
 P(y_c\succ y_r\mid x)
@@ -325,9 +313,9 @@ $$
 \sigma(a)=\frac{1}{1+e^{-a}}
 $$
 
-A reinforcement-learning stage can then optimise the policy to obtain higher reward while constraining it from moving too far from a reference policy.
+A reinforcement-learning stage can then optimise the policy for higher reward while constraining it from moving too far from a reference policy.
 
-This broad pipeline is commonly called reinforcement learning from human feedback, or RLHF, when humans provide the underlying preference labels.
+This broad pipeline is commonly called reinforcement learning from human feedback, or RLHF, when humans supply the underlying preference labels.
 
 # Why constrain the policy?
 
@@ -335,7 +323,7 @@ If optimisation pursues only a learned reward score, the policy can exploit weak
 
 A reference-policy constraint discourages extreme movement away from a known model.
 
-One common regularised objective has the conceptual form:
+One conceptual regularised objective is:
 
 $$
 \mathrm{reward}
@@ -347,13 +335,11 @@ $$
 
 The coefficient \(\beta\) controls the strength of the reference constraint.
 
-A larger constraint preserves more reference behaviour but can limit adaptation.
-
 # Direct preference optimisation
 
-Direct preference optimisation, or DPO, is one approach that trains the policy directly from chosen and rejected responses without first using the reward model as a separately deployed optimisation target.
+Direct preference optimisation, or DPO, trains the policy directly from chosen and rejected responses.
 
-Define the policy log-probability margin:
+Define the policy margin:
 
 $$
 \Delta_{\theta}
@@ -386,17 +372,15 @@ $$
 \right)
 $$
 
-The objective rewards the policy for preferring the chosen response more strongly than the reference policy does.
+The policy is rewarded for preferring the chosen response more strongly than the reference policy does.
 
 # A small DPO calculation
 
-Suppose the current policy assigns:
+Suppose:
 
 $$
 \log\pi_{\theta}(y_c\mid x)=-1.2
 $$
-
-and:
 
 $$
 \log\pi_{\theta}(y_r\mid x)=-2.0
@@ -405,18 +389,14 @@ $$
 Then:
 
 $$
-\Delta_{\theta}
-=-1.2-(-2.0)
-=0.8
+\Delta_{\theta}=0.8
 $$
 
-Suppose the reference policy gives:
+Suppose the reference gives:
 
 $$
 \log\pi_{\mathrm{ref}}(y_c\mid x)=-1.4
 $$
-
-and:
 
 $$
 \log\pi_{\mathrm{ref}}(y_r\mid x)=-1.8
@@ -425,9 +405,7 @@ $$
 Then:
 
 $$
-\Delta_{\mathrm{ref}}
-=-1.4-(-1.8)
-=0.4
+\Delta_{\mathrm{ref}}=0.4
 $$
 
 With:
@@ -470,36 +448,26 @@ Preference optimisation says:
 
 > Prefer this response over that alternative, relative to a reference or reward criterion.
 
-They can be combined, alternated, or weighted in different recipes.
-
 A preference method does not remove the need for high-quality demonstrations, and SFT does not make pairwise judgement unnecessary.
 
-# Full fine-tuning updates every selected parameter
+# Full fine-tuning updates original weights
 
-In full fine-tuning, gradients can update the model's original weights across:
+In full fine-tuning, gradients can update the model's original parameters across embeddings, attention, MLPs, normalisation, and the output head.
 
-- embeddings;
-- attention projections;
-- MLPs;
-- normalisation parameters;
-- output head.
-
-This offers high adaptation capacity but requires substantial memory for gradients and optimiser state.
-
-It also creates a complete new model checkpoint.
+This offers high adaptation capacity but requires substantial gradient and optimiser memory and creates a complete new checkpoint.
 
 # Parameter-efficient fine-tuning
 
-Parameter-efficient methods keep most pretrained parameters frozen and train a much smaller set of new parameters.
+Parameter-efficient methods keep most pretrained parameters frozen and train a much smaller new parameter set.
 
-Benefits can include:
+Possible benefits include:
 
 - lower optimiser-state memory;
 - smaller saved adapters;
 - easier storage of many task variants;
 - reduced communication for trainable state.
 
-The frozen base model still participates in forward and backward computation because gradients must pass through its operations to reach the trainable adapters.
+The frozen base still participates in forward and backward computation because gradients must pass through it to reach the adapters.
 
 # LoRA adds a low-rank update
 
@@ -550,13 +518,7 @@ The base \(W_0\) remains frozen. Gradients update \(A\) and \(B\).
 
 # Why low rank saves parameters
 
-A square projection with:
-
-$$
-d_{\mathrm{in}}=d_{\mathrm{out}}=4096
-$$
-
-contains:
+A square projection with width 4096 contains:
 
 $$
 4096^2
@@ -566,7 +528,7 @@ $$
 
 parameters.
 
-With LoRA rank:
+With rank:
 
 $$
 r=16
@@ -582,7 +544,7 @@ $$
 131072
 $$
 
-trainable parameters.
+parameters.
 
 The ratio is:
 
@@ -593,36 +555,19 @@ $$
 
 or about 0.78125% of the base matrix's parameter count.
 
-This comparison excludes other trainable modules and implementation overhead, but it shows the low-rank saving.
+This excludes other trainable modules and implementation overhead, but it shows the low-rank saving.
 
-# Rank controls adapter capacity
+# Rank and module choice control adapter capacity
 
-A larger rank \(r\):
+A larger rank increases trainable parameters and the possible rank of the update.
 
-- increases trainable parameters;
-- increases adapter memory and compute;
-- allows a higher-rank weight update.
+Adapters can be attached to selected modules such as Query and Value projections, all attention projections, MLP projections, or other linear layers.
 
-A smaller rank is cheaper but may not express the required change.
+Training fewer modules is cheaper but constrains where adaptation can occur.
 
-Rank is a capacity choice, not a direct quality guarantee.
+# Merging and switching adapters
 
-# Where LoRA can be attached
-
-Adapters can be applied to selected projections such as:
-
-- Query and Value matrices;
-- all attention projections;
-- MLP up and down projections;
-- output heads or other linear layers.
-
-Training only a few modules is cheaper but constrains where the model can adapt.
-
-The module selection is part of the experiment.
-
-# Merging a LoRA adapter
-
-After training, the low-rank update can be combined with the base weight:
+After training, the update can be merged:
 
 $$
 W_{\mathrm{merged}}
@@ -630,58 +575,48 @@ W_{\mathrm{merged}}
 W_0+rac{\alpha}{r}AB
 $$
 
-A merged model can run without separate adapter matrix multiplications.
+A merged model avoids separate adapter matrix multiplications.
 
 Alternatively, adapters can remain separate so one base model can load different behaviours.
 
-Merging changes deployment packaging, not the mathematical result when precision and scaling are handled consistently.
+Merging changes deployment packaging, not the intended mathematical result when precision and scaling are handled consistently.
 
 # Quantised bases and adapters
 
-Some fine-tuning systems store the frozen base model in a quantised representation while training adapters in a higher precision.
+Some systems store the frozen base in a quantised representation while training adapters in a higher precision.
 
-This can reduce memory substantially.
-
-The important distinction is:
-
-- base weights are quantised and frozen;
-- adapter parameters remain trainable;
-- computation may temporarily use dequantised values or specialised kernels.
-
-Quantisation introduces approximation and implementation constraints. It is not identical to ordinary full-precision LoRA.
+This can reduce memory, but it is not identical to ordinary full-precision LoRA. Quantisation adds approximation, dequantisation behaviour, and kernel constraints.
 
 # Adapters do not eliminate activation memory
 
-Freezing base parameters removes their optimiser-state and gradient-storage requirements.
+Freezing base parameters removes their optimiser-state and parameter-gradient requirements.
 
-But training still needs:
+Training still needs:
 
 - forward activations;
 - backward signals through the network;
-- trainable adapter gradients;
-- optimiser state for adapters.
+- adapter gradients;
+- optimiser state for trainable adapters.
 
-Long context lengths and large microbatches can still make activation memory the dominant cost.
+Long contexts and large microbatches can still make activation memory dominant.
 
 # Behaviour changes can have side effects
 
-Post-training can improve instruction following while degrading other capabilities.
-
-Potential effects include:
+Post-training can improve instruction following while causing:
 
 - catastrophic forgetting;
 - reduced diversity;
 - excessive refusals;
 - reward hacking;
 - style overfitting;
-- poorer performance outside the fine-tuning distribution;
+- poorer out-of-distribution behaviour;
 - increased confidence without increased correctness.
 
-Evaluation must cover both desired improvements and regressions.
+Evaluation must cover desired improvements and regressions.
 
 # Build separate evaluation sets
 
-A post-training evaluation suite can include:
+A post-training suite can include:
 
 - instruction-following tests;
 - factuality checks;
@@ -695,45 +630,17 @@ A post-training evaluation suite can include:
 
 Training loss alone cannot establish assistant quality.
 
-# Offline preference accuracy is limited
-
-A preference model can report how often it ranks held-out chosen responses above rejected responses.
-
-That metric does not fully measure:
-
-- open-ended generation quality;
-- robustness to new prompt types;
-- calibration;
-- factual correctness;
-- user satisfaction;
-- safety under adversarial interaction.
-
-Generated-output evaluation remains necessary.
-
 # Human and automated feedback have different failure modes
 
-Human feedback can be:
+Human feedback can be expensive, inconsistent, style-sensitive, or limited by annotator expertise.
 
-- expensive;
-- inconsistent;
-- influenced by presentation style;
-- limited by annotator expertise.
-
-Automated judges can be:
-
-- scalable;
-- reproducible;
-- biased toward their own preferred style;
-- vulnerable to prompt wording;
-- incorrect on specialised facts.
+Automated judges can be scalable and reproducible but may prefer their own style, react to prompt wording, or fail on specialised facts.
 
 A reliable process uses clear rubrics, quality control, diverse tests, and appropriate human oversight.
 
-# Post-training does not remove inference controls
+# Post-training does not remove runtime controls
 
-Even a well-aligned model still operates inside a system.
-
-The deployed application may use:
+A deployed application may still use:
 
 - system instructions;
 - input and output filters;
@@ -750,16 +657,16 @@ Model training and runtime controls address different layers of behaviour and ri
 
 ```text
 pretrained model
-    -> prepare chat-formatted demonstrations
+    -> chat-formatted demonstrations
     -> supervised fine-tuning
-    -> evaluate instruction-following baseline
-    -> collect or generate response comparisons
-    -> apply preference optimisation
-    -> evaluate quality, safety, and regressions
-    -> optionally package full weights or adapters
+    -> instruction-following evaluation
+    -> response comparisons
+    -> preference optimisation
+    -> quality, safety, and regression evaluation
+    -> full checkpoint or adapter packaging
 ```
 
-The actual path can include several rounds of data collection and model evaluation.
+The path can contain several rounds of data collection and evaluation.
 
 # Common post-training mistakes
 
@@ -781,25 +688,25 @@ Many prompts have several valid responses.
 
 ## Mistake 5: calling every preference method RLHF
 
-Some methods use human labels and reinforcement learning; others optimise preferences directly or use automated feedback.
+Some methods use reinforcement learning; others optimise comparisons directly.
 
-## Mistake 6: assuming a lower preference loss guarantees truth
+## Mistake 6: assuming lower preference loss guarantees truth
 
-The objective reflects the quality of comparisons and rubric.
+The objective reflects the comparisons and rubric.
 
 ## Mistake 7: claiming LoRA changes the objective
 
 LoRA changes the trainable parameterisation. SFT or preference loss still defines what is optimised.
 
-## Mistake 8: saying LoRA trains no gradients through the base network
+## Mistake 8: saying no gradient travels through the frozen base
 
-The frozen base receives no parameter update, but backward signals pass through its computation to train adapters.
+The base receives no parameter update, but backward signals pass through its computation.
 
-## Mistake 9: assuming adapter parameter count equals total training memory
+## Mistake 9: equating adapter parameter count with total training memory
 
-Activations and temporary buffers can remain large.
+Activations and temporary buffers remain.
 
-## Mistake 10: evaluating only the target behaviour
+## Mistake 10: evaluating only target behaviour
 
 Post-training can cause regressions elsewhere.
 
@@ -813,7 +720,7 @@ Masked next-token cross-entropy over curated demonstrations.
 
 ## 2. What does response-only masking ignore?
 
-Direct loss on prompt-region tokens. The prompt still supplies context.
+Direct loss on prompt-region labels. The prompt still supplies context.
 
 ## 3. What does a preference pair contain?
 
@@ -837,9 +744,9 @@ The original base weight \(W_0\).
 
 ## 8. Which LoRA parameters are trained?
 
-The low-rank matrices \(A\) and \(B\), plus any other modules deliberately left trainable.
+The low-rank matrices \(A\) and \(B\), plus any other deliberately trainable modules.
 
-## 9. How many LoRA parameters are used for a \(4096\mathbin{×}4096\) matrix with rank 16?
+## 9. How many adapter parameters are used for a \(4096\mathbin{×}4096\) matrix with rank 16?
 
 $$
 131072
@@ -847,7 +754,7 @@ $$
 
 ## 10. Why evaluate regressions after post-training?
 
-Behavioural improvements can reduce capability, calibration, diversity, or safety in other distributions.
+Behavioural improvements can reduce capability, calibration, diversity, or safety elsewhere.
 
 </div>
 
@@ -875,12 +782,4 @@ In our story:
 
 # Coming next: measure, compress, and deploy
 
-The model now has an architecture, a training process, and assistant-like post-training.
-
-The next part of the book can examine:
-
-- evaluation and benchmark design;
-- quantisation and efficient inference;
-- batching, latency, throughput, and serving;
-- retrieval-augmented generation and tool use;
-- hallucination, grounding, and production safeguards.
+The next part of the book can examine evaluation, quantisation, efficient inference, serving, retrieval augmentation, tool use, grounding, and production safeguards.

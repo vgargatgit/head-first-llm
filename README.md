@@ -70,6 +70,7 @@ Chapters 15–17 expand that one update into a complete model-development system
 
 ## Visual development plans
 
+- [`docs/inference-loop-scene-master-plan.md`](docs/inference-loop-scene-master-plan.md) — canonical visual reference for Chapters 1–11, grounded in the implemented Chapters 1–3 artwork and extended into scene briefs for Chapters 4–11.
 - [`docs/training-loop-scene-master-plan.md`](docs/training-loop-scene-master-plan.md) — canonical character bible, visual metaphor system, and storyboard map for the training loop and Chapters 12–17.
 
 ## Working agreement

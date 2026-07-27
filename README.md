@@ -25,8 +25,11 @@ The Pages site includes a browser-side preview login. This is suitable only as a
 3. [Meet the Profile Writer](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=3)
 4. [When Queries Meet Keys](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=4)
 5. [Meet the Information Courier](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=5)
+6. [Many Specialists at Work](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=6)
+7. [The Team Lead Combines the Reports](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=7)
+8. [The Private Thinking Room](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=8)
 
-Chapters 4 and 5 currently use equations, tables, and worked calculations without illustration assets.
+Chapters 4–8 currently use equations, tables, text diagrams, and worked calculations without illustration assets. High-value graphics can be added after the technical content is reviewed.
 
 ## Repository layout
 
@@ -37,10 +40,19 @@ Chapters 4 and 5 currently use equations, tables, and worked calculations withou
 - `dist/` — earlier browser distribution pages retained for reference
 - `styles/` — earlier shared chapter styling
 - `CHANGELOG.md` — chronological project updates
+- `manifest.md` — canonical chapter order and publication status
 
 ## Current workspace status
 
-The complete Chapter 1–5 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites image paths for the illustrated chapters and renders Chapters 4–5 directly without graphics.
+The complete Chapter 1–8 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites image paths for the illustrated chapters and renders Chapters 4–8 directly without graphics.
+
+Chapters 6–8 carry one continuous numerical example through:
+
+- two-head causal self-attention;
+- concatenation and the output projection;
+- residual addition and LayerNorm;
+- a position-wise MLP;
+- the output of one simplified Transformer block.
 
 ## Working agreement
 

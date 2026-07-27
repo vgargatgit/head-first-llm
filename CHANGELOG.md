@@ -2,6 +2,14 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-27 — Training visual plan aligned with illustrated chapters
+
+- Revised `docs/training-loop-scene-master-plan.md` so Chapters 12–17 explicitly inherit the successful cream-paper, purple-accented, hand-drawn visual language of Chapters 1–3.
+- Added the repeatable production pattern used by the illustrated chapters: chapter hero, story mechanism, exact calculation panel, shared-system or contrast scene, misconception guardrail, and chapter handoff.
+- Converted the earlier high-value scene lists into production-ready chapter briefs with proposed asset names, compositions, numerical panels, continuity requirements, and handoffs.
+- Added a required “remove the costumes” mapping and strengthened continuity rules for returning token characters, Transformer rooms, the Final Audition, and existing inference props.
+- Preserved the training cast and technical guardrails while making the training and inference master plans follow one consistent book-wide production system.
+
 ## 2026-07-27 — Inference-loop visual master plan added
 
 - Added `docs/inference-loop-scene-master-plan.md` as the canonical character bible, visual metaphor system, and storyboard map for Chapters 1–11.

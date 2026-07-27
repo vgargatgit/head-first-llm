@@ -1,0 +1,6 @@
+A: \text
+B: \\text
+C: \\\text
+D: \\\\text
+E: \times
+F: \\times

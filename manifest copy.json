@@ -1,0 +1,26 @@
+{
+  "project": "Head First LLMs",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "A Token Enters the Dating World",
+      "source": "src/chapter-01.md",
+      "html": "dist/chapter-01.html",
+      "assets": "assets/chapter-01/"
+    },
+    {
+      "number": 2,
+      "title": "Meet the Question Coach",
+      "source": "src/chapter-02.md",
+      "html": "dist/chapter-02.html",
+      "assets": "assets/chapter-02/"
+    },
+    {
+      "number": 3,
+      "title": "Meet the Profile Writer",
+      "source": "src/chapter-03.md",
+      "html": "dist/chapter-03.html",
+      "assets": "assets/chapter-03/"
+    }
+  ]
+}

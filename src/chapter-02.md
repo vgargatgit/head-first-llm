@@ -4,7 +4,7 @@ subtitle: "How a token turns its current state into what it should look for"
 lang: en
 ---
 
-![Chapter 2 — Meet the Question Coach](../assets/chapter-02/01-chapter-2-meet-the-question-coach.svg){.hero}
+![Chapter 2 — Meet the Question Coach](chapter_2_graphics/01_chapter_hero.png){.hero}
 
 # The question this chapter answers
 
@@ -93,7 +93,7 @@ the head's learned Question Coach
 SAT's query for this head
 ```
 
-![The Question Coach pipeline](../assets/chapter-02/02-the-question-coach-pipeline.svg)
+![The Question Coach pipeline](chapter_2_graphics/02_question_coach_story.png)
 
 The Question Coach has a very specific job.
 
@@ -200,7 +200,7 @@ q_1 & q_2
 \end{bmatrix}
 $$
 
-![Exact query calculation](../assets/chapter-02/03-exact-query-calculation.svg)
+![Exact query calculation](chapter_2_graphics/03_exact_query_calculation.png)
 
 ## First query coordinate
 
@@ -425,7 +425,7 @@ $$
 Q = XW^Q
 $$
 
-![One shared Question Coach creates different token queries](../assets/chapter-02/04-one-clean-shared-question-coach-used-by-every-token-wit.svg)
+![One shared Question Coach creates different token queries](chapter_2_graphics/04_shared_coach.png)
 
 Using the Chapter 1 hidden states:
 
@@ -542,7 +542,7 @@ $$
 
 and so on.
 
-![Different heads employ different Question Coaches](../assets/chapter-02/05-different-heads-employ-different-question-coaches.svg)
+![Different heads employ different Question Coaches](chapter_2_graphics/05_different_heads.png)
 
 In the dating-service story:
 
@@ -596,36 +596,6 @@ Conceptually, however, each head still receives its own slice of the query proje
 So the dating-service intuition remains useful:
 
 > Every specialist matchmaking agency has its own Question Coach.
-
-# Worked implementation example: two query matrices, three token vectors
-
-Suppose three token states are stacked in $X\in\mathbb{R}^{3\times4}$, and two heads each use a different query projection:
-
-$$
-W_1^Q,W_2^Q\in\mathbb{R}^{4\times2}
-$$
-
-Computed separately:
-
-$$
-Q^{(1)}=XW_1^Q,\qquad Q^{(2)}=XW_2^Q
-$$
-
-An implementation can concatenate the matrices along their columns:
-
-$$
-W_{\text{big}}^Q=\left[W_1^Q\mid W_2^Q\right]\in\mathbb{R}^{4\times4}
-$$
-
-and compute both heads with one multiplication:
-
-$$
-Q_{\text{big}}=XW_{\text{big}}^Q=\left[Q^{(1)}\mid Q^{(2)}\right]\in\mathbb{R}^{3\times4}
-$$
-
-![Two head-specific query matrices computed separately and packed into one multiplication](../assets/chapter-02/06-two-head-specific-query-matrices-computed-separately-an.svg)
-
-The first two output columns belong to Head 1 and the last two belong to Head 2. Packing the matrices improves implementation efficiency; it does not make the heads share one Query transformation.
 
 # What the query does not contain
 
@@ -721,7 +691,7 @@ But SAT still has a problem.
 
 It has expressed what it wants, but the other tokens have not yet created searchable profiles.
 
-![SAT now has a query, but matching requires Keys](../assets/chapter-02/07-sat-now-has-a-query-but-matching-requires-keys.svg)
+![SAT now has a query, but matching requires Keys](chapter_2_graphics/06_handoff_to_keys.png)
 
 # Coming next: Meet the Profile Writer
 

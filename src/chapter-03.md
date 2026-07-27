@@ -4,7 +4,7 @@ subtitle: "How a token turns its current state into a searchable Key"
 lang: en
 ---
 
-![Chapter 3 — Meet the Profile Writer](../assets/chapter-03/01-chapter-3-meet-the-profile-writer.svg){.hero}
+![Chapter 3 — Meet the Profile Writer](../assets/chapter-03/01_chapter_hero_profile_writer.png){.hero}
 
 # The question this chapter answers
 
@@ -61,13 +61,13 @@ The Key is not a biography written in English. It is a vector in the learned Key
 In the story:
 
 - `SAT` is the client;
-- $x_{\text{sat}}$ is its current situation;
-- $W^K$ is the Profile Writer;
-- $k_{\text{sat}}$ is the searchable profile.
+- \(x_{\text{sat}}\) is its current situation;
+- \(W^K\) is the Profile Writer;
+- \(k_{\text{sat}}\) is the searchable profile.
 
 # What the Profile Writer actually does
 
-For any token position $t$:
+For any token position \(t\):
 
 $$
 k_t = x_tW^K
@@ -83,7 +83,7 @@ the head's learned Profile Writer
 the token's searchable Key
 ```
 
-![The Profile Writer transforms a hidden state into a Key](../assets/chapter-03/02-the-profile-writer-transforms-a-hidden-state-into-a-key.svg)
+![The Profile Writer transforms a hidden state into a Key](../assets/chapter-03/02_profile_writer_pipeline.png)
 
 The Profile Writer **does**:
 
@@ -113,10 +113,10 @@ Calling a Key a “profile” does not mean it stores a human-readable list of a
 
 | Dating-service story | Transformer operation |
 |---|---|
-| Token's current situation | Hidden state $x_t$ |
-| Profile Writer | Key projection $W^K$ |
+| Token's current situation | Hidden state \(x_t\) |
+| Profile Writer | Key projection \(W^K\) |
 | Profile-writing session | Matrix multiplication |
-| Searchable profile card | Key vector $k_t$ |
+| Searchable profile card | Key vector \(k_t\) |
 | “When should a search match me?” | A position in the head's learned Key space |
 
 The compact operation is:
@@ -180,11 +180,11 @@ k_{\text{sat}}
 \end{bmatrix}
 $$
 
-![Exact calculation of SAT's Key](../assets/chapter-03/03-exact-calculation-of-sat-s-key.svg)
+![Exact calculation of SAT's Key](../assets/chapter-03/03_exact_key_calculation.png)
 
 ## First Key coordinate
 
-The first output coordinate uses the first column of $W^K$:
+The first output coordinate uses the first column of \(W^K\):
 
 $$
 \begin{aligned}
@@ -212,7 +212,7 @@ $$
 
 ## Second Key coordinate
 
-The second output coordinate uses the second column of $W^K$:
+The second output coordinate uses the second column of \(W^K\):
 
 $$
 \begin{aligned}
@@ -294,17 +294,17 @@ so both Query vectors and Key vectors contain two coordinates.
 
 ## Shape intuition
 
-The hidden state lives in the shared model space of width $d_{\text{model}}$.
+The hidden state lives in the shared model space of width \(d_{\text{model}}\).
 
-The Profile Writer projects it into this head's Key space of width $d_k$.
+The Profile Writer projects it into this head's Key space of width \(d_k\).
 
-The Question Coach projects hidden states into the matching Query space, also of width $d_k$.
+The Question Coach projects hidden states into the matching Query space, also of width \(d_k\).
 
 </div>
 
 # One Profile Writer, many tokens
 
-Within one attention head, the same $W^K$ is applied independently to every token position.
+Within one attention head, the same \(W^K\) is applied independently to every token position.
 
 Our sequence matrix is:
 
@@ -334,7 +334,7 @@ $$
 K=XW^K
 $$
 
-![The same Profile Writer creates a different Key for every token](../assets/chapter-03/04-the-same-profile-writer-creates-a-different-key-for-eve.svg)
+![The same Profile Writer creates a different Key for every token](../assets/chapter-03/04_shared_profile_writer.png)
 
 Carrying out the multiplication gives:
 
@@ -390,7 +390,7 @@ That means:
 
 </div>
 
-# Why call $K$ a matrix?
+# Why call \(K\) a matrix?
 
 For one token, we use a lowercase Key vector:
 
@@ -420,9 +420,9 @@ Keep the three related symbols separate:
 
 | Symbol | Meaning |
 |---|---|
-| $W^K$ | Learned Key projection |
-| $k_t$ | Key vector for one token position |
-| $K$ | Matrix containing all token Keys |
+| \(W^K\) | Learned Key projection |
+| \(k_t\) | Key vector for one token position |
+| \(K\) | Matrix containing all token Keys |
 
 # Query and Key: same input, different jobs
 
@@ -442,14 +442,14 @@ $$
 k_t=x_tW^K
 $$
 
-![Query and Key begin with the same state but serve different roles](../assets/chapter-03/05-query-and-key-begin-with-the-same-state-but-serve-diffe.svg)
+![Query and Key begin with the same state but serve different roles](../assets/chapter-03/05_query_vs_key_comparison.png)
 
 The roles are deliberately asymmetric:
 
 | Representation | Operational question |
 |---|---|
-| Query $q_t$ | “What information is this position looking for?” |
-| Key $k_t$ | “When should this position match a search?” |
+| Query \(q_t\) | “What information is this position looking for?” |
+| Key \(k_t\) | “When should this position match a search?” |
 
 The two projections are usually different:
 
@@ -600,7 +600,7 @@ These are **raw compatibility scores**, not probabilities.
 
 They have not yet been:
 
-- scaled by $\sqrt{d_k}$;
+- scaled by \(\sqrt{d_k}\);
 - masked;
 - passed through softmax.
 
@@ -608,7 +608,7 @@ We will do all three steps in the next chapter.
 
 # From one Query to all Keys
 
-For one Query row $q_i$, comparing against all Keys can be written:
+For one Query row \(q_i\), comparing against all Keys can be written:
 
 $$
 q_iK^T
@@ -786,25 +786,25 @@ No. It transforms each hidden state independently. Cross-token comparison begins
 
 Because the model compares them using dot products. A Query and Key need the same number of coordinates.
 
-## 4. Does $K$ contain one row for each head?
+## 4. Does \(K\) contain one row for each head?
 
-No. For one head, $K$ contains one row per token position. Multiple heads have separate Key matrices or separate slices of a packed tensor.
+No. For one head, \(K\) contains one row per token position. Multiple heads have separate Key matrices or separate slices of a packed tensor.
 
 ## 5. Is a Key the information that will be copied into the output?
 
 Not necessarily. That payload role belongs to the Value.
 
-## 6. Why do THE, CAT, and SAT receive different Keys when the same $W^K$ is used?
+## 6. Why do THE, CAT, and SAT receive different Keys when the same \(W^K\) is used?
 
 Because they enter the projection with different hidden-state vectors.
 
-## 7. What is the shape of $K$ for three tokens and $d_k=2$?
+## 7. What is the shape of \(K\) for three tokens and \(d_k=2\)?
 
 $$
 K\in\mathbb{R}^{3\times2}
 $$
 
-## 8. What is the shape of $QK^T$ for three tokens?
+## 8. What is the shape of \(QK^T\) for three tokens?
 
 $$
 QK^T\in\mathbb{R}^{3\times3}
@@ -838,7 +838,7 @@ In the dating-service story:
 
 > **The Question Coach helps a token express what it seeks. The Profile Writer helps every token create a profile that those searches can match.**
 
-![Queries are now ready to meet the available Keys](../assets/chapter-03/06-queries-are-now-ready-to-meet-the-available-keys.svg)
+![Queries are now ready to meet the available Keys](../assets/chapter-03/06_handoff_to_scoring.png)
 
 # Coming next: Query meets Key
 
@@ -861,7 +861,7 @@ $$
 
 Then we will answer three questions:
 
-1. Why divide the scores by $\sqrt{d_k}$?
+1. Why divide the scores by \(\sqrt{d_k}\)?
 2. How does causal masking remove forbidden future positions?
 3. How does softmax turn raw scores into attention weights?
 

@@ -4,7 +4,7 @@ subtitle: "How a token goes from knowing what it is to understanding where it fi
 lang: en
 ---
 
-![Chapter 1 — A Token Enters the Dating World](../assets/chapter-01/01-chapter-1-a-token-enters-the-dating-world.svg){.hero}
+![Chapter 1 — A Token Enters the Dating World](../assets/chapter-01/01_chapter_cover_token_enters_dating_world.png){.hero}
 
 # The question this chapter answers
 
@@ -105,7 +105,7 @@ That means:
 - three token positions;
 - four numbers per token.
 
-![One vector per token, matrix shape, and causal visibility](../assets/chapter-01/02-one-vector-per-token-matrix-shape-and-causal-visibility.svg)
+![One vector per token, matrix shape, and causal visibility](../assets/chapter-01/02_one_vector_per_token.png)
 
 <div class="translation">
 
@@ -185,7 +185,7 @@ So the most accurate wording is:
 
 The initial token embedding is only the beginning of that state’s journey.
 
-![The same token carries an increasingly contextual hidden state through the model](../assets/chapter-01/03-the-same-token-carries-an-increasingly-contextual-hidde.svg)
+![The same token carries an increasingly contextual hidden state through the model](../assets/chapter-01/03_evolving_hidden_state_passport.png)
 
 The passport metaphor is useful:
 
@@ -284,7 +284,7 @@ The number of token positions does not change. The model still has one row per t
 
 What changes is the quality of those rows as representations of the tokens **in context**.
 
-![Before and after the attention matchmaking session](../assets/chapter-01/04-before-and-after-the-attention-matchmaking-session.svg)
+![Before and after the attention matchmaking session](../assets/chapter-01/04_before_and_after_attention.png)
 
 In human language, we might interpret the change as:
 

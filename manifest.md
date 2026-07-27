@@ -15,6 +15,9 @@ This file records the canonical chapter order and publication status for the boo
 | 9 | Every Token Needs an Address | `src/chapter-09.md` | Planned high-value graphics | Published |
 | 10 | The Residual Stream Climbs the Stack | `src/chapter-10.md` | Planned high-value graphics | Published |
 | 11 | The Final Audition | `src/chapter-11.md` | Planned high-value graphics | Published |
+| 12 | The Answer Key Moves One Step Ahead | `src/chapter-12.md` | Planned high-value graphics | Published |
+| 13 | Meet the Scorekeeper | `src/chapter-13.md` | Planned high-value graphics | Published |
+| 14 | The Blame Travels Backward | `src/chapter-14.md` | Planned high-value graphics | Published |
 
 ## Learning sequence
 
@@ -29,12 +32,15 @@ This file records the canonical chapter order and publication status for the boo
 9. Positional embeddings and RoPE supply order and relative-distance information.
 10. A stack of independently learned blocks repeatedly refines the residual stream and maintains per-layer KV caches during generation.
 11. The final hidden state is projected into vocabulary logits, converted into probabilities, and decoded into the next token.
+12. Shifted token sequences create next-token inputs and labels while causal and loss masks preserve the intended training task.
+13. Cross-entropy converts correct-target probabilities into a masked mean loss, perplexity, and the initial logit gradient.
+14. Backpropagation applies the chain rule through the output head, residual stream, MLPs, attention, embeddings, and optimiser update.
 
 ## Graphics approach
 
 Chapters are written and numerically verified before illustration work begins. Graphics are then added selectively where they provide high instructional value, rather than as decoration.
 
-Strong candidates across Chapters 6–11 are:
+Strong candidates across Chapters 6–14 are:
 
 - parallel heads processing the same token rows and concatenating by feature;
 - output projection plus the residual highway and normalisation;
@@ -42,8 +48,11 @@ Strong candidates across Chapters 6–11 are:
 - one complete Transformer-block flow;
 - additive position embeddings compared with rotating Query/Key pairs under RoPE;
 - one token case file moving through a vertical stack with per-layer KV-cache shelves;
-- a final hidden vector expanding into vocabulary logits, softmax probabilities, and the autoregressive loop.
+- a final hidden vector expanding into vocabulary logits, softmax probabilities, and the autoregressive loop;
+- one sequence split into aligned input and shifted-target rows;
+- correct-token probability flowing through negative log-loss into perplexity;
+- a backward computational graph showing branch gradients rejoining and parameter corrections accumulating.
 
 ## Planned continuation
 
-The next sequence can move from inference to learning: shifted next-token targets, cross-entropy loss, backpropagation, gradients, optimisation, and how the model's parameters acquire useful values.
+The next sequence can expand from one illustrative update to training systems: minibatches, optimisation schedules, validation and checkpoints, distributed training, supervised fine-tuning, preference optimisation, and parameter-efficient adaptation.

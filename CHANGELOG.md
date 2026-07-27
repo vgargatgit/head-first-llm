@@ -2,6 +2,20 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-27 — Chapters 12 through 14 added
+
+- Added `src/chapter-12.md`: **The Answer Key Moves One Step Ahead**.
+- Converted a token sequence into shifted next-token inputs and labels, explained teacher forcing, and distinguished causal, padding, and loss masks, document boundaries, packing, and context windows.
+- Added `src/chapter-13.md`: **Meet the Scorekeeper**.
+- Calculated per-token negative log-likelihood, an eight-position masked mean loss of 1.041859, perplexity of 2.834481, and the exact softmax-cross-entropy logit gradient `p - y` from the Chapter 11 distribution.
+- Added `src/chapter-14.md`: **The Blame Travels Backward**.
+- Propagated the Chapter 13 gradient through the vocabulary projection, calculated the full vocabulary-weight and hidden-state gradients, traced residual, MLP, attention, and embedding gradients, and completed a worked gradient-descent parameter update.
+- Added practical training notes covering AdamW, weight decay, clipping, gradient accumulation, mixed precision, loss scaling, and gradient clearing.
+- Kept Chapters 12–14 free of image references while adding high-value training-graphics candidates to the manifest.
+- Extended the landing page, reader registry, numbered navigation, previous/next links, README, and manifest from eleven chapters to fourteen.
+- Bumped the reader build version to `20260727.6` so browsers load the fourteen-chapter registry and current source files.
+- Widened responsive navigation handling so fourteen chapter links wrap safely before the mobile breakpoint.
+
 ## 2026-07-27 — Chapters 9 through 11 added
 
 - Added `src/chapter-09.md`: **Every Token Needs an Address**.

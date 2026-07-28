@@ -2,104 +2,116 @@
 
 This file records the canonical chapter order and publication status for the book website.
 
-| Chapter | Title | Main concepts | Source | Graphics status | Publication status |
-|---:|---|---|---|---|---|
-| 1 | A Token Enters the Dating World | Tokens, vectors, hidden states | `src/chapter-01.md` | Illustrated | Published |
-| 2 | Meet the Question Coach | Query projections | `src/chapter-02.md` | Illustrated | Published |
-| 3 | Meet the Profile Writer | Key projections | `src/chapter-03.md` | Illustrated | Published |
-| 4 | Compatibility Scores — When Queries Meet Keys | Dot products, scaling, masking, softmax | `src/chapter-04.md` | Opener in progress | In progress |
-| 5 | Meet the Information Courier | Value projections, weighted sums, context vectors | `src/chapter-05.md` | Planned | Planned |
-| 6 | Many Specialists at Work | Multi-head attention and concatenation | `src/chapter-06.md` | Planned | Planned |
-| 7 | The Team Lead Combines the Reports | Output projection, residual connections, normalisation | `src/chapter-07.md` | Planned | Planned |
-| 8 | The Private Thinking Room | Position-wise MLP and non-linearity | `src/chapter-08.md` | Planned | Planned |
-| 9 | Every Token Needs an Address | Positional embeddings, relative position, RoPE | `src/chapter-09.md` | Planned | Planned |
-| 10 | The Residual Stream Climbs the Stack | Repeated Transformer blocks and evolving hidden states | `src/chapter-10.md` | Planned | Planned |
-| 11 | Three Transformer Families Move In | Encoder-only, decoder-only, and encoder–decoder models | `src/chapter-11.md` | Planned | Planned |
-| 12 | The Decoder Borrows the Encoder’s Notes | Cross-attention, source memory, conditional generation | `src/chapter-12.md` | Planned | Planned |
-| 13 | The Final Audition | Vocabulary logits and next-token probabilities | `src/chapter-13.md` | Planned | Planned |
-| 14 | One Token at a Time | Autoregressive decoding, temperature, top-k, top-p, beam search, KV cache | `src/chapter-14.md` | Planned | Planned |
-| 15 | The Answer Key Moves One Step Ahead | Shifted inputs and next-token training labels | `src/chapter-15.md` | Planned | Planned |
-| 16 | Meet the Scorekeeper | Cross-entropy, masking, mean loss, perplexity | `src/chapter-16.md` | Planned | Planned |
-| 17 | The Blame Travels Backward | Backpropagation, gradients, optimisers | `src/chapter-17.md` | Planned | Planned |
-| 18 | From Blank Slate to Foundation Model | Foundation models, self-supervised pretraining, broad data, scale, checkpoints | `src/chapter-18.md` | Planned | Planned |
-| 19 | The Model Goes to Finishing School | Fine-tuning, supervised fine-tuning, instruction tuning, adapters, LoRA and QLoRA | `src/chapter-19.md` | Planned | Planned |
-| 20 | Learning What People Prefer | Reward models, RLHF, preference tuning, DPO, safety tuning | `src/chapter-20.md` | Planned | Planned |
-| 21 | The Training Factory Never Sees the Whole Library | Minibatches, accumulation, data mixtures, schedules, validation | `src/chapter-21.md` | Planned | Planned |
-| 22 | The Model Outgrows One Machine | Data, tensor and pipeline parallelism; sharding and rematerialisation | `src/chapter-22.md` | Planned | Planned |
-| 23 | Open Book, Closed Book, or Tool Belt? | Prompt context, model weights, RAG, tools and external memory | `src/chapter-23.md` | Planned | Planned |
-| 24 | Pictures, Audio, and Other Languages | Multimodal encoders, projectors, modality tokens and cross-attention variants | `src/chapter-24.md` | Planned | Planned |
-| 25 | Smaller, Faster, Cheaper | Quantisation, distillation, sparse and mixture-of-experts models, serving efficiency | `src/chapter-25.md` | Planned | Planned |
-| 26 | Trust, but Verify | Evaluation, hallucination, calibration, bias, privacy, safety and benchmark contamination | `src/chapter-26.md` | Planned | Planned |
+| Chapter | Title | Source | Graphics status | Publication status |
+|---:|---|---|---|---|
+| 1 | A Token Enters the Dating World | `src/chapter-01.md` | Illustrated | Published |
+| 2 | Meet the Question Coach | `src/chapter-02.md` | Illustrated | Published |
+| 3 | Meet the Profile Writer | `src/chapter-03.md` | Illustrated | Published |
+| 4 | When Queries Meet Keys | `src/chapter-04.md` | Illustrated | Published |
+| 5 | Meet the Information Courier | `src/chapter-05.md` | Illustrated | Published |
+| 6 | Many Specialists at Work | `src/chapter-06.md` | Illustrated | Published |
+| 7 | The Team Lead Combines the Reports | `src/chapter-07.md` | Illustrated | Published |
+| 8 | The Private Thinking Room | `src/chapter-08.md` | Planned high-value graphics | Published |
+| 9 | Every Token Needs an Address | `src/chapter-09.md` | Planned high-value graphics | Published |
+| 10 | The Residual Stream Climbs the Stack | `src/chapter-10.md` | Planned high-value graphics | Published |
+| 11 | The Final Audition | `src/chapter-11.md` | Planned high-value graphics | Published |
+| 12 | The Answer Key Moves One Step Ahead | `src/chapter-12.md` | Planned high-value graphics | Published |
+| 13 | Meet the Scorekeeper | `src/chapter-13.md` | Planned high-value graphics | Published |
+| 14 | The Blame Travels Backward | `src/chapter-14.md` | Planned high-value graphics | Published |
+| 15 | The Training Factory Never Sees the Whole Library | `src/chapter-15.md` | Planned high-value graphics | Published |
+| 16 | The Model Outgrows One Machine | `src/chapter-16.md` | Planned high-value graphics | Published |
+| 17 | From Completion Machine to Helpful Assistant | `src/chapter-17.md` | Planned high-value graphics | Published |
+| 18 | Three Transformer Families Move In | `src/chapter-18.md` | Planned | Planned |
+| 19 | The Decoder Borrows the Encoder’s Notes | `src/chapter-19.md` | Planned | Planned |
+| 20 | From Pretraining to Specialisation | `src/chapter-20.md` | Planned | Planned |
+| 21 | Open Book, Closed Book, or Tool Belt? | `src/chapter-21.md` | Planned | Planned |
+| 22 | Pictures, Audio, and Other Modalities | `src/chapter-22.md` | Planned | Planned |
+| 23 | Smaller, Faster, Cheaper | `src/chapter-23.md` | Planned | Planned |
+| 24 | Trust, but Verify | `src/chapter-24.md` | Planned | Planned |
 
 ## Learning sequence
-
-### Part I — Build attention from the vectors up
 
 1. Hidden states establish what each token currently knows.
 2. Query projections express what each token position is seeking.
 3. Key projections create searchable representations for matching.
-4. Scaled dot products, causal masking and softmax produce attention weights.
+4. Scaled dot products, causal masking, and softmax produce attention weights.
 5. Value projections and weighted sums produce the output of one attention head.
-6. Multiple heads learn parallel matching-and-retrieval systems.
-7. Output projections, residual connections and normalisation return the result to the residual stream.
-8. The position-wise MLP performs non-linear private processing.
-9. Position information supplies order and relative distance.
-10. A stack of independently learned blocks repeatedly refines every token representation.
+6. Multiple heads learn parallel matching-and-retrieval systems and concatenate their outputs.
+7. The output projection mixes head features; residual connections and normalisation preserve a stable residual stream.
+8. The position-wise MLP performs non-linear private processing and completes one simplified Transformer block.
+9. Positional embeddings and RoPE supply order and relative-distance information.
+10. A stack of independently learned blocks repeatedly refines the residual stream and maintains per-layer KV caches during generation.
+11. The final hidden state is projected into vocabulary logits, converted into probabilities, and decoded into the next token.
+12. Shifted token sequences create next-token inputs and labels while causal and loss masks preserve the intended training task.
+13. Cross-entropy converts correct-target probabilities into a masked mean loss, perplexity, and the initial logit gradient.
+14. Backpropagation applies the chain rule through the output head, residual stream, MLPs, attention, embeddings, and optimiser update.
+15. Minibatches, accumulation, data mixtures, schedules, validation, and checkpoints turn repeated updates into a controlled training run.
+16. Data parallelism, model-state sharding, tensor parallelism, pipelines, and rematerialisation distribute training across accelerators.
+17. Supervised demonstrations, preference comparisons, and low-rank adapters shape a pretrained completion model into assistant-like behaviour.
+18. Encoder-only, decoder-only, and encoder–decoder architectures are compared by attention pattern, training objective, strengths, and publicly documented real-world examples.
+19. Cross-attention is derived explicitly: decoder Queries attend to encoder Keys and Values so generated output can consult an encoded source sequence.
+20. The complete model lifecycle distinguishes broad pretraining, foundation models, base checkpoints, continued pretraining, full fine-tuning, supervised and instruction tuning, LoRA or QLoRA, and preference tuning.
+21. Retrieval and tools distinguish information stored in weights from information supplied in context or fetched at runtime.
+22. Multimodal systems connect language models to image, audio, and other modality encoders through projectors, shared token spaces, or cross-attention variants.
+23. Quantisation, distillation, sparsity, mixture-of-experts routing, batching, and caching reduce training and serving cost.
+24. Evaluation covers hallucination, calibration, bias, privacy, safety, benchmark contamination, and production monitoring.
 
-### Part II — Meet the Transformer families
-
-11. Encoder-only models read bidirectionally and excel at representation, classification and retrieval tasks.
-12. Decoder-only models use causal attention and generate sequences autoregressively.
-13. Encoder–decoder models separate source understanding from target generation.
-14. Cross-attention uses decoder queries with encoder keys and values, allowing the output side to consult the encoded input.
-15. Publicly documented examples and typical use cases are compared without guessing the undisclosed internals of closed models.
-
-### Part III — Train and adapt a foundation model
-
-16. Vocabulary logits and decoding convert hidden states into generated text.
-17. Shifted labels, cross-entropy and backpropagation create the basic pretraining loop.
-18. Broad self-supervised pretraining produces an adaptable checkpoint that can serve as a foundation for many downstream systems.
-19. Full fine-tuning and parameter-efficient methods specialise that checkpoint.
-20. Instruction and preference tuning shape behaviour rather than merely adding factual knowledge.
-21. Data pipelines, schedules, validation and distributed systems turn the mathematics into a real training run.
-
-### Part IV — Build useful and responsible systems
-
-22. Retrieval and tools add information that is not stored reliably in model weights.
-23. Multimodal systems connect language models to image, audio and other encoders.
-24. Quantisation, distillation, sparsity and serving techniques reduce cost and latency.
-25. Evaluation and safeguards measure capability, reliability and risk before deployment.
-
-## Model-family examples for Chapter 11
+## Model-family examples for Chapter 18
 
 | Family | Attention pattern | Publicly documented examples | Typical strengths |
 |---|---|---|---|
-| Encoder-only | Bidirectional self-attention | BERT, RoBERTa, DeBERTa, ModernBERT | Classification, tagging, retrieval, reranking and embeddings |
-| Decoder-only | Causal self-attention | GPT-3, Llama 3, Mistral 7B, Gemma | Text and code generation, chat, completion and tool-oriented generation |
-| Encoder–decoder | Encoder self-attention, decoder causal self-attention and cross-attention | Original Transformer, T5, BART, Whisper | Translation, summarisation, transcription and conditional generation |
+| Encoder-only | Bidirectional self-attention | BERT, RoBERTa, DeBERTa, ModernBERT | Classification, tagging, retrieval, reranking, and embeddings |
+| Decoder-only | Causal self-attention | GPT-3, Llama 3, Mistral 7B, Gemma | Text and code generation, chat, completion, and tool-oriented generation |
+| Encoder–decoder | Encoder self-attention, decoder causal self-attention, and cross-attention | Original Transformer, T5, BART, Whisper | Translation, summarisation, transcription, and conditional generation |
 
-Commercial frontier models whose current internal architecture is not sufficiently disclosed should be labelled **architecture not publicly confirmed**, rather than being forced into a category.
+Commercial frontier models whose current internals are not sufficiently disclosed should be labelled **architecture not publicly confirmed**, rather than being forced into a category.
+
+## Chapter 19 — Cross-attention scope
+
+The chapter should make the source of each tensor impossible to confuse:
+
+- decoder hidden states produce the Queries;
+- encoder outputs produce the Keys and Values;
+- the score matrix compares each decoder position with every permitted encoder position;
+- the weighted sum retrieves source information for the decoder;
+- decoder causal self-attention and encoder–decoder cross-attention are separate sublayers with different jobs.
+
+The running story can use a Translator at a writing desk: the decoder drafts one output token at a time, then consults a wall of encoder notes before completing each draft.
+
+## Chapter 20 — Foundation-model and adaptation scope
+
+This chapter should distinguish concepts that are often blurred together:
+
+- **pretraining:** learning broad statistical structure from large datasets using a self-supervised or otherwise scalable objective;
+- **pretrained or base model:** the checkpoint produced by pretraining;
+- **foundation model:** a broadly trained model intended to support many downstream adaptations or applications;
+- **continued pretraining:** further broad or domain-focused pretraining without changing the fundamental objective;
+- **fine-tuning:** updating a pretrained model for a narrower task, domain, format, or behaviour;
+- **instruction tuning:** supervised fine-tuning on instruction-and-response examples;
+- **parameter-efficient fine-tuning:** adapting a small subset of parameters or added modules, including LoRA and QLoRA;
+- **preference tuning:** shaping behaviour from comparisons or preference signals through methods such as RLHF or DPO;
+- **prompting and RAG:** runtime adaptation methods that do not alter the model weights.
 
 ## Graphics approach
 
-Chapters are written and numerically verified before final illustration work begins. Graphics are added where they carry instructional value rather than as decoration.
+Chapters are written and numerically verified before final illustration work begins. Graphics are added selectively where they provide high instructional value rather than as decoration.
 
-Strong candidates for the new chapters include:
+Strong candidates for Chapters 18–24 are:
 
-- a three-house comparison of encoder-only, decoder-only and encoder–decoder attention patterns;
+- a three-house comparison of encoder-only, decoder-only, and encoder–decoder attention patterns;
+- a model-family field guide matching public models to architecture and typical jobs;
 - a cross-attention scene in which decoder Queries consult an encoder memory wall of Keys and Values;
 - a foundation-model construction site showing broad pretraining followed by many adapted downstream buildings;
-- a training-path map separating pretraining, supervised fine-tuning, instruction tuning and preference tuning;
-- a model-family field guide matching public models to their architecture and common jobs;
-- a RAG scene contrasting knowledge in weights, information in the prompt and documents retrieved at runtime;
+- a lifecycle map separating pretraining, continued pretraining, full fine-tuning, instruction tuning, LoRA or QLoRA, and preference tuning;
+- a RAG scene contrasting knowledge in weights, information in the prompt, and documents retrieved at runtime;
 - a multimodal bridge connecting image or audio encoders to a language decoder;
-- a deployment workshop covering quantisation, distillation, MoE routing and KV-cache memory;
-- an evaluation clinic for hallucination, calibration, bias, privacy, safety and benchmark leakage.
+- a deployment workshop covering quantisation, distillation, MoE routing, batching, and KV-cache memory;
+- an evaluation clinic for hallucination, calibration, bias, privacy, safety, and benchmark leakage.
 
 ## Immediate production order
 
-1. Finish the Chapter 4 graphics pack.
-2. Write and numerically verify Chapter 4.
-3. Build the Chapter 4 HTML.
-4. Continue through Values, multi-head attention and the complete Transformer block.
-5. Produce the model-family and cross-attention chapters before beginning the training arc.
+1. Continue the established graphics and content production sequence for the existing chapters.
+2. Write Chapter 18 as the architecture-family field guide.
+3. Follow it with the full numerical cross-attention chapter.
+4. Add the high-level foundation-model and adaptation lifecycle chapter.
+5. Continue with RAG and tools, multimodality, efficiency, and evaluation.

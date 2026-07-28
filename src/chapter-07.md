@@ -4,6 +4,10 @@ subtitle: "How output projection, residual connections, and LayerNorm complete t
 lang: en
 ---
 
+<!-- chapter-07-art:hero:start -->
+![The Team Lead receives concatenated specialist reports while the original token states continue along a residual highway toward separate normalisation booths.](../assets/chapter-07/01_chapter_hero_team_lead.webp){.hero}
+<!-- chapter-07-art:hero:end -->
+
 # The question this chapter answers
 
 Chapter 6 ended with two head outputs concatenated into one matrix:
@@ -160,6 +164,10 @@ Y\approx
 }
 $$
 
+<!-- chapter-07-art:output-calculation:start -->
+![A workbook-style Team Lead panel shows a four-feature token report passing through a learned four-by-four output-projection matrix to produce a four-coordinate update.](../assets/chapter-07/02_output_projection_calculation.webp)
+<!-- chapter-07-art:output-calculation:end -->
+
 # Verify SAT's output projection
 
 SAT enters the output projection with:
@@ -196,6 +204,10 @@ y_{\text{sat}}
 \end{bmatrix}
 $$
 
+<!-- chapter-07-art:feature-mixing:start -->
+![Feature lines from concatenated head reports are mixed within one token row; output projection does not perform another Query-Key comparison.](../assets/chapter-07/03_output_projection_feature_mixing.webp)
+<!-- chapter-07-art:feature-mixing:end -->
+
 # What \(W^O\) actually mixes
 
 Before \(W^O\), SAT's row is arranged as:
@@ -226,6 +238,10 @@ The cross-token retrieval already happened inside each head through \(A_rV_r\).
 The output projection mixes the retrieved feature coordinates at each token position independently. It does not create a new attention matrix.
 
 </div>
+
+<!-- chapter-07-art:residual-highway:start -->
+![The output-projection update joins the original token state on a residual highway before the token proceeds to normalisation.](../assets/chapter-07/04_residual_highway.webp)
+<!-- chapter-07-art:residual-highway:end -->
 
 # The residual highway
 
@@ -314,6 +330,10 @@ Each sublayer writes an amendment into that document instead of replacing the wh
 
 </div>
 
+<!-- chapter-07-art:shape-match:start -->
+![Matching three-by-four input and update grids align cell by cell so their residual sum remains a three-by-four tensor.](../assets/chapter-07/05_residual_shape_match.webp)
+<!-- chapter-07-art:shape-match:end -->
+
 # Residual addition requires matching shapes
 
 We can add \(X\) and \(Y\) because:
@@ -379,6 +399,10 @@ $$
 \gamma,\beta\in\mathbb{R}^{d_{\text{model}}}
 $$
 
+<!-- chapter-07-art:per-token-layernorm:start -->
+![THE, CAT, and SAT enter separate LayerNorm booths, each calculating its own mean and variance across four feature coordinates before learned scale and shift.](../assets/chapter-07/06_per_token_layernorm.webp)
+<!-- chapter-07-art:per-token-layernorm:end -->
+
 # LayerNorm works within each token
 
 For our matrix:
@@ -402,6 +426,10 @@ SAT row -> its own mean and variance
 ```
 
 This is different from Batch Normalisation, which uses statistics across examples or spatial positions depending on its application.
+
+<!-- chapter-07-art:exact-layernorm:start -->
+![SAT's residual row is normalised with mean 0.064982 and variance 0.174902, producing approximately negative 0.066680, negative 0.316240, 1.573850, and negative 1.190930.](../assets/chapter-07/07_exact_sat_layernorm.webp)
+<!-- chapter-07-art:exact-layernorm:end -->
 
 # Exact LayerNorm calculation for SAT
 
@@ -694,6 +722,10 @@ N\in\mathbb{R}^{3\times4}
 $$
 
 </div>
+
+<!-- chapter-07-art:variants-handoff:start -->
+![Post-norm and pre-norm block orderings are compared, LayerNorm is distinguished from RMSNorm, and THE, CAT, and SAT head toward separate Chapter 8 private thinking rooms.](../assets/chapter-07/08_norm_variants_and_handoff.webp)
+<!-- chapter-07-art:variants-handoff:end -->
 
 # Chapter takeaway
 

@@ -591,6 +591,6 @@ Chapter 7 graphics are complete only when:
 
 - Detailed scene planning: complete.
 - Reusable prop specification: complete.
-- Final artwork generation: not started.
-- Asset integration into the chapter: not started.
-- Website and mobile review: pending final artwork.
+- Final artwork generation: complete for the accepted poster and all eight scene assets.
+- Asset integration into the chapter: complete.
+- Website and mobile review: pending deployed preview review.

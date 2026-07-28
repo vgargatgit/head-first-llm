@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260728.6';
+  const BUILD_VERSION = '20260728.7';
   const chapters = {
     1: {
       title: 'A Token Enters the Dating World',
@@ -31,7 +31,7 @@
     4: { title: 'When Queries Meet Keys', source: 'src/chapter-04.md', assetFrom: ['../assets/chapter-04/', '/assets/chapter-04/'], assetTo: 'assets/chapter-04/', assetAliases: {} },
     5: { title: 'Meet the Information Courier', source: 'src/chapter-05.md', assetFrom: ['../assets/chapter-05/', '/assets/chapter-05/'], assetTo: 'assets/chapter-05/', assetAliases: {} },
     6: { title: 'Many Specialists at Work', source: 'src/chapter-06.md', assetFrom: ['../assets/chapter-06/', '/assets/chapter-06/'], assetTo: 'assets/chapter-06/', assetAliases: {} },
-    7: { title: 'The Team Lead Combines the Reports', source: 'src/chapter-07.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    7: { title: 'The Team Lead Combines the Reports', source: 'src/chapter-07.md', assetFrom: ['../assets/chapter-07/', '/assets/chapter-07/'], assetTo: 'assets/chapter-07/', assetAliases: {} },
     8: { title: 'The Private Thinking Room', source: 'src/chapter-08.md', assetFrom: [], assetTo: '', assetAliases: {} },
     9: { title: 'Every Token Needs an Address', source: 'src/chapter-09.md', assetFrom: [], assetTo: '', assetAliases: {} },
     10: { title: 'The Residual Stream Climbs the Stack', source: 'src/chapter-10.md', assetFrom: [], assetTo: '', assetAliases: {} },

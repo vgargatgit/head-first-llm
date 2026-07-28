@@ -2,6 +2,14 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-28 — Chapter 7 graphics added
+
+- Added the accepted Chapter 7 full-page poster and eight WebP scene assets under `assets/chapter-07/`.
+- Introduced the Team Lead, output-projection board, residual highway, per-token normalisation booths, and Private Thinking Room handoff.
+- Integrated output projection, feature mixing, residual addition, shape compatibility, per-token LayerNorm, exact SAT normalisation, and normalisation variants into the manuscript.
+- Activated Chapter 7 assets in the website reader and refreshed the site cache version.
+- Updated the Chapter 7 production plan.
+
 ## 2026-07-28 — Chapter 6 graphics added
 
 - Added seven approved WebP scenes under `assets/chapter-06/`.

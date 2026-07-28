@@ -28,6 +28,9 @@ jobs:
       - name: Run structural manuscript audit
         run: python3 tools/book_audit.py
 
+      - name: Index the concatenated manuscript
+        run: python3 tools/chapter_index.py
+
       - name: Run rendered-Markdown audit
         run: node tools/render_audit.mjs
 

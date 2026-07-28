@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260728.7';
+  const BUILD_VERSION = '20260728.8';
   const chapters = {
     1: {
       title: 'A Token Enters the Dating World',
@@ -41,7 +41,14 @@
     14: { title: 'The Blame Travels Backward', source: 'src/chapter-14.md', assetFrom: [], assetTo: '', assetAliases: {} },
     15: { title: 'The Training Factory Never Sees the Whole Library', source: 'src/chapter-15.md', assetFrom: [], assetTo: '', assetAliases: {} },
     16: { title: 'The Model Outgrows One Machine', source: 'src/chapter-16.md', assetFrom: [], assetTo: '', assetAliases: {} },
-    17: { title: 'From Completion Machine to Helpful Assistant', source: 'src/chapter-17.md', assetFrom: [], assetTo: '', assetAliases: {} }
+    17: { title: 'From Completion Machine to Helpful Assistant', source: 'src/chapter-17.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    18: { title: 'Three Transformer Families Move In', source: 'src/chapter-18.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    19: { title: 'The Decoder Borrows the Encoder’s Notes', source: 'src/chapter-19.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    20: { title: 'From Pretraining to Specialisation', source: 'src/chapter-20.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    21: { title: 'Open Book, Closed Book, or Tool Belt?', source: 'src/chapter-21.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    22: { title: 'Pictures, Audio, and Other Modalities', source: 'src/chapter-22.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    23: { title: 'Smaller, Faster, Cheaper', source: 'src/chapter-23.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    24: { title: 'Trust, but Verify', source: 'src/chapter-24.md', assetFrom: [], assetTo: '', assetAliases: {} }
   };
 
   const params = new URLSearchParams(location.search);
@@ -61,7 +68,7 @@
   }
 
   if (!chapter) {
-    fail('That chapter does not exist yet. Return to the chapter list and choose Chapters 1–17.');
+    fail('That chapter does not exist yet. Return to the chapter list and choose Chapters 1–24.');
     return;
   }
 

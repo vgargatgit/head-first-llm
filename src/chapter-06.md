@@ -4,6 +4,10 @@ subtitle: "How multiple attention heads examine the same tokens in different lea
 lang: en
 ---
 
+<!-- chapter-06-art:hero:start -->
+![THE, CAT, and SAT send the same hidden-state matrix into two complete attention-head specialist agencies, each with its own learned projections and attention pipeline.](../assets/chapter-06/01_chapter_hero_two_attention_heads.webp){.hero}
+<!-- chapter-06-art:hero:end -->
+
 # The question this chapter answers
 
 Chapter 5 completed one causal self-attention head:
@@ -82,6 +86,10 @@ Therefore, they can produce different:
 - retrieved outputs.
 
 The heads are not given human-written job descriptions. Their different behaviour emerges because their parameters are learned independently during training.
+
+<!-- chapter-06-art:one-head:start -->
+![A complete Head 1 blueprint shows its own Query, Key, and Value projections, score calculation, scaling, causal mask, row-wise softmax, Value retrieval, and two-coordinate output.](../assets/chapter-06/02_one_head_complete_pipeline.webp)
+<!-- chapter-06-art:one-head:end -->
 
 # One head is one complete attention system
 
@@ -247,6 +255,10 @@ $$
 $$
 
 The same four-dimensional token state is therefore projected into a different two-dimensional space for this head.
+
+<!-- chapter-06-art:head2-calculation:start -->
+![Head 2 projects the same input into different Query, Key, and Value vectors, then computes SAT's raw compatibility score with THE as 0.092696.](../assets/chapter-06/03_head2_exact_calculation.webp)
+<!-- chapter-06-art:head2-calculation:end -->
 
 # Calculate Head 2's Queries
 
@@ -425,6 +437,10 @@ $$
 
 The mask is the same causal rule used by Head 1. The learned scores differ, but future positions remain forbidden for every head.
 
+<!-- chapter-06-art:attention-maps:start -->
+![Head 1 and Head 2 obey the same causal visibility rule but assign different attention weights to THE, CAT, and SAT, with both SAT rows highlighted for comparison.](../assets/chapter-06/04_two_attention_maps.webp)
+<!-- chapter-06-art:attention-maps:end -->
+
 # Head 2's attention weights
 
 Applying softmax row by row gives:
@@ -527,6 +543,10 @@ $$
 
 Head 2 has now completed its own retrieval.
 
+<!-- chapter-06-art:head-outputs:start -->
+![Two Information Couriers deliver separate Head 1 and Head 2 reports to SAT: negative 0.145069 and 0.163369 from Head 1, and 0.228069 and negative 0.100593 from Head 2.](../assets/chapter-06/05_two_head_outputs.webp)
+<!-- chapter-06-art:head-outputs:end -->
+
 # Put the two head outputs side by side
 
 We now have:
@@ -592,6 +612,10 @@ H\approx
 \end{bmatrix}
 }
 $$
+
+<!-- chapter-06-art:concatenation:start -->
+![A feature binder joins each token's two Head 1 coordinates beside its two Head 2 coordinates, preserving THE, CAT, and SAT rows while producing the three-by-four matrix H.](../assets/chapter-06/06_concatenate_head_reports.webp)
+<!-- chapter-06-art:concatenation:end -->
 
 # Concatenation preserves token rows
 
@@ -765,6 +789,10 @@ In ordinary causal self-attention, yes. Every head must obey the same restrictio
 No. One large matrix can contain separate projection blocks for separate heads.
 
 </div>
+
+<!-- chapter-06-art:packed-handoff:start -->
+![Separate conceptual head projections are compared with one packed matrix multiplication and reshape; misconception panels reject splitting tokens or sharing one softmax, and the concatenated report H is delivered to the Chapter 7 Team Lead.](../assets/chapter-06/07_packed_multihead_projection_and_handoff.webp)
+<!-- chapter-06-art:packed-handoff:end -->
 
 # Chapter takeaway
 

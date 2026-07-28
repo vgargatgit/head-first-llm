@@ -2,6 +2,14 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-28 — Chapter 6 graphics added
+
+- Added seven approved WebP scenes under `assets/chapter-06/`.
+- Introduced the two Head Specialist agencies, persistent head badges, feature binder, and packed-projection visual system.
+- Integrated the hero, complete one-head pipeline, exact Head 2 score calculation, two attention maps, two retrieved reports, feature concatenation, and Chapter 7 Team Lead handoff into the manuscript.
+- Activated Chapter 6 assets in the website reader and refreshed the site cache version.
+- Updated the Chapter 6 production plan.
+
 ## 2026-07-28 — Chapter 5 graphics added
 
 - Added seven approved WebP scenes under `assets/chapter-05/`.

@@ -2,6 +2,13 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-28 — Chapter 4 graphics added
+
+- Added a complete Chapter 4 infographic and eight standalone SVG scenes under `assets/chapter-04/`.
+- Used the exact Query, Key, score, mask, softmax, and attention values from the chapter.
+- Integrated the scenes into the Chapter 4 manuscript with descriptive alt text.
+- Updated the Chapter 4 production plan.
+
 ## 2026-07-27 — Chapter 5 through 17 graphics production plans added
 
 - Added canonical production specifications under `docs/chapter-05/` through `docs/chapter-17/`, completing the detailed scene-plan library for every currently unillustrated chapter.

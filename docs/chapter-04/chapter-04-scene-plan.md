@@ -1455,6 +1455,6 @@ Chapter 4 graphics are complete only when:
 
 - Detailed scene planning: complete.
 - Reusable Chapter 4 prop specification: complete.
-- Final artwork generation: not started.
-- Asset integration into `src/chapter-04.md`: not started.
-- Mobile and website review: pending final artwork.
+- Final artwork generation: complete for the full infographic and eight standalone scenes.
+- Asset integration into `src/chapter-04.md`: complete.
+- Mobile and website review: pending deployed preview review.

@@ -4,6 +4,10 @@ subtitle: "How dot products become scaled, masked attention weights"
 lang: en
 ---
 
+<!-- chapter-04-art:hero:start -->
+![THE, CAT and SAT meet the Question Coach at the Chapter 4 matching desk.](../assets/chapter-04/01_chapter_hero_matching_desk.svg){.hero}
+<!-- chapter-04-art:hero:end -->
+
 # The question this chapter answers
 
 The previous chapters created two learned views of every token state:
@@ -150,7 +154,16 @@ Softmax cares about relative differences, not whether every input is positive.
 
 </div>
 
+<!-- chapter-04-art:dot-product:start -->
+![SAT's Query is compared coordinate by coordinate with THE, CAT and SAT Keys.](../assets/chapter-04/02_query_key_dot_product.svg)
+<!-- chapter-04-art:dot-product:end -->
+
 # All comparisons in one matrix multiplication
+
+<!-- chapter-04-art:score-matrix:start -->
+![The complete three-by-three raw Query-Key score matrix.](../assets/chapter-04/03_full_score_matrix.svg)
+<!-- chapter-04-art:score-matrix:end -->
+
 
 The complete Query matrix is:
 
@@ -267,6 +280,11 @@ $$
 
 # Stage 2: why divide by \(\sqrt{d_k}\)?
 
+<!-- chapter-04-art:scale:start -->
+![The scale calibrator divides every score by the square root of the Query-Key width.](../assets/chapter-04/04_scale_by_sqrt_dk.svg)
+<!-- chapter-04-art:scale:end -->
+
+
 The Transformer does not normally send the raw dot products directly into softmax. It first scales them:
 
 $$
@@ -328,6 +346,11 @@ $$
 Scaling changes the distances between logits but preserves their ordering within a row because every score is divided by the same positive number.
 
 # Stage 3: causal masking
+
+<!-- chapter-04-art:causal-mask:start -->
+![The lower-triangular causal mask blocks future positions before softmax.](../assets/chapter-04/05_causal_mask_by_row.svg)
+<!-- chapter-04-art:causal-mask:end -->
+
 
 Our running model is a causal language model. A token may use information from:
 
@@ -419,6 +442,11 @@ For example, SAT's Key is:
 Nothing about SAT's Key itself changed. Only the permission relationship changed.
 
 # Stage 4: softmax turns logits into weights
+
+<!-- chapter-04-art:softmax:start -->
+![Independent softmax panels turn each Query row into weights that sum to one.](../assets/chapter-04/06_rowwise_softmax.svg)
+<!-- chapter-04-art:softmax:end -->
+
 
 For one Query row \(i\), softmax is:
 
@@ -519,6 +547,11 @@ The largest weight goes to CAT, but the attention is distributed across all thre
 
 # The complete attention-weight matrix
 
+<!-- chapter-04-art:attention-matrix:start -->
+![The final attention matrix is handed to the Information Courier for Value mixing.](../assets/chapter-04/07_attention_weight_matrix.svg)
+<!-- chapter-04-art:attention-matrix:end -->
+
+
 Applying row-wise softmax to the masked logits gives:
 
 $$
@@ -611,6 +644,11 @@ Read it from the inside out:
 4. softmax: normalise each Query row into attention weights.
 
 # Scores are not explanations
+
+<!-- chapter-04-art:guardrails:start -->
+![Four guardrails distinguish scores from probabilities, masking from negative scores, Keys from Values, and attention weights from complete explanations.](../assets/chapter-04/08_scores_are_not_payloads_or_explanations.svg)
+<!-- chapter-04-art:guardrails:end -->
+
 
 An attention matrix is mathematically observable, but it should not automatically be treated as a complete explanation of a model's behaviour.
 

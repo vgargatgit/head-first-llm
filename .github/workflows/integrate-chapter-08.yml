@@ -1,8 +1,13 @@
 name: Integrate Chapter 8 graphics
 
 on:
+  workflow_dispatch:
   issues:
     types: [opened]
+  push:
+    branches: [main]
+    paths:
+      - .github/chapter-08-integration-trigger
 
 permissions:
   contents: write
@@ -10,7 +15,7 @@ permissions:
 
 jobs:
   integrate:
-    if: github.event.issue.title == '[automation] Integrate Chapter 8 graphics'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.issue.title == '[automation] Integrate Chapter 8 graphics'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,11 +38,13 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/workflows/integrate-chapter-08.yml scripts/integrate_chapter_08.py
+          if test -f .github/chapter-08-integration-trigger; then git rm .github/chapter-08-integration-trigger; fi
           git add src/chapter-08.md site/app.js site/chapter.html site/index.html docs/chapter-08/chapter-08-scene-plan.md CHANGELOG.md assets/chapter-08
           git commit -m 'Integrate Chapter 8 graphics'
           git push origin main
 
-      - name: Close trigger issue
+      - name: Close trigger issue when present
+        if: github.event_name == 'issues'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh issue close "${{ github.event.issue.number }}" --reason completed

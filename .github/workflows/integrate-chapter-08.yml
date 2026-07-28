@@ -2,6 +2,8 @@ name: Integrate Chapter 8 graphics
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '55 16 28 7 *'
   issues:
     types: [opened]
   push:
@@ -15,7 +17,7 @@ permissions:
 
 jobs:
   integrate:
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || github.event.issue.title == '[automation] Integrate Chapter 8 graphics'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || github.event_name == 'push' || github.event.issue.title == '[automation] Integrate Chapter 8 graphics'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

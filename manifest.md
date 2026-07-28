@@ -21,13 +21,13 @@ This file records the canonical chapter order and publication status for the boo
 | 15 | The Training Factory Never Sees the Whole Library | `src/chapter-15.md` | Planned high-value graphics | Published |
 | 16 | The Model Outgrows One Machine | `src/chapter-16.md` | Planned high-value graphics | Published |
 | 17 | From Completion Machine to Helpful Assistant | `src/chapter-17.md` | Planned high-value graphics | Published |
-| 18 | Three Transformer Families Move In | `src/chapter-18.md` | Planned | Planned |
-| 19 | The Decoder Borrows the Encoder’s Notes | `src/chapter-19.md` | Planned | Planned |
-| 20 | From Pretraining to Specialisation | `src/chapter-20.md` | Planned | Planned |
-| 21 | Open Book, Closed Book, or Tool Belt? | `src/chapter-21.md` | Planned | Planned |
-| 22 | Pictures, Audio, and Other Modalities | `src/chapter-22.md` | Planned | Planned |
-| 23 | Smaller, Faster, Cheaper | `src/chapter-23.md` | Planned | Planned |
-| 24 | Trust, but Verify | `src/chapter-24.md` | Planned | Planned |
+| 18 | Three Transformer Families Move In | `src/chapter-18.md` | Planned high-value graphics | Published |
+| 19 | The Decoder Borrows the Encoder’s Notes | `src/chapter-19.md` | Planned high-value graphics | Published |
+| 20 | From Pretraining to Specialisation | `src/chapter-20.md` | Planned high-value graphics | Published |
+| 21 | Open Book, Closed Book, or Tool Belt? | `src/chapter-21.md` | Planned high-value graphics | Published |
+| 22 | Pictures, Audio, and Other Modalities | `src/chapter-22.md` | Planned high-value graphics | Published |
+| 23 | Smaller, Faster, Cheaper | `src/chapter-23.md` | Planned high-value graphics | Published |
+| 24 | Trust, but Verify | `src/chapter-24.md` | Planned high-value graphics | Published |
 
 ## Learning sequence
 
@@ -50,11 +50,11 @@ This file records the canonical chapter order and publication status for the boo
 17. Supervised demonstrations, preference comparisons, and low-rank adapters shape a pretrained completion model into assistant-like behaviour.
 18. Encoder-only, decoder-only, and encoder–decoder architectures are compared by attention pattern, training objective, strengths, and publicly documented real-world examples.
 19. Cross-attention is derived explicitly: decoder Queries attend to encoder Keys and Values so generated output can consult an encoded source sequence.
-20. The complete model lifecycle distinguishes broad pretraining, foundation models, base checkpoints, continued pretraining, full fine-tuning, supervised and instruction tuning, LoRA or QLoRA, and preference tuning.
+20. The complete model lifecycle distinguishes broad pretraining, foundation models, base checkpoints, continued pretraining, full fine-tuning, supervised and instruction tuning, LoRA or QLoRA, preference tuning, prompting, retrieval, and tools.
 21. Retrieval and tools distinguish information stored in weights from information supplied in context or fetched at runtime.
 22. Multimodal systems connect language models to image, audio, and other modality encoders through projectors, shared token spaces, or cross-attention variants.
-23. Quantisation, distillation, sparsity, mixture-of-experts routing, batching, and caching reduce training and serving cost.
-24. Evaluation covers hallucination, calibration, bias, privacy, safety, benchmark contamination, and production monitoring.
+23. Quantisation, distillation, sparsity, mixture-of-experts routing, batching, caching, and speculative decoding reduce training and serving cost.
+24. Evaluation covers hallucination, calibration, bias, privacy, safety, benchmark contamination, release gates, and production monitoring.
 
 ## Model-family examples for Chapter 18
 
@@ -68,7 +68,7 @@ Commercial frontier models whose current internals are not sufficiently disclose
 
 ## Chapter 19 — Cross-attention scope
 
-The chapter should make the source of each tensor impossible to confuse:
+The chapter makes the source of each tensor explicit:
 
 - decoder hidden states produce the Queries;
 - encoder outputs produce the Keys and Values;
@@ -76,11 +76,11 @@ The chapter should make the source of each tensor impossible to confuse:
 - the weighted sum retrieves source information for the decoder;
 - decoder causal self-attention and encoder–decoder cross-attention are separate sublayers with different jobs.
 
-The running story can use a Translator at a writing desk: the decoder drafts one output token at a time, then consults a wall of encoder notes before completing each draft.
+The running story uses a Translator at a writing desk: the decoder drafts one output token at a time, then consults a wall of encoder notes before completing each draft.
 
 ## Chapter 20 — Foundation-model and adaptation scope
 
-This chapter should distinguish concepts that are often blurred together:
+The chapter distinguishes concepts that are often blurred together:
 
 - **pretraining:** learning broad statistical structure from large datasets using a self-supervised or otherwise scalable objective;
 - **pretrained or base model:** the checkpoint produced by pretraining;
@@ -110,8 +110,8 @@ Strong candidates for Chapters 18–24 are:
 
 ## Immediate production order
 
-1. Continue the established graphics and content production sequence for the existing chapters.
-2. Write Chapter 18 as the architecture-family field guide.
-3. Follow it with the full numerical cross-attention chapter.
-4. Add the high-level foundation-model and adaptation lifecycle chapter.
-5. Continue with RAG and tools, multimodality, efficiency, and evaluation.
+1. Numerically and editorially review Chapters 18–24 against the established chapter style.
+2. Create the Chapter 18–24 visual master plan and chapter-specific scene plans.
+3. Produce the architecture-family and cross-attention graphics first.
+4. Continue through the foundation-model lifecycle, RAG, multimodality, efficiency, and evaluation graphics.
+5. Integrate approved assets with descriptive alt text and mobile review.

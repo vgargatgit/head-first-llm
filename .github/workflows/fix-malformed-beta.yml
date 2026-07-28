@@ -1,0 +1,29 @@
+name: Fix malformed beta escapes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/fix-malformed-beta.py
+      - .github/workflows/fix-malformed-beta.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[beta escapes repaired]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: python scripts/fix-malformed-beta.py
+      - name: Commit repair and remove one-time files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm scripts/fix-malformed-beta.py .github/workflows/fix-malformed-beta.yml
+          git add src/chapter-*.md
+          git commit -m "fix: repair malformed beta escapes [beta escapes repaired]"
+          git push origin HEAD:main

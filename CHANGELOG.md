@@ -2,6 +2,19 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-28 — Chapters 18 through 24 published
+
+- Added `src/chapter-18.md`: **Three Transformer Families Move In**, comparing encoder-only, decoder-only, and encoder–decoder attention patterns, objectives, use cases, and publicly documented model examples.
+- Added `src/chapter-19.md`: **The Decoder Borrows the Encoder’s Notes**, including a complete numerical cross-attention calculation from decoder Query through source Keys, softmax weights, and the encoder Value mixture.
+- Added `src/chapter-20.md`: **From Pretraining to Specialisation**, separating pretraining, foundation models, base checkpoints, continued pretraining, full and parameter-efficient fine-tuning, instruction tuning, preference tuning, prompting, retrieval, and tools.
+- Added `src/chapter-21.md`: **Open Book, Closed Book, or Tool Belt?**, covering parametric memory, prompt context, dense and hybrid retrieval, reranking, citations, external memory, access controls, prompt injection, and tool execution.
+- Added `src/chapter-22.md`: **Pictures, Audio, and Other Modalities**, covering patches, spectrogram features, projectors, learned-query bottlenecks, cross-attention, fusion strategies, and multimodal evaluation.
+- Added `src/chapter-23.md`: **Smaller, Faster, Cheaper**, covering quantisation, distillation, pruning, MoE, KV caches, GQA and MQA, continuous batching, paged caches, speculative decoding, and serving metrics.
+- Added `src/chapter-24.md`: **Trust, but Verify**, covering groundedness, calibration, Brier score, contamination, human and model judges, bias, privacy, safety, red teaming, release gates, regression testing, and production monitoring.
+- Extended the landing page, reader registry, numbered navigation, previous and next links, README, and manifest from seventeen chapters to twenty-four.
+- Bumped the website reader build version to `20260728.8` so browsers load the expanded chapter registry and current Markdown sources.
+- Kept Chapters 18–24 free of image references while marking high-value graphics as the next production phase.
+
 ## 2026-07-28 — Architecture and foundation-model roadmap added
 
 - Preserved the established seventeen published chapters and appended Chapters 18–24 as planned material.
@@ -78,7 +91,7 @@ All notable changes to **LLMs from the Inside Out** are recorded here.
 
 ## 2026-07-27 — Training-loop visual master plan added
 
-- Added `docs/training-loop-scene-master-plan.md` as the canonical character bible, visual metaphor system, and storyboard map for Chapters 12–17.
+- Added `docs/training-loop-scene-master-plan.md` as the canonical character bible and storyboard map for Chapters 12–17.
 - Defined the seven core training personas: Data Librarian, Answer-Key Clerk, Scorekeeper, Gradient Courier, Optimizer Engineer, Validation Inspector, and Checkpoint Archivist.
 - Defined supporting personas for distributed training, supervised fine-tuning, preference optimisation, and LoRA.
 - Established recurring props, places, colour and arrow conventions, technical guardrails, the master training-loop storyboard, and chapter-specific scene inventories.

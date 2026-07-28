@@ -1,0 +1,107 @@
+name: Refresh Chapter 4 Pages assets
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.event.issue.title == '[automation] Refresh Chapter 4 Pages assets'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add image cache busting and refresh deployment
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+          app_path = root / 'site/app.js'
+          app = app_path.read_text(encoding='utf-8')
+          app = re.sub(r"const BUILD_VERSION = '[^']+';", "const BUILD_VERSION = '20260728.4';", app, count=1)
+
+          old = """  function handleMissingImages() {
+    article.querySelectorAll('img').forEach(image => {
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.addEventListener('error', () => {
+        image.classList.add('image-missing');
+        const placeholder = document.createElement('div');
+        placeholder.className = 'image-placeholder';
+        placeholder.textContent = image.alt
+          ? `Illustration file is missing or empty: ${image.alt}`
+          : 'Illustration file is missing or empty.';
+        image.insertAdjacentElement('afterend', placeholder);
+      }, { once: true });
+    });
+  }
+"""
+
+          new = """  function handleMissingImages() {
+    article.querySelectorAll('img').forEach(image => {
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      image.addEventListener('error', () => {
+        image.classList.add('image-missing');
+        const placeholder = document.createElement('div');
+        placeholder.className = 'image-placeholder';
+        placeholder.textContent = image.alt
+          ? `Illustration file is missing or empty: ${image.alt}`
+          : 'Illustration file is missing or empty.';
+        image.insertAdjacentElement('afterend', placeholder);
+      }, { once: true });
+
+      const source = image.getAttribute('src');
+      if (source && !source.startsWith('data:')) {
+        const versionedSource = new URL(source, window.location.href);
+        if (versionedSource.origin === window.location.origin) {
+          versionedSource.searchParams.set('v', BUILD_VERSION);
+          image.src = versionedSource.href;
+        }
+      }
+    });
+  }
+"""
+
+          if old not in app and new not in app:
+              raise SystemExit('Could not find image handler')
+          if old in app:
+              app = app.replace(old, new, 1)
+          app_path.write_text(app, encoding='utf-8')
+
+          for relative in ('site/chapter.html', 'site/index.html'):
+              path = root / relative
+              text = path.read_text(encoding='utf-8')
+              text = re.sub(r'20260728\.\d+', '20260728.4', text)
+              path.write_text(text, encoding='utf-8')
+
+          (root / 'site/deploy-version.txt').write_text(
+              'Chapter 4 raster assets deployment: 20260728.4\n',
+              encoding='utf-8'
+          )
+
+          workflow = root / '.github/workflows/refresh-chapter-04-pages.yml'
+          if workflow.exists():
+              workflow.unlink()
+          PY
+
+      - name: Validate and commit
+        run: |
+          grep -q "BUILD_VERSION = '20260728.4'" site/app.js
+          grep -q "versionedSource.searchParams.set('v', BUILD_VERSION)" site/app.js
+          grep -q '20260728.4' site/chapter.html
+          grep -q '20260728.4' site/index.html
+          test -f site/deploy-version.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Refresh Chapter 4 Pages image assets'
+          git push

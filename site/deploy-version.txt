@@ -1,2 +1,2 @@
-Chapter 6 graphics deployment: 20260728.6
+Chapter 7 graphics deployment: 20260728.7
 Triggered directly after the bot integration commit so GitHub Pages publishes the current main branch.

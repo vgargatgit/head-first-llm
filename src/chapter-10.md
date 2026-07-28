@@ -136,6 +136,24 @@ The amended file then moves to the next floor of the building.
 
 </div>
 
+<!-- design-pattern-01:chapter-10:start -->
+<div class="translation">
+
+## Pattern Trail — Residual Connections Create a Stable Interface
+
+Chapter 7 introduced the standard residual form:
+
+$$
+y=x+F(x)
+$$
+
+Across a Transformer stack, that pattern becomes a stable architectural interface. Every block receives an $n\times d_{\text{model}}$ residual stream, computes specialised updates, and returns another matrix with the same outer shape.
+
+Depth therefore behaves like **repeated refinement**, not repeated reconstruction from raw embeddings.
+
+</div>
+<!-- design-pattern-01:chapter-10:end -->
+
 # Modern pre-norm stack notation
 
 Many modern decoder-only LLMs use a pre-normalisation arrangement.

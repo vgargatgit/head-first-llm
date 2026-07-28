@@ -284,6 +284,24 @@ The number of token positions does not change. The model still has one row per t
 
 What changes is the quality of those rows as representations of the tokens **in context**.
 
+<!-- design-pattern-01:preview:start -->
+<div class="translation">
+
+## Design Pattern Preview — Residual Connection
+
+The structure:
+
+$$
+X_{\text{updated}}=X+\Delta X_{\text{attention}}
+$$
+
+is a standard **residual connection**. The incoming state keeps a direct route to the output while attention contributes a learned update.
+
+Chapter 7 develops this pattern fully and compares it with residual blocks used elsewhere in machine learning.
+
+</div>
+<!-- design-pattern-01:preview:end -->
+
 ![Before and after the attention matchmaking session](../assets/chapter-01/04_before_and_after_attention.png)
 
 In human language, we might interpret the change as:

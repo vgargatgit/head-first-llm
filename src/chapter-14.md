@@ -355,6 +355,35 @@ $$
 
 Residual connections therefore provide a direct gradient route around each sublayer.
 
+<!-- design-pattern-01:chapter-14:start -->
+<div class="translation">
+
+## Design Pattern Revisited — The Direct Route Also Exists Backward
+
+Chapter 7 introduced the residual connection as:
+
+$$
+y=x+F(x)
+$$
+
+The forward value follows both the identity path and the learned branch. During backpropagation, the shared input likewise receives two contributions:
+
+$$
+\frac{\partial\mathcal L}{\partial x}
+=
+\frac{\partial\mathcal L}{\partial y}
++
+\frac{\partial\mathcal L}{\partial y}
+\frac{\partial F}{\partial x}
+$$
+
+The first term is the direct identity-path contribution. The second term travels through the learned branch.
+
+This direct term is one reason residual architectures are easier to optimise at depth. It is not a guarantee that the total gradient will have a particular magnitude: the branch contribution may reinforce or oppose the direct contribution.
+
+</div>
+<!-- design-pattern-01:chapter-14:end -->
+
 <div class="warning">
 
 ## Forward branches copy values; backward branches add gradients

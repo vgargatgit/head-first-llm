@@ -481,6 +481,22 @@ r_{2,\text{sat}}
 \end{aligned}
 $$
 
+<!-- design-pattern-01:chapter-08:start -->
+<div class="translation">
+
+## Pattern Trail — Residual Connection
+
+The MLP repeats the standard residual pattern introduced in Chapter 7:
+
+$$
+\text{new state}=\text{current state}+\text{learned update}
+$$
+
+Attention writes a contextual update into the residual stream. The MLP writes a position-wise feature update into that same stream. Different branches perform different computations, but both **learn an update and keep the state**.
+
+</div>
+<!-- design-pattern-01:chapter-08:end -->
+
 # The second normalisation
 
 Applying LayerNorm row by row, again using identity \(\gamma\) and \(eta\) for the arithmetic, gives the block output:

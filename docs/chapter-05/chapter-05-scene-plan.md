@@ -88,7 +88,7 @@ The planned Chapter 5 set contains **7 artwork files**.
 ### Asset
 
 ```text
-assets/chapter-05/01_chapter_hero_information_courier.png
+assets/chapter-05/01_chapter_hero_information_courier.webp
 ```
 
 ### Intended placement
@@ -143,7 +143,7 @@ SAT attention row = [0.300981, 0.389986, 0.309033]
 ### Asset
 
 ```text
-assets/chapter-05/02_value_projection_pipeline.png
+assets/chapter-05/02_value_projection_pipeline.webp
 ```
 
 ### Intended placement
@@ -197,7 +197,7 @@ x_t (1 x 4) · W^V (4 x 2) -> v_t (1 x 2)
 ### Asset
 
 ```text
-assets/chapter-05/03_exact_value_calculation.png
+assets/chapter-05/03_exact_value_calculation.webp
 ```
 
 ### Intended placement
@@ -259,7 +259,7 @@ v_sat = [-0.423, 0.001]
 ### Asset
 
 ```text
-assets/chapter-05/04_shared_value_projection.png
+assets/chapter-05/04_shared_value_projection.webp
 ```
 
 ### Intended placement
@@ -315,7 +315,7 @@ V =
 ### Asset
 
 ```text
-assets/chapter-05/05_weighted_value_retrieval.png
+assets/chapter-05/05_weighted_value_retrieval.webp
 ```
 
 ### Intended placement
@@ -373,7 +373,7 @@ Show how one attention row scales and adds Value vectors.
 ### Asset
 
 ```text
-assets/chapter-05/06_attention_output_matrix.png
+assets/chapter-05/06_attention_output_matrix.webp
 ```
 
 ### Intended placement
@@ -433,7 +433,7 @@ Z ≈
 ### Asset
 
 ```text
-assets/chapter-05/07_key_vs_value_and_handoff.png
+assets/chapter-05/07_key_vs_value_and_handoff.webp
 ```
 
 ### Intended placement
@@ -577,6 +577,6 @@ Chapter 5 graphics are complete only when:
 
 - Detailed scene planning: complete.
 - Reusable prop specification: complete.
-- Final artwork generation: not started.
-- Asset integration into the chapter: not started.
-- Website and mobile review: pending final artwork.
+- Final artwork generation: complete for all seven approved WebP scenes.
+- Asset integration into the chapter: complete.
+- Website and mobile review: pending deployed preview review.

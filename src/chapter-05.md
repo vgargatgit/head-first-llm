@@ -4,6 +4,10 @@ subtitle: "How Values and attention weights create the output of one head"
 lang: en
 ---
 
+<!-- chapter-05-art:hero:start -->
+![SAT brings the Chapter 4 attention report to the Information Courier, while THE, CAT, and SAT wait beside their separate Value packages.](../assets/chapter-05/01_chapter_hero_information_courier.webp){.hero}
+<!-- chapter-05-art:hero:end -->
+
 # The question this chapter answers
 
 Chapter 4 produced the attention-weight matrix:
@@ -81,6 +85,10 @@ z_{\text{sat}}
 $$
 
 The result \(z_{\text{sat}}\) is the output of this attention head for SAT.
+
+<!-- chapter-05-art:value-projection:start -->
+![A hidden-state card passes through the shared Value projection and becomes a two-coordinate Value package, while Query, Key, and Value are shown as different projections of the same state.](../assets/chapter-05/02_value_projection_pipeline.webp)
+<!-- chapter-05-art:value-projection:end -->
 
 # What a Value is
 
@@ -205,6 +213,11 @@ $$
 
 # Exact Value calculation for SAT
 
+<!-- chapter-05-art:exact-value:start -->
+![SAT's four hidden-state coordinates are multiplied by the Value projection matrix to produce the Value vector negative 0.423 and 0.001.](../assets/chapter-05/03_exact_value_calculation.webp)
+<!-- chapter-05-art:exact-value:end -->
+
+
 SAT's current hidden state is:
 
 $$
@@ -288,6 +301,11 @@ v_{\text{sat}}
 $$
 
 # One Value projection, many tokens
+
+<!-- chapter-05-art:shared-projection:start -->
+![THE, CAT, and SAT use the same Value projection but leave the packing station with different Value packages that form the matrix V.](../assets/chapter-05/04_shared_value_projection.webp)
+<!-- chapter-05-art:shared-projection:end -->
+
 
 The same \(W^V\) is applied to every row of \(X\):
 
@@ -508,6 +526,11 @@ CAT's output blends information from THE and CAT.
 
 # Exact attention output for SAT
 
+<!-- chapter-05-art:weighted-retrieval:start -->
+![SAT's three attention weights scale the Value packages from THE, CAT, and SAT, and the scaled vectors are added into the head output negative 0.145069 and 0.163369.](../assets/chapter-05/05_weighted_value_retrieval.webp)
+<!-- chapter-05-art:weighted-retrieval:end -->
+
+
 SAT's attention row is:
 
 $$
@@ -585,6 +608,11 @@ $$
 SAT's head output is a new vector assembled from all three visible positions.
 
 # All weighted sums in one matrix multiplication
+
+<!-- chapter-05-art:output-matrix:start -->
+![The three-by-three attention matrix multiplies the three-by-two Value matrix to produce one two-coordinate output row for each token position.](../assets/chapter-05/06_attention_output_matrix.webp)
+<!-- chapter-05-art:output-matrix:end -->
+
 
 Stacking every output row gives the head-output matrix:
 
@@ -1023,6 +1051,10 @@ In the dating-service story:
 > **The Question Coach creates the search. The Profile Writer creates searchable descriptions. The matching desk assigns weights. The Information Courier delivers a weighted blend of the matched information.**
 
 We have now completed one full attention head from input state to retrieved output.
+
+<!-- chapter-05-art:handoff:start -->
+![A correction panel distinguishes Key profiles used for matching from Value packages used as payload, then sends the completed one-head report toward the multi-head specialist wing.](../assets/chapter-05/07_key_vs_value_and_handoff.webp)
+<!-- chapter-05-art:handoff:end -->
 
 # Coming next: many heads, one result
 

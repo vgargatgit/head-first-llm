@@ -2,6 +2,14 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-28 — Chapter 5 graphics added
+
+- Added seven approved WebP scenes under `assets/chapter-05/`.
+- Introduced the Information Courier and the reusable Value-package, packing-station, and weighted-mixing visual system.
+- Integrated the hero, Value projection, exact SAT calculation, shared projection, weighted retrieval, full `A × V` matrix, and Chapter 6 handoff into the manuscript.
+- Activated Chapter 5 assets in the website reader and refreshed the site cache version.
+- Updated the Chapter 5 production plan.
+
 ## 2026-07-28 — Chapter 4 graphics added
 
 - Added the approved Chapter 4 WebP infographic and eight standalone PNG scenes under `assets/chapter-04/`.

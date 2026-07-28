@@ -1,0 +1,87 @@
+name: Integrate Chapter 4 graphics
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    if: github.event.issue.title == '[automation] Integrate Chapter 4 graphics'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Insert graphics and update production records
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          chapter_path = Path('src/chapter-04.md')
+          text = chapter_path.read_text(encoding='utf-8')
+          blocks = {
+            'hero': '''<!-- chapter-04-art:hero:start -->\n![THE, CAT and SAT meet the Question Coach at the Chapter 4 matching desk.](../assets/chapter-04/01_chapter_hero_matching_desk.svg){.hero}\n<!-- chapter-04-art:hero:end -->\n\n''',
+            'dot': '''<!-- chapter-04-art:dot-product:start -->\n![SAT's Query is compared coordinate by coordinate with THE, CAT and SAT Keys.](../assets/chapter-04/02_query_key_dot_product.svg)\n<!-- chapter-04-art:dot-product:end -->\n\n''',
+            'matrix': '''<!-- chapter-04-art:score-matrix:start -->\n![The complete three-by-three raw Query-Key score matrix.](../assets/chapter-04/03_full_score_matrix.svg)\n<!-- chapter-04-art:score-matrix:end -->\n\n''',
+            'scale': '''<!-- chapter-04-art:scale:start -->\n![The scale calibrator divides every score by the square root of the Query-Key width.](../assets/chapter-04/04_scale_by_sqrt_dk.svg)\n<!-- chapter-04-art:scale:end -->\n\n''',
+            'mask': '''<!-- chapter-04-art:causal-mask:start -->\n![The lower-triangular causal mask blocks future positions before softmax.](../assets/chapter-04/05_causal_mask_by_row.svg)\n<!-- chapter-04-art:causal-mask:end -->\n\n''',
+            'softmax': '''<!-- chapter-04-art:softmax:start -->\n![Independent softmax panels turn each Query row into weights that sum to one.](../assets/chapter-04/06_rowwise_softmax.svg)\n<!-- chapter-04-art:softmax:end -->\n\n''',
+            'attention': '''<!-- chapter-04-art:attention-matrix:start -->\n![The final attention matrix is handed to the Information Courier for Value mixing.](../assets/chapter-04/07_attention_weight_matrix.svg)\n<!-- chapter-04-art:attention-matrix:end -->\n\n''',
+            'guardrails': '''<!-- chapter-04-art:guardrails:start -->\n![Four guardrails distinguish scores from probabilities, masking from negative scores, Keys from Values, and attention weights from complete explanations.](../assets/chapter-04/08_scores_are_not_payloads_or_explanations.svg)\n<!-- chapter-04-art:guardrails:end -->\n\n'''
+          }
+
+          def before(needle, block, marker):
+            global text
+            if marker not in text:
+              if needle not in text: raise SystemExit(f'Missing heading: {needle}')
+              text = text.replace(needle, block + needle, 1)
+
+          def after(needle, block, marker):
+            global text
+            if marker not in text:
+              if needle not in text: raise SystemExit(f'Missing heading: {needle}')
+              text = text.replace(needle, needle + '\n' + block, 1)
+
+          before('# The question this chapter answers', blocks['hero'], 'chapter-04-art:hero:start')
+          before('# All comparisons in one matrix multiplication', blocks['dot'], 'chapter-04-art:dot-product:start')
+          after('# All comparisons in one matrix multiplication\n', blocks['matrix'], 'chapter-04-art:score-matrix:start')
+          after('# Stage 2: why divide by \\(\\sqrt{d_k}\\)?\n', blocks['scale'], 'chapter-04-art:scale:start')
+          after('# Stage 3: causal masking\n', blocks['mask'], 'chapter-04-art:causal-mask:start')
+          after('# Stage 4: softmax turns logits into weights\n', blocks['softmax'], 'chapter-04-art:softmax:start')
+          after('# The complete attention-weight matrix\n', blocks['attention'], 'chapter-04-art:attention-matrix:start')
+          after('# Scores are not explanations\n', blocks['guardrails'], 'chapter-04-art:guardrails:start')
+          chapter_path.write_text(text, encoding='utf-8')
+
+          plan_path = Path('docs/chapter-04/chapter-04-scene-plan.md')
+          plan = plan_path.read_text(encoding='utf-8')
+          plan = plan.replace('- Final artwork generation: not started.', '- Final artwork generation: complete for the full infographic and eight standalone scenes.')
+          plan = plan.replace('- Asset integration into `src/chapter-04.md`: not started.', '- Asset integration into `src/chapter-04.md`: complete.')
+          plan = plan.replace('- Mobile and website review: pending final artwork.', '- Mobile and website review: pending deployed preview review.')
+          plan_path.write_text(plan, encoding='utf-8')
+
+          changelog_path = Path('CHANGELOG.md')
+          changelog = changelog_path.read_text(encoding='utf-8')
+          heading = '## 2026-07-28 — Chapter 4 graphics added'
+          if heading not in changelog:
+            entry = '''## 2026-07-28 — Chapter 4 graphics added\n\n- Added a complete Chapter 4 infographic and eight standalone SVG scenes under `assets/chapter-04/`.\n- Used the exact Query, Key, score, mask, softmax, and attention values from the chapter.\n- Integrated the scenes into the Chapter 4 manuscript with descriptive alt text.\n- Updated the Chapter 4 production plan.\n\n'''
+            prefix = '# Changelog\n\nAll notable changes to **LLMs from the Inside Out** are recorded here.\n\n'
+            if prefix not in changelog: raise SystemExit('Unexpected changelog header')
+            changelog_path.write_text(changelog.replace(prefix, prefix + entry, 1), encoding='utf-8')
+
+          workflow = Path('.github/workflows/integrate-chapter-04-graphics.yml')
+          if workflow.exists(): workflow.unlink()
+          PY
+      - name: Validate and commit
+        run: |
+          for i in 00 01 02 03 04 05 06 07 08; do
+            test -n "$(find assets/chapter-04 -maxdepth 1 -name "${i}_*.svg" -print -quit)"
+          done
+          test "$(grep -c 'chapter-04-art:.*:start' src/chapter-04.md)" -eq 8
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Integrate Chapter 4 graphics'
+          git push

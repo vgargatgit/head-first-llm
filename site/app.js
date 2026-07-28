@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260728.8';
+  const BUILD_VERSION = '20260728.9';
   const chapters = {
     1: {
       title: 'A Token Enters the Dating World',
@@ -34,7 +34,13 @@
     7: { title: 'The Team Lead Combines the Reports', source: 'src/chapter-07.md', assetFrom: ['../assets/chapter-07/', '/assets/chapter-07/'], assetTo: 'assets/chapter-07/', assetAliases: {} },
     8: { title: 'The Private Thinking Room', source: 'src/chapter-08.md', assetFrom: [], assetTo: '', assetAliases: {} },
     9: { title: 'Every Token Needs an Address', source: 'src/chapter-09.md', assetFrom: [], assetTo: '', assetAliases: {} },
-    10: { title: 'The Residual Stream Climbs the Stack', source: 'src/chapter-10.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    10: {
+      title: 'The Residual Stream Climbs the Stack',
+      source: 'src/chapter-10.md',
+      assetFrom: ['../assets/chapter-10/', '/assets/chapter-10/'],
+      assetTo: 'assets/chapter-10/',
+      assetAliases: {}
+    },
     11: { title: 'The Final Audition', source: 'src/chapter-11.md', assetFrom: [], assetTo: '', assetAliases: {} },
     12: { title: 'The Answer Key Moves One Step Ahead', source: 'src/chapter-12.md', assetFrom: [], assetTo: '', assetAliases: {} },
     13: { title: 'Meet the Scorekeeper', source: 'src/chapter-13.md', assetFrom: [], assetTo: '', assetAliases: {} },
@@ -49,6 +55,61 @@
     22: { title: 'Pictures, Audio, and Other Modalities', source: 'src/chapter-22.md', assetFrom: [], assetTo: '', assetAliases: {} },
     23: { title: 'Smaller, Faster, Cheaper', source: 'src/chapter-23.md', assetFrom: [], assetTo: '', assetAliases: {} },
     24: { title: 'Trust, but Verify', source: 'src/chapter-24.md', assetFrom: [], assetTo: '', assetAliases: {} }
+  };
+
+  const chapterArtwork = {
+    10: [
+      {
+        placement: 'start',
+        src: 'assets/chapter-10/01_the_transformer_tower_explained.png',
+        alt: 'SAT approaches a tower whose floors represent successive Transformer layers.'
+      },
+      {
+        afterHeading: 'One block is one refinement step',
+        src: 'assets/chapter-10/02_one_floor_at_a_time_transformer_layer.png',
+        alt: 'One Transformer layer applies self-attention, residual connections, normalisation, and a feed-forward network.'
+      },
+      {
+        afterHeading: "SAT's evolving case file",
+        src: 'assets/chapter-10/03_sat_state_evolution_cartoon_diagram.png',
+        alt: 'SAT keeps the same token identity while its hidden representation evolves through the layer stack.'
+      },
+      {
+        afterHeading: 'Every layer owns different parameters',
+        src: 'assets/chapter-10/04_layers_and_parameters_explained_visually.png',
+        alt: 'Each Transformer layer has its own separately learned parameters despite sharing the same architecture.'
+      },
+      {
+        afterHeading: 'What repeated contextualisation buys the model',
+        src: 'assets/chapter-10/05_context_grows_with_visible_tokens.png',
+        alt: 'SAT gathers information from all visible earlier tokens and develops a richer contextual representation.'
+      },
+      {
+        afterHeading: 'One KV cache per layer',
+        src: 'assets/chapter-10/06_key_value_memory_in_neural_layers.png',
+        alt: 'Every Transformer layer stores its own cached Key and Value vectors for previous token positions.'
+      },
+      {
+        afterHeading: 'Generation processes one new position at a time',
+        src: 'assets/chapter-10/07_decoding_with_cached_keys_and_values.png',
+        alt: 'Prompt prefill caches Keys and Values, while decoding computes the newest token using the existing cache.'
+      },
+      {
+        afterHeading: 'Why model depth costs memory and computation',
+        src: 'assets/chapter-10/08_token_generation_growth_in_transformers.png',
+        alt: 'KV-cache storage grows across both sequence length and Transformer depth.'
+      },
+      {
+        afterHeading: 'The final hidden state is still not a token',
+        src: 'assets/chapter-10/09_final_output_path_diagram_with_mascot.png',
+        alt: 'The final hidden state passes through final normalisation and vocabulary projection before becoming token probabilities.'
+      },
+      {
+        afterHeading: 'Coming next: the final audition',
+        src: 'assets/chapter-10/10_chapter_11_from_final_state_to_next_token.png',
+        alt: 'Chapter 10 hands the final hidden state to Chapter 11 and the vocabulary head.'
+      }
+    ]
   };
 
   const params = new URLSearchParams(location.search);
@@ -135,6 +196,52 @@
     });
 
     return restored;
+  }
+
+  function normaliseHeadingText(text) {
+    return text.replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+
+  function createArtworkFigure(artwork, index) {
+    const figure = document.createElement('figure');
+    figure.className = 'chapter-artwork';
+    figure.dataset.artworkIndex = String(index + 1);
+
+    const image = document.createElement('img');
+    image.src = artwork.src;
+    image.alt = artwork.alt;
+
+    if (artwork.placement === 'start') image.classList.add('hero');
+
+    figure.append(image);
+    return figure;
+  }
+
+  function injectChapterArtwork() {
+    const artworkItems = chapterArtwork[chapterNumber] || [];
+    if (!artworkItems.length) return;
+
+    const headings = [...article.querySelectorAll('h1, h2, h3')];
+
+    artworkItems.forEach((artwork, index) => {
+      const figure = createArtworkFigure(artwork, index);
+
+      if (artwork.placement === 'start') {
+        article.insertBefore(figure, article.firstChild);
+        return;
+      }
+
+      const expectedHeading = normaliseHeadingText(artwork.afterHeading || '');
+      const targetHeading = headings.find(heading =>
+        normaliseHeadingText(heading.textContent) === expectedHeading
+      );
+
+      if (targetHeading) {
+        targetHeading.insertAdjacentElement('afterend', figure);
+      } else {
+        console.warn(`Could not place Chapter ${chapterNumber} artwork after heading: ${artwork.afterHeading}`);
+      }
+    });
   }
 
   function slugify(text) {
@@ -252,6 +359,7 @@
       });
 
       article.innerHTML = restoreMath(renderedMarkdown, protectedMath);
+      injectChapterArtwork();
       buildToc();
       handleMissingImages();
       buildFooterNavigation();

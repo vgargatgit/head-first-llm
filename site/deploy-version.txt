@@ -1,0 +1,2 @@
+Chapter 5 graphics deployment: 20260728.5
+Triggered directly after the bot integration commit so GitHub Pages publishes the current main branch.

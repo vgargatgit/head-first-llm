@@ -1,1 +1,0 @@
-Trigger the one-time Chapter 4 Pages asset refresh through an issue event.

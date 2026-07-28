@@ -800,7 +800,7 @@ $$
 \end{bmatrix}
 $$
 
-The learned \(\gamma\) and \(eta\) are set to identity values here only to keep the arithmetic focused on normalisation. In a trained model, they are learned parameters.
+The learned \(\gamma\) and \(\beta\) are set to identity values here only to keep the arithmetic focused on normalisation. In a trained model, they are learned parameters.
 
 # Normalise every token row
 
@@ -817,7 +817,7 @@ N\approx
 }
 $$
 
-For each row, before the learned \(\gamma\) and \(eta\):
+For each row, before the learned \(\gamma\) and \(\beta\):
 
 - the mean is approximately zero;
 - the variance is approximately one.
@@ -968,7 +968,7 @@ Residual operands must have the same shape or be deliberately projected into com
 
 LayerNorm is normally applied over the feature coordinates of each token representation.
 
-## Mistake 6: assuming \(\gamma=1\) and \(eta=0\) in a trained model
+## Mistake 6: assuming \(\gamma=1\) and \(\beta=0\) in a trained model
 
 Those values are only a simplifying choice for our worked calculation. They are trainable parameters.
 

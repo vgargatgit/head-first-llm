@@ -499,7 +499,7 @@ Attention writes a contextual update into the residual stream. The MLP writes a 
 
 # The second normalisation
 
-Applying LayerNorm row by row, again using identity \(\gamma\) and \(eta\) for the arithmetic, gives the block output:
+Applying LayerNorm row by row, again using identity \(\gamma\) and \(\beta\) for the arithmetic, gives the block output:
 
 $$
 O=\operatorname{LayerNorm}(R_2)

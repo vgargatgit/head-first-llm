@@ -529,7 +529,7 @@ The output does not depend entirely on every useful coordinate being recreated b
 
 During backpropagation, the shared input receives a contribution through the direct addition and another through the learned branch. Chapter 14 develops that calculation.
 
-Use cautious wording here: residual connections often make deep networks easier to train, but they do not guarantee that signals or gradients remain large, small, or stable. The branch can amplify, attenuate, reinforce, or oppose other contributions.
+Residual connections often make deep networks easier to train, but they do not guarantee that signals or gradients remain large, small, or stable. The branch can amplify, attenuate, reinforce, or oppose other contributions.
 
 ### 4. The architecture gains a stable interface
 

@@ -2,6 +2,15 @@
 
 All notable changes to **LLMs from the Inside Out** are recorded here.
 
+## 2026-07-28 — Architecture and foundation-model roadmap added
+
+- Preserved the established seventeen published chapters and appended Chapters 18–24 as planned material.
+- Added a dedicated comparison of encoder-only, decoder-only, and encoder–decoder Transformer families with publicly documented model examples.
+- Added a full cross-attention chapter in which decoder Queries attend to encoder Keys and Values.
+- Added a foundation-model lifecycle chapter covering pretraining, base checkpoints, continued pretraining, full and parameter-efficient fine-tuning, instruction tuning, RLHF, DPO, prompting, and RAG.
+- Added planned chapters for retrieval and tools, multimodality, deployment efficiency, and evaluation and safeguards.
+- Corrected the roadmap update so it does not renumber or overwrite the existing Chapters 4–17.
+
 ## 2026-07-28 — Chapter 7 graphics added
 
 - Added the accepted Chapter 7 full-page poster and eight WebP scene assets under `assets/chapter-07/`.
@@ -111,7 +120,7 @@ All notable changes to **LLMs from the Inside Out** are recorded here.
 - Projected the Chapter 10 hidden state into a five-token vocabulary, calculated logits and softmax probabilities, and worked through greedy decoding, temperature, top-k, top-p, weight tying, and the autoregressive generation loop.
 - Kept Chapters 9–11 free of image references while recording high-value illustration candidates in the manifest.
 - Extended the landing page, reader registry, numbered navigation, previous/next links, README, and manifest from eight chapters to eleven.
-- Bumped the reader build version to `20260727.5` so browsers load the eleven-chapter registry and current source files.
+- Bumped the reader build version to `20260727.5` so browsers load the eleven-chapter registry and current Markdown sources.
 - Updated responsive reader navigation so two-digit chapter links wrap cleanly on narrow screens.
 
 ## 2026-07-27 — Chapters 6 through 8 added

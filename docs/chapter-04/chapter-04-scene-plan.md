@@ -469,7 +469,7 @@ The planned Chapter 4 set contains **eight artwork files**.
 ### Asset
 
 ```text
-assets/chapter-04/01_chapter_hero_matching_desk.png
+assets/chapter-04/01_chapter_hero_matching_desk.svg
 ```
 
 ### Intended placement
@@ -548,7 +548,7 @@ The exact Key numbers may appear on the cards when legible; otherwise they are i
 ### Asset
 
 ```text
-assets/chapter-04/02_query_key_dot_product.png
+assets/chapter-04/02_query_key_dot_product.svg
 ```
 
 ### Intended placement
@@ -647,7 +647,7 @@ A small neutral note:
 ### Asset
 
 ```text
-assets/chapter-04/03_full_score_matrix.png
+assets/chapter-04/03_full_score_matrix.svg
 ```
 
 ### Intended placement
@@ -752,7 +752,7 @@ cell i,j = raw compatibility score
 ### Asset
 
 ```text
-assets/chapter-04/04_scale_by_sqrt_dk.png
+assets/chapter-04/04_scale_by_sqrt_dk.svg
 ```
 
 ### Intended placement
@@ -838,7 +838,7 @@ Keep this generic. Do not claim that scaling always makes attention broad or tha
 ### Asset
 
 ```text
-assets/chapter-04/05_causal_mask_by_row.png
+assets/chapter-04/05_causal_mask_by_row.svg
 ```
 
 ### Intended placement
@@ -944,7 +944,7 @@ The wrong side should visibly show a broken row total after erasing one already-
 ### Asset
 
 ```text
-assets/chapter-04/06_rowwise_softmax.png
+assets/chapter-04/06_rowwise_softmax.svg
 ```
 
 ### Intended placement
@@ -1081,7 +1081,7 @@ This callout must remain secondary to the main row-wise lesson.
 ### Asset
 
 ```text
-assets/chapter-04/07_attention_weight_matrix.png
+assets/chapter-04/07_attention_weight_matrix.svg
 ```
 
 ### Intended placement
@@ -1168,7 +1168,7 @@ Value packages should appear only as silhouettes or unopened parcels. Chapter 5 
 ### Asset
 
 ```text
-assets/chapter-04/08_scores_are_not_payloads_or_explanations.png
+assets/chapter-04/08_scores_are_not_payloads_or_explanations.svg
 ```
 
 ### Intended placement
@@ -1263,14 +1263,14 @@ Do not calculate `Z` here; only preview the next operation.
 
 | Order | Asset | Chapter section | Role |
 |---:|---|---|---|
-| 1 | `01_chapter_hero_matching_desk.png` | Chapter opening | Hero and central question |
-| 2 | `02_query_key_dot_product.png` | Stage 1 | Exact one-pair calculation |
-| 3 | `03_full_score_matrix.png` | All comparisons / shapes | Shared-system matrix view |
-| 4 | `04_scale_by_sqrt_dk.png` | Stage 2 | Numerical calibration |
-| 5 | `05_causal_mask_by_row.png` | Stage 3 | Row-specific visibility |
-| 6 | `06_rowwise_softmax.png` | Stage 4 | Exact probability normalisation |
-| 7 | `07_attention_weight_matrix.png` | Complete matrix | Final report and Chapter 5 handoff |
-| 8 | `08_scores_are_not_payloads_or_explanations.png` | Conceptual cautions / ending | Misconception guardrail |
+| 1 | `01_chapter_hero_matching_desk.svg` | Chapter opening | Hero and central question |
+| 2 | `02_query_key_dot_product.svg` | Stage 1 | Exact one-pair calculation |
+| 3 | `03_full_score_matrix.svg` | All comparisons / shapes | Shared-system matrix view |
+| 4 | `04_scale_by_sqrt_dk.svg` | Stage 2 | Numerical calibration |
+| 5 | `05_causal_mask_by_row.svg` | Stage 3 | Row-specific visibility |
+| 6 | `06_rowwise_softmax.svg` | Stage 4 | Exact probability normalisation |
+| 7 | `07_attention_weight_matrix.svg` | Complete matrix | Final report and Chapter 5 handoff |
+| 8 | `08_scores_are_not_payloads_or_explanations.svg` | Conceptual cautions / ending | Misconception guardrail |
 
 Scene 07 and Scene 08 may be reversed in the final chapter layout if the prose places “scores are not explanations” before the final handoff. The narrative requirement is that the last visible direction points toward the Information Courier and Values.
 

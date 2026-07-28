@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260727.7';
+  const BUILD_VERSION = '20260728.1';
   const chapters = {
     1: {
       title: 'A Token Enters the Dating World',
@@ -28,7 +28,7 @@
       assetTo: 'assets/chapter-03/',
       assetAliases: {}
     },
-    4: { title: 'When Queries Meet Keys', source: 'src/chapter-04.md', assetFrom: [], assetTo: '', assetAliases: {} },
+    4: { title: 'When Queries Meet Keys', source: 'src/chapter-04.md', assetFrom: ['../assets/chapter-04/', '/assets/chapter-04/'], assetTo: 'assets/chapter-04/', assetAliases: {} },
     5: { title: 'Meet the Information Courier', source: 'src/chapter-05.md', assetFrom: [], assetTo: '', assetAliases: {} },
     6: { title: 'Many Specialists at Work', source: 'src/chapter-06.md', assetFrom: [], assetTo: '', assetAliases: {} },
     7: { title: 'The Team Lead Combines the Reports', source: 'src/chapter-07.md', assetFrom: [], assetTo: '', assetAliases: {} },

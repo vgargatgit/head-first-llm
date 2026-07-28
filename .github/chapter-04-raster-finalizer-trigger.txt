@@ -1,1 +1,0 @@
-Trigger the one-time Chapter 4 raster finalizer through an issue event.

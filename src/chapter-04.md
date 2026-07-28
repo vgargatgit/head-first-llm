@@ -5,7 +5,7 @@ lang: en
 ---
 
 <!-- chapter-04-art:hero:start -->
-![THE, CAT and SAT meet the Question Coach at the Chapter 4 matching desk.](../assets/chapter-04/01_chapter_hero_matching_desk.svg){.hero}
+![THE, CAT and SAT meet the Question Coach at the Chapter 4 matching desk.](../assets/chapter-04/01_chapter_hero_matching_desk.png){.hero}
 <!-- chapter-04-art:hero:end -->
 
 # The question this chapter answers
@@ -155,13 +155,13 @@ Softmax cares about relative differences, not whether every input is positive.
 </div>
 
 <!-- chapter-04-art:dot-product:start -->
-![SAT's Query is compared coordinate by coordinate with THE, CAT and SAT Keys.](../assets/chapter-04/02_query_key_dot_product.svg)
+![SAT's Query is compared coordinate by coordinate with THE, CAT and SAT Keys.](../assets/chapter-04/02_query_key_dot_product.png)
 <!-- chapter-04-art:dot-product:end -->
 
 # All comparisons in one matrix multiplication
 
 <!-- chapter-04-art:score-matrix:start -->
-![The complete three-by-three raw Query-Key score matrix.](../assets/chapter-04/03_full_score_matrix.svg)
+![The complete three-by-three raw Query-Key score matrix.](../assets/chapter-04/03_full_score_matrix.png)
 <!-- chapter-04-art:score-matrix:end -->
 
 
@@ -281,7 +281,7 @@ $$
 # Stage 2: why divide by \(\sqrt{d_k}\)?
 
 <!-- chapter-04-art:scale:start -->
-![The scale calibrator divides every score by the square root of the Query-Key width.](../assets/chapter-04/04_scale_by_sqrt_dk.svg)
+![The scale calibrator divides every score by the square root of the Query-Key width.](../assets/chapter-04/04_scale_by_sqrt_dk.png)
 <!-- chapter-04-art:scale:end -->
 
 
@@ -348,7 +348,7 @@ Scaling changes the distances between logits but preserves their ordering within
 # Stage 3: causal masking
 
 <!-- chapter-04-art:causal-mask:start -->
-![The lower-triangular causal mask blocks future positions before softmax.](../assets/chapter-04/05_causal_mask_by_row.svg)
+![The lower-triangular causal mask blocks future positions before softmax.](../assets/chapter-04/05_causal_mask_by_row.png)
 <!-- chapter-04-art:causal-mask:end -->
 
 
@@ -444,7 +444,7 @@ Nothing about SAT's Key itself changed. Only the permission relationship changed
 # Stage 4: softmax turns logits into weights
 
 <!-- chapter-04-art:softmax:start -->
-![Independent softmax panels turn each Query row into weights that sum to one.](../assets/chapter-04/06_rowwise_softmax.svg)
+![Independent softmax panels turn each Query row into weights that sum to one.](../assets/chapter-04/06_rowwise_softmax.png)
 <!-- chapter-04-art:softmax:end -->
 
 
@@ -548,7 +548,7 @@ The largest weight goes to CAT, but the attention is distributed across all thre
 # The complete attention-weight matrix
 
 <!-- chapter-04-art:attention-matrix:start -->
-![The final attention matrix is handed to the Information Courier for Value mixing.](../assets/chapter-04/07_attention_weight_matrix.svg)
+![The final attention matrix is handed to the Information Courier for Value mixing.](../assets/chapter-04/07_attention_weight_matrix.png)
 <!-- chapter-04-art:attention-matrix:end -->
 
 
@@ -646,7 +646,7 @@ Read it from the inside out:
 # Scores are not explanations
 
 <!-- chapter-04-art:guardrails:start -->
-![Four guardrails distinguish scores from probabilities, masking from negative scores, Keys from Values, and attention weights from complete explanations.](../assets/chapter-04/08_scores_are_not_payloads_or_explanations.svg)
+![Four guardrails distinguish scores from probabilities, masking from negative scores, Keys from Values, and attention weights from complete explanations.](../assets/chapter-04/08_scores_are_not_payloads_or_explanations.png)
 <!-- chapter-04-art:guardrails:end -->
 
 

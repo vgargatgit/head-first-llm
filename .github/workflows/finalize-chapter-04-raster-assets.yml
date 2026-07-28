@@ -75,9 +75,12 @@ jobs:
           for accidental in chapter_one.glob('*chapter_4_opener_prompt*2721696499.png'):
               accidental.unlink()
 
-          workflow = root / '.github/workflows/finalize-chapter-04-raster-assets.yml'
-          if workflow.exists():
-              workflow.unlink()
+          for temporary in (
+              root / '.github/chapter-04-raster-finalizer-trigger.txt',
+              root / '.github/workflows/finalize-chapter-04-raster-assets.yml',
+          ):
+              if temporary.exists():
+                  temporary.unlink()
           PY
 
       - name: Validate final Chapter 4 state
@@ -99,6 +102,7 @@ jobs:
           test "$(grep -c 'assets/chapter-04/.*\.png' src/chapter-04.md)" -eq 8
           grep -q "BUILD_VERSION = '20260728.3'" site/app.js
           ! find assets/chapter-01 -maxdepth 1 -name '*chapter_4_opener_prompt*2721696499.png' -print -quit | grep -q .
+          test ! -f .github/chapter-04-raster-finalizer-trigger.txt
 
       - name: Commit final raster integration
         run: |

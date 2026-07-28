@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260728.3';
+  const BUILD_VERSION = '20260728.4';
   const chapters = {
     1: {
       title: 'A Token Enters the Dating World',
@@ -175,6 +175,15 @@
           : 'Illustration file is missing or empty.';
         image.insertAdjacentElement('afterend', placeholder);
       }, { once: true });
+
+      const source = image.getAttribute('src');
+      if (source && !source.startsWith('data:')) {
+        const versionedSource = new URL(source, window.location.href);
+        if (versionedSource.origin === window.location.origin) {
+          versionedSource.searchParams.set('v', BUILD_VERSION);
+          image.src = versionedSource.href;
+        }
+      }
     });
   }
 

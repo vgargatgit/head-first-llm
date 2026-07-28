@@ -88,9 +88,12 @@ jobs:
               encoding='utf-8'
           )
 
-          workflow = root / '.github/workflows/refresh-chapter-04-pages.yml'
-          if workflow.exists():
-              workflow.unlink()
+          for temporary in (
+              root / '.github/chapter-04-pages-refresh-trigger.txt',
+              root / '.github/workflows/refresh-chapter-04-pages.yml',
+          ):
+              if temporary.exists():
+                  temporary.unlink()
           PY
 
       - name: Validate and commit
@@ -100,6 +103,7 @@ jobs:
           grep -q '20260728.4' site/chapter.html
           grep -q '20260728.4' site/index.html
           test -f site/deploy-version.txt
+          test ! -f .github/chapter-04-pages-refresh-trigger.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A

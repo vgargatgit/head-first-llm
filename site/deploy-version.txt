@@ -1,2 +1,2 @@
-Chapter 7 graphics deployment: 20260728.7
-Triggered directly after the bot integration commit so GitHub Pages publishes the current main branch.
+Chapter 8 graphics deployment: 20260728.13
+Triggered after the Chapter 8 reader integration so GitHub Pages publishes the current main branch.

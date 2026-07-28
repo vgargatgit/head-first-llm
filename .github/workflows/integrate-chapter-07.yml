@@ -1,0 +1,41 @@
+name: Integrate Chapter 7 graphics
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  integrate:
+    if: github.event.issue.title == '[automation] Integrate Chapter 7 graphics'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Run validated integration
+        run: |
+          set -euo pipefail
+          python scripts/integrate_chapter_07.py
+          for file in assets/chapter-07/*.webp; do test -s "$file"; done
+          test "$(grep -c '../assets/chapter-07/' src/chapter-07.md)" -eq 8
+          grep -q "BUILD_VERSION = '20260728.7'" site/app.js
+          grep -q "assetTo: 'assets/chapter-07/'" site/app.js
+
+      - name: Commit integration and remove temporary files
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/integrate-chapter-07.yml scripts/integrate_chapter_07.py
+          git add src/chapter-07.md site/app.js site/chapter.html site/index.html docs/chapter-07/chapter-07-scene-plan.md CHANGELOG.md assets/chapter-07
+          git commit -m 'Integrate Chapter 7 graphics'
+          git push origin main
+
+      - name: Close trigger issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue close "${{ github.event.issue.number }}" --reason completed

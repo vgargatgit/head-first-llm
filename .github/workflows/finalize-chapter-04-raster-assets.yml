@@ -1,0 +1,109 @@
+name: Finalize Chapter 4 raster assets
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.event.issue.title == '[automation] Finalize Chapter 4 raster assets'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Switch Chapter 4 to raster assets
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+
+          chapter_path = root / 'src/chapter-04.md'
+          chapter = chapter_path.read_text(encoding='utf-8')
+          chapter = chapter.replace('../assets/chapter-04/01_chapter_hero_matching_desk.svg', '../assets/chapter-04/01_chapter_hero_matching_desk.png')
+          chapter = chapter.replace('../assets/chapter-04/02_query_key_dot_product.svg', '../assets/chapter-04/02_query_key_dot_product.png')
+          chapter = chapter.replace('../assets/chapter-04/03_full_score_matrix.svg', '../assets/chapter-04/03_full_score_matrix.png')
+          chapter = chapter.replace('../assets/chapter-04/04_scale_by_sqrt_dk.svg', '../assets/chapter-04/04_scale_by_sqrt_dk.png')
+          chapter = chapter.replace('../assets/chapter-04/05_causal_mask_by_row.svg', '../assets/chapter-04/05_causal_mask_by_row.png')
+          chapter = chapter.replace('../assets/chapter-04/06_rowwise_softmax.svg', '../assets/chapter-04/06_rowwise_softmax.png')
+          chapter = chapter.replace('../assets/chapter-04/07_attention_weight_matrix.svg', '../assets/chapter-04/07_attention_weight_matrix.png')
+          chapter = chapter.replace('../assets/chapter-04/08_scores_are_not_payloads_or_explanations.svg', '../assets/chapter-04/08_scores_are_not_payloads_or_explanations.png')
+          chapter_path.write_text(chapter, encoding='utf-8')
+
+          plan_path = root / 'docs/chapter-04/chapter-04-scene-plan.md'
+          plan = plan_path.read_text(encoding='utf-8')
+          plan = plan.replace('.svg', '.png')
+          plan = plan.replace('standalone SVG scenes', 'standalone PNG scenes')
+          plan = plan.replace('full infographic and eight standalone scenes', 'approved WebP infographic and eight standalone PNG scenes')
+          plan_path.write_text(plan, encoding='utf-8')
+
+          changelog_path = root / 'CHANGELOG.md'
+          changelog = changelog_path.read_text(encoding='utf-8')
+          changelog = changelog.replace(
+              'Added a complete Chapter 4 infographic and eight standalone SVG scenes under `assets/chapter-04/`.',
+              'Added the approved Chapter 4 WebP infographic and eight standalone PNG scenes under `assets/chapter-04/`.'
+          )
+          changelog = changelog.replace(
+              '- Integrated the scenes into the Chapter 4 manuscript with descriptive alt text.\n',
+              '- Integrated the raster scenes into the Chapter 4 manuscript with descriptive alt text.\n'
+          )
+          changelog_path.write_text(changelog, encoding='utf-8')
+
+          app_path = root / 'site/app.js'
+          app = app_path.read_text(encoding='utf-8')
+          app = re.sub(r"const BUILD_VERSION = '[^']+';", "const BUILD_VERSION = '20260728.3';", app, count=1)
+          app_path.write_text(app, encoding='utf-8')
+
+          for relative in ('site/chapter.html', 'site/index.html'):
+              path = root / relative
+              text = path.read_text(encoding='utf-8')
+              text = re.sub(r'20260728\.\d+', '20260728.3', text)
+              path.write_text(text, encoding='utf-8')
+
+          assets = root / 'assets/chapter-04'
+          for svg in assets.glob('*.svg'):
+              svg.unlink()
+
+          chapter_one = root / 'assets/chapter-01'
+          for accidental in chapter_one.glob('*chapter_4_opener_prompt*2721696499.png'):
+              accidental.unlink()
+
+          workflow = root / '.github/workflows/finalize-chapter-04-raster-assets.yml'
+          if workflow.exists():
+              workflow.unlink()
+          PY
+
+      - name: Validate final Chapter 4 state
+        run: |
+          test -f assets/chapter-04/00_chapter_04_complete_infographic.webp
+          for name in \
+            01_chapter_hero_matching_desk \
+            02_query_key_dot_product \
+            03_full_score_matrix \
+            04_scale_by_sqrt_dk \
+            05_causal_mask_by_row \
+            06_rowwise_softmax \
+            07_attention_weight_matrix \
+            08_scores_are_not_payloads_or_explanations; do
+            test -f "assets/chapter-04/${name}.png"
+          done
+          ! find assets/chapter-04 -maxdepth 1 -name '*.svg' -print -quit | grep -q .
+          ! grep -q 'assets/chapter-04/.*\.svg' src/chapter-04.md
+          test "$(grep -c 'assets/chapter-04/.*\.png' src/chapter-04.md)" -eq 8
+          grep -q "BUILD_VERSION = '20260728.3'" site/app.js
+          ! find assets/chapter-01 -maxdepth 1 -name '*chapter_4_opener_prompt*2721696499.png' -print -quit | grep -q .
+
+      - name: Commit final raster integration
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Finalize Chapter 4 raster graphics'
+          git push

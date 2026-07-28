@@ -49,6 +49,8 @@ const files = fs.readdirSync(srcDir)
 const rows = [];
 for (const file of files) {
   const original = fs.readFileSync(path.join(srcDir, file), 'utf8');
+  const sourceParenInline = (original.match(/\\\(/g) || []).length;
+  const sourceBracketDisplay = (original.match(/\\\[/g) || []).length;
   const prepared = prepareMarkdown(original);
   const protectedMath = protectMath(prepared);
   const rendered = marked.parse(protectedMath.markdown, {
@@ -74,8 +76,23 @@ for (const file of files) {
     .filter(match => /\*\*|(^|\n)#{1,6}\s|(^|\n)\s*[-*+]\s|\$\$/.test(match[1])).length;
   if (rawCalloutMarkdown) findings.push(`${rawCalloutMarkdown} rendered callout(s) still contain literal Markdown`);
 
+  const renderedParenInline = (html.match(/\\\(/g) || []).length;
+  const renderedBracketDisplay = (html.match(/\\\[/g) || []).length;
+  const restoredDollarInline = protectedMath.inlineMath.length;
+  const restoredDollarDisplay = protectedMath.displayMath.length;
+  if (sourceParenInline > renderedParenInline) {
+    findings.push(`${sourceParenInline - renderedParenInline} source \\(…\\) delimiter(s) are lost before MathJax can process them`);
+  }
+  if (sourceBracketDisplay > renderedBracketDisplay + restoredDollarDisplay) {
+    findings.push(`${sourceBracketDisplay - renderedBracketDisplay} source \\[…\\] delimiter(s) are lost before MathJax can process them`);
+  }
+  if (sourceParenInline || sourceBracketDisplay) {
+    findings.push(`source uses ${sourceParenInline} \\(…\\) inline and ${sourceBracketDisplay} \\[…\\] display delimiters; current protection covers only dollar delimiters (${restoredDollarInline} inline, ${restoredDollarDisplay} display)`);
+  }
+
   const h1Count = (html.match(/<h1\b/g) || []).length;
   if (h1Count === 0) findings.push('no H1 is rendered');
+  if (h1Count > 1) findings.push(`${h1Count} H1 elements are rendered, creating competing document titles or TOC entries`);
   if (!/^\s*<h1[^>]*>Chapter\s+\d+/i.test(html)) findings.push('rendered body does not begin with a chapter-title H1');
 
   fs.writeFileSync(path.join(auditDir, file.replace('.md', '.rendered.html')), html);

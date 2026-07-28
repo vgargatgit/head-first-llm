@@ -31,6 +31,9 @@ jobs:
       - name: Index the concatenated manuscript
         run: python3 tools/chapter_index.py
 
+      - name: Scan for hidden control characters
+        run: python3 tools/control_char_audit.py
+
       - name: Run rendered-Markdown audit
         run: node tools/render_audit.mjs
 

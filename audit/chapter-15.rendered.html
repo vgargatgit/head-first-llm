@@ -1,0 +1,424 @@
+<h1>The question this chapter answers</h1>
+<p>Chapter 14 followed one loss backward and changed one parameter.</p>
+<p>Real language-model training repeats that process across enormous collections of token sequences.</p>
+<p>But the complete training corpus cannot be loaded into one accelerator at once. Often, even one desired batch cannot fit into memory at once.</p>
+<p>How does a training system organise data, combine many small pieces into one optimiser step, vary the learning rate, measure progress, and recover after interruption?</p>
+<div class="big-idea">
+
+<p><strong>A training run is a carefully controlled stream of token batches. Each step samples data, computes a mean loss, accumulates gradients, updates parameters, validates progress, and periodically saves enough state to continue faithfully.</strong></p>
+</div>
+
+<h1>Cold open: the model attends one shift at a time</h1>
+<p>Imagine a library containing billions of tokens.</p>
+<p>The model does not read the complete library and then update once.</p>
+<p>Instead, the training factory repeatedly performs a cycle:</p>
+<pre><code class="language-text">select token sequences
+        -&gt; build shifted targets and masks
+        -&gt; forward pass
+        -&gt; mean loss over valid target tokens
+        -&gt; backward pass
+        -&gt; optimiser step
+        -&gt; repeat
+</code></pre>
+<p>Every update sees only a small sample of the available corpus.</p>
+<p>Over many steps, those samples provide enough evidence to shape shared parameters.</p>
+<h1>Examples, sequences, and tokens are different units</h1>
+<p>Training reports often use several batch units.</p>
+<h2>Document or example</h2>
+<p>An original item in the dataset, such as an article, source file, conversation, or book passage.</p>
+<h2>Sequence</h2>
+<p>A fixed or bounded window of tokens presented to the model in one forward pass.</p>
+<p>One long document can produce several sequences. Several short documents can be packed into one sequence.</p>
+<h2>Token</h2>
+<p>One tokenizer output position.</p>
+<p>For language models, token count is often the clearest measure of training work because sequences can have different lengths.</p>
+<div class="warning">
+
+<h2>“Batch size 32” is incomplete</h2>
+<p>It may mean 32 sequences, 32 examples, or 32 items per device. Without sequence length, device count, and gradient accumulation, it does not reveal how many tokens contribute to one optimiser step.</p>
+</div>
+
+<h1>Local batch, microbatch, and global batch</h1>
+<p>Suppose each accelerator processes:</p>
+<ul>
+<li>(B_{\mathrm{device}}) sequences per forward pass;</li>
+<li>each sequence contains (S) token positions;</li>
+<li>there are (D) data-parallel workers;</li>
+<li>gradients accumulate over (A) microsteps.</li>
+</ul>
+<p>The number of sequence slots contributing to one optimiser step is:</p>
+<div class="math-display">\[B_{\mathrm{global}}
+=
+B_{\mathrm{device}}DA\]</div>
+<p>If every sequence has (S) valid token positions, the approximate token batch is:</p>
+<div class="math-display">\[N_{\mathrm{tokens}}
+=
+B_{\mathrm{device}}DAS\]</div>
+<p>Padding and masked labels can reduce the number of valid targets.</p>
+<h1>A complete effective-batch calculation</h1>
+<p>Suppose:</p>
+<div class="math-display">\[B_{\mathrm{device}}=2\]</div>
+<div class="math-display">\[D=4\]</div>
+<div class="math-display">\[A=8\]</div>
+<p>and:</p>
+<div class="math-display">\[S=512\]</div>
+<p>Then the optimiser step combines:</p>
+<div class="math-display">\[B_{\mathrm{global}}
+=2\cdot4\cdot8
+=64\]</div>
+<p>sequence slots.</p>
+<p>The nominal token count is:</p>
+<div class="math-display">\[N_{\mathrm{tokens}}
+=2\cdot4\cdot8\cdot512
+=32768\]</div>
+<p>So the factory performs eight forward-and-backward microsteps before one optimiser update, and that update represents as many as 32,768 token positions.</p>
+<h1>Gradient accumulation preserves memory, not computation</h1>
+<p>Gradient accumulation can make a large effective batch fit into limited memory.</p>
+<pre><code class="language-text">clear gradients
+microstep 1 -&gt; forward -&gt; backward -&gt; add gradients
+microstep 2 -&gt; forward -&gt; backward -&gt; add gradients
+...
+microstep 8 -&gt; forward -&gt; backward -&gt; add gradients
+optimiser step
+clear gradients
+</code></pre>
+<p>Only one microbatch&#39;s activations need to remain live at a time.</p>
+<p>However, all eight forward and backward computations still occur. Accumulation saves peak activation memory; it does not eliminate arithmetic.</p>
+<h1>Mean the loss consistently</h1>
+<p>Suppose microbatch (m) contains (N_m) valid target tokens and token-loss sum (L_m).</p>
+<p>The correct effective-batch mean is:</p>
+<div class="math-display">\[\mathcal{L}_{\mathrm{batch}}
+=
+\frac{\sum_m L_m}{\sum_m N_m}\]</div>
+<p>Simply averaging microbatch means can be wrong when microbatches contain different numbers of valid labels.</p>
+<p>For example, consider:</p>
+<table>
+<thead>
+<tr>
+<th align="right">Microbatch</th>
+<th align="right">Valid targets</th>
+<th align="right">Mean loss</th>
+<th align="right">Loss sum</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">1</td>
+<td align="right">100</td>
+<td align="right">1.0</td>
+<td align="right">100</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td align="right">20</td>
+<td align="right">2.0</td>
+<td align="right">40</td>
+</tr>
+</tbody></table>
+<p>The unweighted average of microbatch means is:</p>
+<div class="math-display">\[\frac{1.0+2.0}{2}=1.5\]</div>
+<p>But the valid-token mean is:</p>
+<div class="math-display">\[\frac{100+40}{100+20}
+=
+1.166667\]</div>
+<p>The second value gives every valid target equal weight.</p>
+<h1>Shuffle without losing structure</h1>
+<p>Training data should not always arrive in the same highly correlated order.</p>
+<p>Shuffling helps mix topics and sources across updates. Yet language-model data pipelines must preserve structure where it matters:</p>
+<ul>
+<li>token order inside a document;</li>
+<li>document boundaries when cross-document attention is disallowed;</li>
+<li>role boundaries in conversations;</li>
+<li>source metadata used for filtering or weighting.</li>
+</ul>
+<p>The pipeline shuffles examples or sequence units, not the tokens inside a sentence.</p>
+<h1>Packing short examples</h1>
+<p>Padding wastes computation because padded positions do not provide useful targets.</p>
+<p>Suppose the context length is 16, but three examples contain 5, 4, and 3 tokens.</p>
+<p>Processing each separately uses:</p>
+<div class="math-display">\[3\cdot16=48\]</div>
+<p>sequence slots for only:</p>
+<div class="math-display">\[5+4+3=12\]</div>
+<p>real tokens.</p>
+<p>Packing can place several examples into one context window:</p>
+<pre><code class="language-text">example A | boundary | example B | boundary | example C
+</code></pre>
+<p>A correct implementation must decide whether attention can cross those boundaries and must build masks accordingly.</p>
+<p>Packing improves utilisation, but incorrect boundaries can create training examples the data policy never intended.</p>
+<h1>Data mixtures shape what the model practises</h1>
+<p>A pretraining corpus may combine sources such as:</p>
+<ul>
+<li>general web text;</li>
+<li>books and articles;</li>
+<li>source code;</li>
+<li>mathematics;</li>
+<li>scientific material;</li>
+<li>multilingual text;</li>
+<li>curated high-quality collections.</li>
+</ul>
+<p>If source (k) is sampled with probability (q_k), then:</p>
+<div class="math-display">\[\sum_k q_k=1\]</div>
+<p>The sampling probabilities need not equal raw corpus proportions.</p>
+<p>A small high-quality source may be upsampled. A huge repetitive source may be downsampled.</p>
+<div class="translation">
+
+<h2>The curriculum is partly in the sampler</h2>
+<p>The optimiser can only learn from examples the data pipeline presents. Changing the mixture changes the distribution of practice, even when the architecture and objective remain unchanged.</p>
+</div>
+
+<h1>Epochs become less intuitive at large scale</h1>
+<p>An epoch traditionally means one pass through the dataset.</p>
+<p>For a fixed corpus containing (N) tokens and a run that processes (R) training tokens:</p>
+<div class="math-display">\[\mathrm{epochs}
+=
+\frac{R}{N}\]</div>
+<p>But large language-model training may involve:</p>
+<ul>
+<li>streaming datasets;</li>
+<li>weighted resampling;</li>
+<li>repeated high-quality subsets;</li>
+<li>filtered or regenerated shards;</li>
+<li>corpora so large that one complete pass is not the most useful unit.</li>
+</ul>
+<p>Training-token count and optimiser-step count are therefore often more informative than epoch count alone.</p>
+<h1>One optimiser step is not one example</h1>
+<p>With the earlier effective batch:</p>
+<div class="math-display">\[N_{\mathrm{tokens}}=32768\]</div>
+<p>After 10,000 optimiser steps, the nominal processed-token count is:</p>
+<div class="math-display">\[32768\cdot10000
+=
+327680000\]</div>
+<p>or about 327.68 million token positions before accounting for ignored labels or repeated samples.</p>
+<h1>The learning rate changes during training</h1>
+<p>Chapter 14 used one fixed learning rate to expose the update sign.</p>
+<p>Practical training commonly uses a schedule.</p>
+<p>A frequent pattern is:</p>
+<ol>
+<li>warm up from a small learning rate;</li>
+<li>reach a peak value;</li>
+<li>decay over the remaining steps.</li>
+</ol>
+<h1>Linear warmup</h1>
+<p>Let:</p>
+<ul>
+<li>(s) be the current optimiser step;</li>
+<li>(S_w) be the number of warmup steps;</li>
+<li>(\eta_{\max}) be the peak learning rate.</li>
+</ul>
+<p>During warmup:</p>
+<div class="math-display">\[\eta(s)
+=
+\eta_{\max}\frac{s}{S_w}
+\qquad
+0\le s\le S_w\]</div>
+<p>If:</p>
+<div class="math-display">\[\eta_{\max}=3\cdot10^{-4}\]</div>
+<p>and:</p>
+<div class="math-display">\[S_w=1000\]</div>
+<p>then at step 250:</p>
+<div class="math-display">\[\eta(250)
+=
+3\cdot10^{-4}\frac{250}{1000}
+=
+7.5\cdot10^{-5}\]</div>
+<p>Warmup avoids applying the full step size before optimiser statistics and representations have stabilised.</p>
+<h1>Cosine decay</h1>
+<p>After warmup, one possible schedule is cosine decay.</p>
+<p>Let total planned steps be (S). For (s&gt;S_w), define progress:</p>
+<div class="math-display">\[u
+=
+\frac{s-S_w}{S-S_w}\]</div>
+<p>with (0\le u\le1).</p>
+<p>A cosine schedule from (\eta_{\max}) toward (\eta_{\min}) is:</p>
+<div class="math-display">\[\eta(s)
+=
+\eta_{\min}
++
+\frac{1}{2}
+(\eta_{\max}-\eta_{\min})
+[1+\cos(\pi u)]\]</div>
+<p>At (u=0), the rate is (\eta_{\max}). At (u=1), it reaches (\eta_{\min}).</p>
+<p>The exact schedule is a training-recipe choice, not a requirement of the Transformer architecture.</p>
+<h1>Training loss is not enough</h1>
+<p>Training loss is measured on data used to compute updates.</p>
+<p>A model can improve its training loss while becoming worse at generalising to unseen examples.</p>
+<p>A validation set is held out from parameter updates. Periodically, the model runs forward passes on that set and reports metrics such as:</p>
+<ul>
+<li>validation cross-entropy;</li>
+<li>validation perplexity;</li>
+<li>task-specific evaluation scores;</li>
+<li>source-specific losses.</li>
+</ul>
+<p>No backward pass or optimiser update should use the validation examples during ordinary evaluation.</p>
+<h1>Watch the gap, not only the direction</h1>
+<p>Possible patterns include:</p>
+<table>
+<thead>
+<tr>
+<th>Training loss</th>
+<th>Validation loss</th>
+<th>Possible interpretation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Falling</td>
+<td>Falling</td>
+<td>General learning is improving</td>
+</tr>
+<tr>
+<td>Falling</td>
+<td>Flat</td>
+<td>Additional updates may have diminishing general benefit</td>
+</tr>
+<tr>
+<td>Falling</td>
+<td>Rising</td>
+<td>Overfitting, distribution mismatch, or data-quality issues may be growing</td>
+</tr>
+<tr>
+<td>Unstable</td>
+<td>Unstable</td>
+<td>Optimisation or numerical problems may be present</td>
+</tr>
+</tbody></table>
+<p>A single metric cannot diagnose every cause, but the relationship between training and validation is informative.</p>
+<h1>Prevent validation contamination</h1>
+<p>Validation is misleading when its examples also appear in training.</p>
+<p>Contamination can occur through:</p>
+<ul>
+<li>duplicate documents;</li>
+<li>mirrored websites;</li>
+<li>benchmark questions copied into the corpus;</li>
+<li>train and validation slices taken after poor deduplication;</li>
+<li>generated data that reproduces held-out material.</li>
+</ul>
+<p>Deduplication and provenance tracking are part of evaluation quality, not merely storage hygiene.</p>
+<h1>Checkpoints freeze a complete training state</h1>
+<p>A useful training checkpoint normally includes more than model weights.</p>
+<p>To resume faithfully, save:</p>
+<ul>
+<li>model parameters;</li>
+<li>optimiser moments and step counters;</li>
+<li>learning-rate scheduler state;</li>
+<li>gradient-scaler state for mixed precision;</li>
+<li>random-number-generator states;</li>
+<li>data-loader or shard position;</li>
+<li>training configuration and tokenizer identity;</li>
+<li>progress counters and metadata.</li>
+</ul>
+<p>Saving only model weights allows inference, but it may not reproduce the next training step.</p>
+<h1>Why optimiser state matters</h1>
+<p>AdamW maintains moving statistics for every trained parameter.</p>
+<p>If weights are restored but those moments are reset, the resumed optimiser behaves differently from the interrupted run.</p>
+<p>The model starts from the same parameter values but not from the same optimisation state.</p>
+<h1>Why the data cursor matters</h1>
+<p>Suppose a streaming job stops after consuming part of a shard.</p>
+<p>Without restoring the data position, a resumed run may:</p>
+<ul>
+<li>repeat recent examples;</li>
+<li>skip unseen examples;</li>
+<li>change the mixture schedule;</li>
+<li>break reproducibility.</li>
+</ul>
+<p>Exact reproducibility can still be difficult in distributed systems, but checkpointing the data state reduces avoidable drift.</p>
+<h1>Checkpoint frequency is a trade-off</h1>
+<p>Saving often reduces lost work after failure, but checkpoints consume:</p>
+<ul>
+<li>storage bandwidth;</li>
+<li>filesystem or object-store capacity;</li>
+<li>training time;</li>
+<li>coordination across workers.</li>
+</ul>
+<p>A practical policy may keep:</p>
+<ul>
+<li>recent rolling checkpoints;</li>
+<li>less frequent long-term checkpoints;</li>
+<li>selected checkpoints with strong validation results.</li>
+</ul>
+<h1>A complete training-run loop</h1>
+<pre><code class="language-text">initialise model, optimiser, schedule, and data stream
+
+repeat until token or step budget is exhausted:
+    collect one or more microbatches
+    create shifted targets and masks
+    run forward and backward passes
+    reduce or accumulate gradients
+    unscale and clip when required
+    apply optimiser update
+    advance learning-rate schedule
+
+    periodically:
+        evaluate held-out data
+        log losses, throughput, and stability signals
+        save a resumable checkpoint
+</code></pre>
+<h1>Throughput and utilisation</h1>
+<p>Training systems also monitor operational measures such as:</p>
+<ul>
+<li>valid tokens processed per second;</li>
+<li>time per optimiser step;</li>
+<li>accelerator utilisation;</li>
+<li>communication time;</li>
+<li>input-pipeline stalls;</li>
+<li>memory headroom;</li>
+<li>invalid gradients or skipped steps.</li>
+</ul>
+<p>A mathematically correct training loop can still waste most hardware time while waiting for data or communication.</p>
+<h1>Common training-run mistakes</h1>
+<h2>Mistake 1: reporting sequence batch without token count</h2>
+<p>Sequence length can change the amount of work dramatically.</p>
+<h2>Mistake 2: averaging unequal microbatches equally</h2>
+<p>Loss and gradient scaling should reflect the intended valid-token weighting.</p>
+<h2>Mistake 3: assuming accumulation makes training cheaper</h2>
+<p>It reduces peak memory but still performs every microstep.</p>
+<h2>Mistake 4: shuffling tokens inside examples</h2>
+<p>Shuffling should mix examples or sequence units while preserving linguistic order.</p>
+<h2>Mistake 5: allowing packed examples to attend across forbidden boundaries</h2>
+<p>Packing and masking must agree.</p>
+<h2>Mistake 6: treating raw corpus proportions as automatically optimal</h2>
+<p>Sampling weights are part of the model&#39;s curriculum.</p>
+<h2>Mistake 7: using training loss as the only quality signal</h2>
+<p>Held-out evaluation is required to measure generalisation.</p>
+<h2>Mistake 8: saving only model weights for a training restart</h2>
+<p>Optimiser, schedule, random state, and data position also matter.</p>
+<h2>Mistake 9: changing the learning rate without recording the schedule</h2>
+<p>The schedule is part of the experiment definition.</p>
+<h2>Mistake 10: comparing runs with different token budgets as if they saw equal data</h2>
+<p>Step count alone can hide different effective batch sizes and sequence lengths.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What is the global sequence batch for 2 sequences per device, 4 devices, and 8 accumulation steps?</h2>
+<div class="math-display">\[2\cdot4\cdot8=64\]</div>
+<h2>2. At sequence length 512, what is the nominal token batch?</h2>
+<div class="math-display">\[64\cdot512=32768\]</div>
+<h2>3. What does gradient accumulation primarily reduce?</h2>
+<p>Peak activation memory required for the effective batch.</p>
+<h2>4. Why can averaging microbatch means be wrong?</h2>
+<p>Microbatches can contain different counts of valid target tokens.</p>
+<h2>5. What does data-mixture sampling control?</h2>
+<p>How often the model practises examples from each source distribution.</p>
+<h2>6. Why use learning-rate warmup?</h2>
+<p>To avoid immediately applying the peak step size during the unstable beginning of optimisation.</p>
+<h2>7. Does validation loss produce an optimiser update?</h2>
+<p>Not during ordinary held-out evaluation.</p>
+<h2>8. Why save optimiser state?</h2>
+<p>Adaptive optimiser moments and counters influence future updates.</p>
+<h2>9. Why save a data cursor?</h2>
+<p>To reduce skipped or repeated data after resuming.</p>
+<h2>10. Is one epoch always the clearest measure for LLM pretraining?</h2>
+<p>No. Weighted streaming mixtures and huge corpora often make processed-token count more informative.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>One optimiser step may combine many devices and microsteps:</p>
+<div class="math-display">\[B_{\mathrm{global}}
+=
+B_{\mathrm{device}}DA\]</div>
+<p>The training run repeatedly samples data, computes a valid-token mean loss, accumulates gradients, applies a scheduled update, validates on held-out data, and saves resumable state.</p>
+<p>In our story:</p>
+<blockquote>
+<p><strong>The model never receives the whole library at once. The training factory delivers carefully mixed pages in measured batches, adjusts the teaching pace, checks an unseen exam, and bookmarks every state needed to continue.</strong></p>
+</blockquote>
+<h1>Coming next: the factory needs more than one machine</h1>
+<p>Even a well-designed batch may not fit on one accelerator, and a large model&#39;s parameters and optimiser state can exceed one device&#39;s memory.</p>
+<p>Chapter 16 explains how workers share data, parameters, layers, activations, gradients, and communication.</p>

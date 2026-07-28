@@ -1,0 +1,757 @@
+<h1>The question this chapter answers</h1>
+<p>Chapter 10 followed SAT through a stack of Transformer blocks and a final normalisation.</p>
+<p>The resulting hidden state was:</p>
+<div class="math-display">\[\widetilde{h}_{\text{sat}}
+\approx
+\begin{bmatrix}
+-0.008859 & -0.111600 & 1.470933 & -1.350474
+\end{bmatrix}\]</div>
+<p>This vector contains contextual information produced by the model.</p>
+<p>But it is not yet a token, a word, or a probability distribution.</p>
+<p>How does the model turn four hidden coordinates into a decision among every token in its vocabulary?</p>
+<div class="big-idea">
+
+<p><strong>The language-model head projects the final hidden state into vocabulary space. The resulting logits score every vocabulary token, softmax converts those scores into probabilities, and a decoding rule selects the next token.</strong></p>
+</div>
+
+<h1>Cold open: SAT reaches the final audition</h1>
+<p>SAT&#39;s case file has travelled through:</p>
+<ul>
+<li>token and position representation;</li>
+<li>multiple attention heads;</li>
+<li>Value retrieval;</li>
+<li>output projections;</li>
+<li>residual connections;</li>
+<li>MLP transformations;</li>
+<li>a stack of Transformer blocks;</li>
+<li>final normalisation.</li>
+</ul>
+<p>Now every vocabulary token auditions to be the next token.</p>
+<p>Each candidate receives one score.</p>
+<p>The model does not directly ask:</p>
+<blockquote>
+<p>Which English word should come next?</p>
+</blockquote>
+<p>It asks:</p>
+<blockquote>
+<p>Which vocabulary token ID should come next?</p>
+</blockquote>
+<p>A vocabulary token may be:</p>
+<ul>
+<li>a complete word;</li>
+<li>part of a word;</li>
+<li>punctuation;</li>
+<li>whitespace combined with text;</li>
+<li>a control or special token.</li>
+</ul>
+<h1>The language-model output head</h1>
+<p>Let the vocabulary be:</p>
+<div class="math-display">\[\mathcal{V}\]</div>
+<p>with size:</p>
+<div class="math-display">\[|\mathcal{V}|\]</div>
+<p>The output projection has shape:</p>
+<div class="math-display">\[W_{\text{vocab}}
+\in
+\mathbb{R}^{d_{\text{model}}\times|\mathcal{V}|}\]</div>
+<p>For one final hidden state:</p>
+<div class="math-display">\[\widetilde{h}_t
+\in
+\mathbb{R}^{1\times d_{\text{model}}}\]</div>
+<p>the vocabulary logits are:</p>
+<div class="math-display">\[\ell_t
+=
+\widetilde{h}_tW_{\text{vocab}}+b\]</div>
+<p>where:</p>
+<div class="math-display">\[b\in\mathbb{R}^{1\times|\mathcal{V}|}\]</div>
+<p>The result has one coordinate per vocabulary entry:</p>
+<div class="math-display">\[\ell_t
+\in
+\mathbb{R}^{1\times|\mathcal{V}|}\]</div>
+<h1>A tiny vocabulary</h1>
+<p>Real vocabularies can contain many thousands of tokens.</p>
+<p>For a complete hand calculation, use only five candidates:</p>
+<table>
+<thead>
+<tr>
+<th align="right">Vocabulary ID</th>
+<th>Token</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">0</td>
+<td><code>on</code></td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td><code>quietly</code></td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td><code>.</code></td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td><code>the</code></td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td><code>mat</code></td>
+</tr>
+</tbody></table>
+<p>Thus:</p>
+<div class="math-display">\[|\mathcal{V}|=5\]</div>
+<p>Our model width is:</p>
+<div class="math-display">\[d_{\text{model}}=4\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[W_{\text{vocab}}
+\in
+\mathbb{R}^{4\times5}\]</div>
+<h1>The vocabulary projection matrix</h1>
+<p>Use this small learned matrix:</p>
+<div class="math-display">\[W_{\text{vocab}}
+=
+\begin{bmatrix}
+0.4 & -0.2 & 0.1 & 0.3 & -0.1\\
+-0.1 & 0.5 & -0.2 & 0.2 & 0.3\\
+0.2 & -0.1 & 0.6 & -0.4 & 0.5\\
+-0.3 & 0.4 & -0.1 & 0.1 & -0.2
+\end{bmatrix}\]</div>
+<p>and bias:</p>
+<div class="math-display">\[b=
+\begin{bmatrix}
+0.05 & -0.02 & 0.10 & 0 & 0.03
+\end{bmatrix}\]</div>
+<p>Each column of (W_{\text{vocab}}) belongs to one candidate token.</p>
+<p>For example, the third column belongs to the period token:</p>
+<div class="math-display">\[w_{.}
+=
+\begin{bmatrix}
+0.1\\
+-0.2\\
+0.6\\
+-0.1
+\end{bmatrix}\]</div>
+<h1>Calculate the vocabulary logits</h1>
+<p>SAT&#39;s final state is:</p>
+<div class="math-display">\[\widetilde{h}_{\text{sat}}
+=
+\begin{bmatrix}
+-0.008859 & -0.111600 & 1.470933 & -1.350474
+\end{bmatrix}\]</div>
+<p>The logits are:</p>
+<div class="math-display">\[\ell_{\text{sat}}
+=
+\widetilde{h}_{\text{sat}}W_{\text{vocab}}+b\]</div>
+<p>The result is:</p>
+<div class="math-display">\[\boxed{
+\ell_{\text{sat}}
+\approx
+\begin{bmatrix}
+0.756945 & -0.761311 & 1.139041 & -0.748398 & 1.002967
+\end{bmatrix}
+}\]</div>
+<p>Mapped to the vocabulary:</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th align="right">Logit</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>on</code></td>
+<td align="right">0.756945</td>
+</tr>
+<tr>
+<td><code>quietly</code></td>
+<td align="right">-0.761311</td>
+</tr>
+<tr>
+<td><code>.</code></td>
+<td align="right">1.139041</td>
+</tr>
+<tr>
+<td><code>the</code></td>
+<td align="right">-0.748398</td>
+</tr>
+<tr>
+<td><code>mat</code></td>
+<td align="right">1.002967</td>
+</tr>
+</tbody></table>
+<p>The period has the highest logit, followed by <code>mat</code>, then <code>on</code>.</p>
+<h1>Verify the period logit</h1>
+<p>The period column is:</p>
+<div class="math-display">\[w_{.}
+=
+\begin{bmatrix}
+0.1\\
+-0.2\\
+0.6\\
+-0.1
+\end{bmatrix}\]</div>
+<p>Its bias is:</p>
+<div class="math-display">\[b_{.}=0.10\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\begin{aligned}
+\ell_{.}
+&=
+(-0.008859)(0.1)
++(-0.111600)(-0.2)\\
+&\quad +(1.470933)(0.6)
++(-1.350474)(-0.1)
++0.10\\
+&\approx
+-0.000886
++0.022320
++0.882560
++0.135047
++0.100000\\
+&\approx1.139041
+\end{aligned}\]</div>
+<p>This is one ordinary dot product plus a bias.</p>
+<p>The same hidden state is compared with every vocabulary column.</p>
+<h1>Logits are scores, not probabilities</h1>
+<p>The logits include negative and positive values:</p>
+<div class="math-display">\[\ell_{\text{sat}}
+\approx
+\begin{bmatrix}
+0.756945 & -0.761311 & 1.139041 & -0.748398 & 1.002967
+\end{bmatrix}\]</div>
+<p>They do not:</p>
+<ul>
+<li>lie between 0 and 1;</li>
+<li>sum to 1;</li>
+<li>directly represent percentages.</li>
+</ul>
+<p>Only their relative values matter for the next softmax.</p>
+<p>Adding the same constant to every logit does not change the probability distribution.</p>
+<h1>Softmax over the vocabulary</h1>
+<p>For vocabulary token (j):</p>
+<div class="math-display">\[p(j)
+=
+\frac{e^{\ell_j}}
+{\sum_{r\in\mathcal{V}}e^{\ell_r}}\]</div>
+<p>For numerical stability, implementations subtract the largest logit:</p>
+<div class="math-display">\[m=\max_j\ell_j\]</div>
+<div class="math-display">\[p(j)
+=
+\frac{e^{\ell_j-m}}
+{\sum_r e^{\ell_r-m}}\]</div>
+<p>Here:</p>
+<div class="math-display">\[m=1.139041\]</div>
+<p>Applying softmax gives:</p>
+<div class="math-display">\[\boxed{
+p
+\approx
+\begin{bmatrix}
+0.238931 & 0.052348 & 0.350118 & 0.053029 & 0.305575
+\end{bmatrix}
+}\]</div>
+<p>Mapped back to tokens:</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th align="right">Probability</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>on</code></td>
+<td align="right">0.238931</td>
+</tr>
+<tr>
+<td><code>quietly</code></td>
+<td align="right">0.052348</td>
+</tr>
+<tr>
+<td><code>.</code></td>
+<td align="right">0.350118</td>
+</tr>
+<tr>
+<td><code>the</code></td>
+<td align="right">0.053029</td>
+</tr>
+<tr>
+<td><code>mat</code></td>
+<td align="right">0.305575</td>
+</tr>
+</tbody></table>
+<p>Apart from tiny rounding differences:</p>
+<div class="math-display">\[\sum_jp(j)=1\]</div>
+<div class="translation">
+
+<h2>The audition result</h2>
+<p>The logits are the judges&#39; raw scores.</p>
+<p>Softmax turns those scores into a distribution of selection chances. A candidate with a lower score can still receive a non-zero chance unless a decoding filter removes it.</p>
+</div>
+
+<h1>Follow the output shapes</h1>
+<p>For the full sequence after the final stack:</p>
+<div class="math-display">\[X^{(L)}
+\in
+\mathbb{R}^{n\times d_{\text{model}}}\]</div>
+<p>The vocabulary matrix is:</p>
+<div class="math-display">\[W_{\text{vocab}}
+\in
+\mathbb{R}^{d_{\text{model}}\times|\mathcal{V}|}\]</div>
+<p>Therefore, all positions can produce logits together:</p>
+<div class="math-display">\[\mathcal{L}
+=
+X^{(L)}W_{\text{vocab}}+b\]</div>
+<p>with:</p>
+<div class="math-display">\[\mathcal{L}
+\in
+\mathbb{R}^{n\times|\mathcal{V}|}\]</div>
+<p>There is one vocabulary-logit row for every sequence position.</p>
+<h1>Which position predicts the next token?</h1>
+<p>During generation, the model uses the final row for the current last position.</p>
+<p>If the current prefix is:</p>
+<blockquote>
+<p>The cat sat</p>
+</blockquote>
+<p>then the hidden state at SAT&#39;s position produces the distribution for the token that follows SAT.</p>
+<p>The earlier rows represent predictions that would have been made after earlier prefixes:</p>
+<table>
+<thead>
+<tr>
+<th>Final-state row</th>
+<th>Predicts token after prefix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>THE</td>
+<td><code>The</code></td>
+</tr>
+<tr>
+<td>CAT</td>
+<td><code>The cat</code></td>
+</tr>
+<tr>
+<td>SAT</td>
+<td><code>The cat sat</code></td>
+</tr>
+</tbody></table>
+<p>During training, all these rows can be scored in parallel against shifted target tokens.</p>
+<p>During one generation step, only the newest prediction is needed to choose the next token.</p>
+<h1>Greedy decoding</h1>
+<p>The simplest rule chooses the token with the largest probability:</p>
+<div class="math-display">\[\hat{j}
+=
+\arg\max_j p(j)\]</div>
+<p>For our distribution, the largest probability belongs to:</p>
+<div class="math-display">\[\texttt{.}\]</div>
+<p>because:</p>
+<div class="math-display">\[0.350118
+>
+0.305575
+>
+0.238931\]</div>
+<p>Greedy decoding therefore appends a period.</p>
+<p>Greedy decoding is deterministic for a fixed model state and fixed numerical implementation.</p>
+<p>It does not explore lower-probability alternatives.</p>
+<h1>Sampling from the distribution</h1>
+<p>Instead of taking the maximum, the decoder can sample according to the probabilities.</p>
+<p>Our distribution gives approximately:</p>
+<ul>
+<li>35.0% chance to <code>.</code>;</li>
+<li>30.6% chance to <code>mat</code>;</li>
+<li>23.9% chance to <code>on</code>;</li>
+<li>about 5.3% each to <code>quietly</code> and <code>the</code>.</li>
+</ul>
+<p>Sampling could choose <code>mat</code> even though the period has the highest probability.</p>
+<div class="warning">
+
+<h2>Highest probability does not mean guaranteed selection</h2>
+<p>The model produces a distribution. The decoding algorithm decides whether to take the maximum or draw a random sample.</p>
+<p>Model probabilities and decoding policy are separate stages.</p>
+</div>
+
+<h1>Temperature</h1>
+<p>Temperature rescales logits before softmax:</p>
+<div class="math-display">\[p_T(j)
+=
+\operatorname{softmax}
+\left(
+\frac{\ell_j}{T}
+\right)\]</div>
+<p>where:</p>
+<div class="math-display">\[T>0\]</div>
+<p>The effects are:</p>
+<ul>
+<li>(T&lt;1): differences become larger and the distribution becomes sharper;</li>
+<li>(T=1): the original distribution is preserved;</li>
+<li>(T&gt;1): differences shrink and the distribution becomes flatter.</li>
+</ul>
+<h1>Temperature applied to our logits</h1>
+<p>Using the same five logits:</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th align="right">(T=0.5)</th>
+<th align="right">(T=1.0)</th>
+<th align="right">(T=1.5)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>on</code></td>
+<td align="right">0.204911</td>
+<td align="right">0.238931</td>
+<td align="right">0.238189</td>
+</tr>
+<tr>
+<td><code>quietly</code></td>
+<td align="right">0.009836</td>
+<td align="right">0.052348</td>
+<td align="right">0.086565</td>
+</tr>
+<tr>
+<td><code>.</code></td>
+<td align="right">0.439996</td>
+<td align="right">0.350118</td>
+<td align="right">0.307291</td>
+</tr>
+<tr>
+<td><code>the</code></td>
+<td align="right">0.010093</td>
+<td align="right">0.053029</td>
+<td align="right">0.087313</td>
+</tr>
+<tr>
+<td><code>mat</code></td>
+<td align="right">0.335163</td>
+<td align="right">0.305575</td>
+<td align="right">0.280642</td>
+</tr>
+</tbody></table>
+<p>At (T=0.5), the leading candidates dominate more strongly.</p>
+<p>At (T=1.5), the lower-scoring candidates receive more probability.</p>
+<p>Temperature does not alter:</p>
+<ul>
+<li>model weights;</li>
+<li>hidden states already calculated;</li>
+<li>the vocabulary;</li>
+<li>what the model learned during training.</li>
+</ul>
+<p>It changes the distribution used for decoding.</p>
+<h1>What about temperature zero?</h1>
+<p>The formula divides by (T), so (T=0) is not a valid direct substitution.</p>
+<p>User interfaces sometimes use “temperature 0” as shorthand for deterministic or near-greedy decoding.</p>
+<p>Mathematically, greedy selection is better described as:</p>
+<div class="math-display">\[\arg\max_j\ell_j\]</div>
+<p>or as the limiting behaviour as temperature approaches zero from above.</p>
+<h1>Top-k sampling</h1>
+<p>Top-(k) sampling keeps only the (k) highest-scoring tokens.</p>
+<p>For:</p>
+<div class="math-display">\[k=2\]</div>
+<p>the retained candidates are:</p>
+<ul>
+<li><code>.</code> with probability 0.350118;</li>
+<li><code>mat</code> with probability 0.305575.</li>
+</ul>
+<p>The other probabilities are set to zero, and the retained values are renormalised.</p>
+<p>The new distribution is approximately:</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th align="right">Top-2 probability</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>.</code></td>
+<td align="right">0.533966</td>
+</tr>
+<tr>
+<td><code>mat</code></td>
+<td align="right">0.466034</td>
+</tr>
+<tr>
+<td>all others</td>
+<td align="right">0</td>
+</tr>
+</tbody></table>
+<p>Top-(k) limits the candidate count, regardless of how much total probability those candidates originally held.</p>
+<h1>Top-p or nucleus sampling</h1>
+<p>Top-(p) sampling keeps the smallest set of highest-probability tokens whose cumulative probability reaches a threshold (p).</p>
+<p>Let:</p>
+<div class="math-display">\[p=0.8\]</div>
+<p>Sort the candidates:</p>
+<table>
+<thead>
+<tr>
+<th align="right">Rank</th>
+<th>Token</th>
+<th align="right">Probability</th>
+<th align="right">Cumulative probability</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">1</td>
+<td><code>.</code></td>
+<td align="right">0.350118</td>
+<td align="right">0.350118</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td><code>mat</code></td>
+<td align="right">0.305575</td>
+<td align="right">0.655693</td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td><code>on</code></td>
+<td align="right">0.238931</td>
+<td align="right">0.894624</td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td><code>the</code></td>
+<td align="right">0.053029</td>
+<td align="right">0.947653</td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td><code>quietly</code></td>
+<td align="right">0.052348</td>
+<td align="right">1.000001</td>
+</tr>
+</tbody></table>
+<p>The first two candidates do not yet reach 0.8. Adding <code>on</code> crosses the threshold.</p>
+<p>After filtering and renormalisation:</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th align="right">Top-(p=0.8) probability</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>.</code></td>
+<td align="right">0.391358</td>
+</tr>
+<tr>
+<td><code>mat</code></td>
+<td align="right">0.341568</td>
+</tr>
+<tr>
+<td><code>on</code></td>
+<td align="right">0.267074</td>
+</tr>
+<tr>
+<td><code>the</code></td>
+<td align="right">0</td>
+</tr>
+<tr>
+<td><code>quietly</code></td>
+<td align="right">0</td>
+</tr>
+</tbody></table>
+<p>Unlike top-(k), the number of retained tokens can change from one decoding step to another.</p>
+<h1>Top-k and top-p are filters, not new model knowledge</h1>
+<p>The model produced the original logits.</p>
+<p>The decoder then applies choices such as:</p>
+<ul>
+<li>temperature scaling;</li>
+<li>top-(k) filtering;</li>
+<li>top-(p) filtering;</li>
+<li>repetition-related penalties;</li>
+<li>greedy or random selection.</li>
+</ul>
+<p>These choices can strongly affect generated text, but they do not modify the trained model parameters.</p>
+<h1>The autoregressive generation loop</h1>
+<p>Suppose the current token sequence is:</p>
+<pre><code class="language-text">The | cat | sat
+</code></pre>
+<p>One generation step performs:</p>
+<pre><code class="language-text">current prefix
+    -&gt; newest token passes through the Transformer stack
+    -&gt; final hidden state
+    -&gt; vocabulary logits
+    -&gt; decoding distribution
+    -&gt; selected token
+    -&gt; append selected token to the prefix
+</code></pre>
+<p>If <code>mat</code> is selected, the new sequence becomes:</p>
+<pre><code class="language-text">The | cat | sat | mat
+</code></pre>
+<p>The model then performs another decoding step to predict the token after <code>mat</code>.</p>
+<p>It does not usually generate a complete paragraph in one single next-token distribution.</p>
+<p>It repeatedly predicts and appends one token.</p>
+<h1>Where the KV cache fits</h1>
+<p>At the next generation step, the previous tokens are unchanged.</p>
+<p>Their layer-specific Keys and Values can remain in the KV cache.</p>
+<p>For the newly appended token, each layer calculates:</p>
+<ul>
+<li>one new Query;</li>
+<li>one new Key;</li>
+<li>one new Value.</li>
+</ul>
+<p>The new Query attends to cached Keys. The resulting weights combine cached Values and the new Value.</p>
+<p>The new Key and Value are then added to the cache for future steps.</p>
+<p>The output head still runs after the newest token passes through the complete stack.</p>
+<h1>Input embeddings and output weights can be tied</h1>
+<p>The input embedding table maps vocabulary IDs into model-width vectors.</p>
+<p>Using row-oriented notation:</p>
+<div class="math-display">\[E_{\text{token}}
+\in
+\mathbb{R}^{|\mathcal{V}|\times d_{\text{model}}}\]</div>
+<p>The output projection needs:</p>
+<div class="math-display">\[W_{\text{vocab}}
+\in
+\mathbb{R}^{d_{\text{model}}\times|\mathcal{V}|}\]</div>
+<p>Some models share these parameters through weight tying:</p>
+<div class="math-display">\[W_{\text{vocab}}
+=
+E_{\text{token}}^T\]</div>
+<p>This means the same learned vocabulary geometry participates in:</p>
+<ul>
+<li>mapping token IDs into hidden space;</li>
+<li>scoring hidden states against vocabulary candidates.</li>
+</ul>
+<p>Weight tying is common, but it is an architecture choice rather than a requirement of the Transformer formula.</p>
+<h1>Tokens are not necessarily words</h1>
+<p>The vocabulary table in this chapter used readable whole words for clarity.</p>
+<p>A real tokenizer may represent text as fragments.</p>
+<p>For example, a word could be split into several vocabulary tokens, or a token could include a leading space.</p>
+<p>Therefore, next-token generation is not always equivalent to next-word generation.</p>
+<p>The model predicts a token ID from its configured tokenizer vocabulary.</p>
+<p>That token ID is decoded back into bytes or text according to the tokenizer.</p>
+<h1>Special tokens</h1>
+<p>A vocabulary may also contain special tokens representing events such as:</p>
+<ul>
+<li>beginning of sequence;</li>
+<li>end of sequence;</li>
+<li>padding;</li>
+<li>separators;</li>
+<li>tool or control boundaries.</li>
+</ul>
+<p>If an end-of-sequence token is selected, the generation system may stop.</p>
+<p>The precise meaning and availability of special tokens depend on the model and tokenizer.</p>
+<h1>Why all vocabulary probabilities are connected</h1>
+<p>Softmax uses one shared denominator:</p>
+<div class="math-display">\[\sum_{r\in\mathcal{V}}e^{\ell_r}\]</div>
+<p>Increasing one token&#39;s logit tends to increase its probability and reduce the probability mass available to others.</p>
+<p>The vocabulary probabilities are therefore not calculated as independent yes/no decisions.</p>
+<p>They form one competing categorical distribution.</p>
+<h1>Common output and decoding mistakes</h1>
+<h2>Mistake 1: calling logits probabilities</h2>
+<p>Logits are unconstrained scores. Softmax converts them into probabilities.</p>
+<h2>Mistake 2: applying softmax over hidden coordinates</h2>
+<p>Softmax is applied over vocabulary logits, not over the (d_{\text{model}}) coordinates of the hidden state.</p>
+<h2>Mistake 3: assuming the highest-probability token must be selected</h2>
+<p>Sampling can select any retained token with non-zero probability.</p>
+<h2>Mistake 4: saying temperature changes the model&#39;s knowledge</h2>
+<p>Temperature changes logit scaling during decoding. It does not retrain the model.</p>
+<h2>Mistake 5: treating tokens as whole words</h2>
+<p>Tokens can be fragments, punctuation, whitespace-bearing pieces, bytes, or special symbols.</p>
+<h2>Mistake 6: believing a sentence is produced in one forward decision</h2>
+<p>Autoregressive decoding repeatedly selects one next token and appends it.</p>
+<h2>Mistake 7: projecting only after softmax</h2>
+<p>The order is hidden state, vocabulary projection, logits, then softmax.</p>
+<h2>Mistake 8: assuming top-(k) and top-(p) are the same</h2>
+<p>Top-(k) fixes a candidate count. Top-(p) adapts the count to cumulative probability mass.</p>
+<h2>Mistake 9: forgetting the final position rule</h2>
+<p>During generation, the final hidden row for the current prefix supplies the next-token distribution.</p>
+<h2>Mistake 10: assuming every architecture ties embedding and output weights</h2>
+<p>Weight tying is common but optional.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What is the shape of the vocabulary projection?</h2>
+<div class="math-display">\[W_{\text{vocab}}
+\in
+\mathbb{R}^{d_{\text{model}}\times|\mathcal{V}|}\]</div>
+<h2>2. What does one logit represent?</h2>
+<p>One unnormalised score for one vocabulary token candidate.</p>
+<h2>3. Do logits need to be positive?</h2>
+<p>No. They can be any real values.</p>
+<h2>4. Along which dimension is output softmax applied?</h2>
+<p>Across the vocabulary candidates for one prediction position.</p>
+<h2>5. Which token does greedy decoding select in our example?</h2>
+<p>The period token, because it has the largest logit and probability.</p>
+<h2>6. What does temperature below 1 do?</h2>
+<p>It sharpens the distribution by enlarging relative logit differences before softmax.</p>
+<h2>7. Which tokens survive top-(k) with (k=2)?</h2>
+<p>The period and <code>mat</code>.</p>
+<h2>8. Which tokens survive top-(p) with (p=0.8) in our example?</h2>
+<p>The period, <code>mat</code>, and <code>on</code>.</p>
+<h2>9. What does weight tying mean?</h2>
+<p>The output vocabulary matrix shares parameters with the transpose of the input token-embedding table.</p>
+<h2>10. Does one generation step normally produce a complete response?</h2>
+<p>No. It selects one next token. Generation repeats the process autoregressively.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>The final Transformer hidden state has model width:</p>
+<div class="math-display">\[\widetilde{h}_t
+\in
+\mathbb{R}^{1\times d_{\text{model}}}\]</div>
+<p>The language-model head projects it into vocabulary space:</p>
+<div class="math-display">\[\ell_t
+=
+\widetilde{h}_tW_{\text{vocab}}+b\]</div>
+<p>Softmax creates a categorical distribution:</p>
+<div class="math-display">\[p_t
+=
+\operatorname{softmax}(\ell_t)\]</div>
+<p>A decoding strategy then selects one token.</p>
+<p>For our example:</p>
+<div class="math-display">\[\ell_{\text{sat}}
+\approx
+\begin{bmatrix}
+0.756945 & -0.761311 & 1.139041 & -0.748398 & 1.002967
+\end{bmatrix}\]</div>
+<p>and:</p>
+<div class="math-display">\[p
+\approx
+\begin{bmatrix}
+0.238931 & 0.052348 & 0.350118 & 0.053029 & 0.305575
+\end{bmatrix}\]</div>
+<p>In our story:</p>
+<blockquote>
+<p><strong>The final hidden state enters an audition against every vocabulary token. The output projection assigns scores, softmax turns them into chances, and the decoding rule chooses who steps onto the page next.</strong></p>
+</blockquote>
+<h1>The complete inference path</h1>
+<p>We can now follow a decoder-only Transformer from text input to one generated token:</p>
+<pre><code class="language-text">text
+  -&gt; tokenizer
+  -&gt; token IDs
+  -&gt; token embeddings and position information
+  -&gt; stacked Transformer blocks
+  -&gt; final normalisation
+  -&gt; vocabulary projection
+  -&gt; logits
+  -&gt; decoding distribution
+  -&gt; selected next token
+  -&gt; append and repeat
+</code></pre>
+<p>In compact mathematical form:</p>
+<div class="math-display">\[\text{token IDs}
+\rightarrow
+X^{(0)}
+\rightarrow
+X^{(L)}
+\rightarrow
+\widetilde{h}_t
+\rightarrow
+\ell_t
+\rightarrow
+p_t
+\rightarrow
+\text{next token}\]</div>
+<h1>Coming next: how the model learns</h1>
+<p>The forward path is now complete.</p>
+<p>The next part of the book can reverse the question:</p>
+<blockquote>
+<p>How did all these matrices learn useful values?</p>
+</blockquote>
+<p>That journey begins with:</p>
+<ul>
+<li>training examples made from token sequences;</li>
+<li>shifted next-token targets;</li>
+<li>cross-entropy loss;</li>
+<li>backpropagation;</li>
+<li>gradient-based updates to embeddings, attention projections, MLP weights, normalisation parameters, and the vocabulary head.</li>
+</ul>

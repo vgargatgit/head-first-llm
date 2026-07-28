@@ -1,0 +1,471 @@
+<p><img src="chapter_2_graphics/01_chapter_hero.png" alt="Chapter 2 — Meet the Question Coach"></p>
+<h1>The question this chapter answers</h1>
+<p>At the beginning of an attention operation, every token already has a current hidden state.</p>
+<p>For <code>SAT</code>, our running example is:</p>
+<div class="math-display">\[x_{\text{sat}}
+=
+\begin{bmatrix}
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>But a hidden state is not yet a search request.</p>
+<p>How does <code>SAT</code> turn:</p>
+<blockquote>
+<p>“This is what I currently know”</p>
+</blockquote>
+<p>into:</p>
+<blockquote>
+<p>“This is the kind of information I should look for”?</p>
+</blockquote>
+<p>That transformation is the job of the <strong>Query Matrix</strong>:</p>
+<div class="math-display">\[W^Q\]</div>
+<p>In our dating-service story, it is the <strong>Question Coach</strong>.</p>
+<div class="big-idea">
+
+<p><strong>The token supplies its current state. The Question Coach transforms that state into a head-specific query vector.</strong></p>
+</div>
+
+<h1>Cold open: SAT visits the Question Coach</h1>
+<p><code>SAT</code> arrives carrying its current hidden state:</p>
+<div class="math-display">\[x_{\text{sat}}
+\in
+\mathbb{R}^{1 \times 4}\]</div>
+<p>The Question Coach says:</p>
+<blockquote>
+<p>“Tell me what you currently know. I will help turn that into what you should look for.”</p>
+</blockquote>
+<p>The result of the coaching session is a new vector:</p>
+<div class="math-display">\[q_{\text{sat}}\]</div>
+<p>The query is not a sentence in English. It is a learned numerical representation of SAT&#39;s <strong>search intent inside one attention head</strong>.</p>
+<p>In the story:</p>
+<ul>
+<li><code>SAT</code> is the client;</li>
+<li>its hidden state is its current situation;</li>
+<li>the Question Coach is the learned matrix <span class="math-inline">\(W^Q\)</span>;</li>
+<li>the finished preference card is the query vector <span class="math-inline">\(q_{\text{sat}}\)</span>.</li>
+</ul>
+<h1>What the Question Coach actually does</h1>
+<p>The core operation is:</p>
+<div class="math-display">\[q_{\text{sat}}
+=
+x_{\text{sat}} W^Q\]</div>
+<p>Read it from left to right:</p>
+<pre><code class="language-text">SAT&#39;s current state
+        ×
+the head&#39;s learned Question Coach
+        =
+SAT&#39;s query for this head
+</code></pre>
+<p><img src="chapter_2_graphics/02_question_coach_story.png" alt="The Question Coach pipeline"></p>
+<p>The Question Coach has a very specific job.</p>
+<p>It <strong>does</strong>:</p>
+<ul>
+<li>read the token&#39;s current hidden state;</li>
+<li>apply a learned linear transformation;</li>
+<li>produce a query vector for this attention head.</li>
+</ul>
+<p>It does <strong>not yet</strong>:</p>
+<ul>
+<li>inspect other tokens;</li>
+<li>compare SAT with candidates;</li>
+<li>decide which token is important;</li>
+<li>retrieve information;</li>
+<li>calculate attention weights.</li>
+</ul>
+<p>Those later steps require Keys, compatibility scores, softmax, and Values.</p>
+<div class="warning">
+
+<h2>A useful correction to the analogy</h2>
+<p>The Question Coach does not personally know every token and does not choose SAT&#39;s matches.</p>
+<p>It uses one learned transformation for every token inside this attention head. It only helps each token express a search request.</p>
+</div>
+
+<h1>Remove the costumes</h1>
+<table>
+<thead>
+<tr>
+<th>Dating-service story</th>
+<th>Transformer operation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SAT&#39;s current situation</td>
+<td>Hidden state <span class="math-inline">\(x_{sat}\)</span></td>
+</tr>
+<tr>
+<td>Question Coach</td>
+<td>Query projection <span class="math-inline">\(W^{Q}\)</span></td>
+</tr>
+<tr>
+<td>Coaching session</td>
+<td>Matrix multiplication</td>
+</tr>
+<tr>
+<td>Search-preference card</td>
+<td>Query vector <span class="math-inline">\(q_{sat}\)</span></td>
+</tr>
+<tr>
+<td>“What am I looking for?”</td>
+<td>A position in the head&#39;s learned matching space</td>
+</tr>
+</tbody></table>
+<p>The compact mathematical form is:</p>
+<div class="math-display">\[q_t = x_t W^Q\]</div>
+<p>for any token position <span class="math-inline">\(t\)</span>.</p>
+<h1>The exact size-4 calculation</h1>
+<p>We will use the same four-dimensional SAT state from Chapter 1:</p>
+<div class="math-display">\[x_{\text{sat}}
+=
+\begin{bmatrix}
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>For this attention head, suppose the learned Question Coach is:</p>
+<div class="math-display">\[W^Q
+=
+\begin{bmatrix}
+0.8 & -0.2 \\
+0.1 & 0.7 \\
+-0.4 & 0.5 \\
+0.6 & 0.3
+\end{bmatrix}\]</div>
+<p>Its shape is:</p>
+<div class="math-display">\[W^Q
+\in
+\mathbb{R}^{4 \times 2}\]</div>
+<p>The multiplication is:</p>
+<div class="math-display">\[q_{\text{sat}}
+=
+\begin{bmatrix}
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}
+\begin{bmatrix}
+0.8 & -0.2 \\
+0.1 & 0.7 \\
+-0.4 & 0.5 \\
+0.6 & 0.3
+\end{bmatrix}\]</div>
+<p>The result has two coordinates:</p>
+<div class="math-display">\[q_{\text{sat}}
+=
+\begin{bmatrix}
+q_1 & q_2
+\end{bmatrix}\]</div>
+<p><img src="chapter_2_graphics/03_exact_query_calculation.png" alt="Exact query calculation"></p>
+<h2>First query coordinate</h2>
+<p>The first output coordinate uses the first column of <span class="math-inline">\(W^Q\)</span>:</p>
+<div class="math-display">\[\begin{aligned}
+q_1
+&=
+0.14(0.8)
++
+(-0.22)(0.1)
++
+0.67(-0.4)
++
+(-0.31)(0.6) \\
+&=
+0.112
+-
+0.022
+-
+0.268
+-
+0.186 \\
+&=
+-0.364
+\end{aligned}\]</div>
+<h2>Second query coordinate</h2>
+<p>The second output coordinate uses the second column of <span class="math-inline">\(W^Q\)</span>:</p>
+<div class="math-display">\[\begin{aligned}
+q_2
+&=
+0.14(-0.2)
++
+(-0.22)(0.7)
++
+0.67(0.5)
++
+(-0.31)(0.3) \\
+&=
+-0.028
+-
+0.154
++
+0.335
+-
+0.093 \\
+&=
+0.060
+\end{aligned}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\boxed{
+q_{\text{sat}}
+=
+\begin{bmatrix}
+-0.364 & 0.060
+\end{bmatrix}
+}\]</div>
+<h1>Follow the shapes</h1>
+<p>The hidden state has shape:</p>
+<div class="math-display">\[x_{\text{sat}}
+\in
+\mathbb{R}^{1 \times 4}\]</div>
+<p>The Question Coach has shape:</p>
+<div class="math-display">\[W^Q
+\in
+\mathbb{R}^{4 \times 2}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[(1 \times 4)(4 \times 2)
+=
+(1 \times 2)\]</div>
+<p>The inner dimensions match:</p>
+<div class="math-display">\[4 = 4\]</div>
+<p>and disappear from the output shape.</p>
+<p>The remaining dimensions tell us that one token now has a two-dimensional query for this head:</p>
+<div class="math-display">\[q_{\text{sat}}
+\in
+\mathbb{R}^{1 \times 2}\]</div>
+<div class="translation">
+
+<h2>Shape intuition</h2>
+<p>The token state lives in the shared four-dimensional model space.</p>
+<p>The Question Coach projects it into this head&#39;s smaller two-dimensional <strong>query space</strong>.</p>
+<p>The head will compare queries and keys inside that smaller space.</p>
+</div>
+
+<h1>What does the query vector mean?</h1>
+<p>We obtained:</p>
+<div class="math-display">\[q_{\text{sat}}
+=
+\begin{bmatrix}
+-0.364 & 0.060
+\end{bmatrix}\]</div>
+<p>It is tempting to say:</p>
+<pre><code class="language-text">−0.364 means “find a subject”
+0.060 means “look nearby”
+</code></pre>
+<p>That would be too literal.</p>
+<p>The two coordinates do not come with human-assigned labels.</p>
+<p>A more accurate interpretation is:</p>
+<blockquote>
+<p>This vector places SAT at a particular point in the learned query space of this attention head.</p>
+</blockquote>
+<p>The query becomes meaningful operationally when it is compared with Key vectors:</p>
+<div class="math-display">\[q_{\text{sat}} \cdot k_j\]</div>
+<p>That comparison answers:</p>
+<blockquote>
+<p>“How well does SAT&#39;s search request match token <span class="math-inline">\(j\)</span>&#39;s searchable profile?”</p>
+</blockquote>
+<p>Until Keys exist, the query is an unfinished request.</p>
+<h1>Why transform the hidden state at all?</h1>
+<p>Why not compare token hidden states directly?</p>
+<p>For example, why not compare:</p>
+<div class="math-display">\[x_{\text{sat}} \cdot x_{\text{cat}}\]</div>
+<p>instead of creating queries and keys?</p>
+<p>Because the token&#39;s hidden state serves many purposes at once. It contains information needed by:</p>
+<ul>
+<li>attention;</li>
+<li>later MLP computation;</li>
+<li>residual connections;</li>
+<li>later Transformer layers;</li>
+<li>the final prediction process.</li>
+</ul>
+<p>The attention head needs a specialised view of that state.</p>
+<p>The Query Matrix can learn:</p>
+<blockquote>
+<p>“Which combinations of the current hidden-state coordinates are useful when this token is searching?”</p>
+</blockquote>
+<p>Later, the Key Matrix will learn a different view:</p>
+<blockquote>
+<p>“Which combinations are useful when this token is being searched?”</p>
+</blockquote>
+<p>So the same hidden state can play different roles:</p>
+<div class="math-display">\[x_t W^Q
+\neq
+x_t W^K\]</div>
+<p>in general.</p>
+<h1>One coach, many clients</h1>
+<p>Within one attention head, the same Question Coach is applied to every token.</p>
+<p>For our three-token sequence:</p>
+<div class="math-display">\[X
+=
+\begin{bmatrix}
+x_{\text{The}} \\
+x_{\text{cat}} \\
+x_{\text{sat}}
+\end{bmatrix}\]</div>
+<p>the complete query matrix is:</p>
+<div class="math-display">\[Q = XW^Q\]</div>
+<p><img src="chapter_2_graphics/04_shared_coach.png" alt="One shared Question Coach creates different token queries"></p>
+<p>Using the Chapter 1 hidden states:</p>
+<div class="math-display">\[X =
+\begin{bmatrix}
+0.21 & -0.37 & 0.58 & -0.11 \\
+-0.42 & 0.73 & -0.15 & 0.36 \\
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>and the same <span class="math-inline">\(W^Q\)</span>, we obtain:</p>
+<div class="math-display">\[Q
+=
+\begin{bmatrix}
+-0.167 & -0.044 \\
+0.013 & 0.628 \\
+-0.364 & 0.060
+\end{bmatrix}\]</div>
+<p>The rows correspond to:</p>
+<div class="math-display">\[Q
+=
+\begin{bmatrix}
+q_{\text{The}} \\
+q_{\text{cat}} \\
+q_{\text{sat}}
+\end{bmatrix}\]</div>
+<p>So the same coach produces different questions because the clients arrive with different current states.</p>
+<p>This is similar to one career coach using the same method with three different clients. The process is shared; the advice differs because the inputs differ.</p>
+<div class="big-idea">
+
+<p><strong>Shared parameters do not imply identical outputs. The same <span class="math-inline">\(W^Q\)</span> acts on different hidden states, producing different queries.</strong></p>
+</div>
+
+<h1>Why call <span class="math-inline">\(Q\)</span> a matrix?</h1>
+<p>For one token, the result is a query vector:</p>
+<div class="math-display">\[q_t\]</div>
+<p>For the entire sequence, we stack every query row:</p>
+<div class="math-display">\[Q
+=
+\begin{bmatrix}
+q_1 \\
+q_2 \\
+\vdots \\
+q_n
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[Q \in \mathbb{R}^{n \times d_k}\]</div>
+<p>In our example:</p>
+<div class="math-display">\[Q \in \mathbb{R}^{3 \times 2}\]</div>
+<p>Be careful with the language:</p>
+<ul>
+<li><span class="math-inline">\(W^Q\)</span> is the learned <strong>Query Matrix</strong> or query projection;</li>
+<li><span class="math-inline">\(q_t\)</span> is one token&#39;s <strong>query vector</strong>;</li>
+<li><span class="math-inline">\(Q\)</span> is the <strong>matrix of all token queries</strong>.</li>
+</ul>
+<p>These are related but not interchangeable.</p>
+<h1>Different attention heads have different Question Coaches</h1>
+<p>One attention head is one specialised matching system.</p>
+<p>In ordinary multi-head attention, every head has its own query projection:</p>
+<div class="math-display">\[W_1^Q,\;
+W_2^Q,\;
+\ldots,\;
+W_h^Q\]</div>
+<p>Therefore, the same SAT state may produce different queries:</p>
+<div class="math-display">\[q_{\text{sat}}^{(1)}
+=
+x_{\text{sat}} W_1^Q\]</div>
+<div class="math-display">\[q_{\text{sat}}^{(2)}
+=
+x_{\text{sat}} W_2^Q\]</div>
+<p>and so on.</p>
+<p><img src="chapter_2_graphics/05_different_heads.png" alt="Different heads employ different Question Coaches"></p>
+<p>In the dating-service story:</p>
+<ul>
+<li>Head 1 operates one specialist matchmaking agency;</li>
+<li>Head 2 operates another;</li>
+<li>each agency employs its own Question Coach;</li>
+<li>each coach helps SAT express a different kind of search preference.</li>
+</ul>
+<p>One head may become useful for nearby relationships. Another may become useful for grammatical structure. Another may detect long-distance patterns.</p>
+<p>But remember:</p>
+<ul>
+<li>these specialisations are learned;</li>
+<li>they are not manually assigned;</li>
+<li>real heads are not always cleanly interpretable;</li>
+<li>a head may participate in several overlapping computations.</li>
+</ul>
+<div class="warning">
+
+<h2>Analogy warning</h2>
+<p>The Question Coaches are not writing literal questions such as “find my subject.”</p>
+<p>Each <span class="math-inline">\(W_h^Q\)</span> creates a vector in a different learned query space. Human descriptions are interpretations of the behaviour that may emerge from those vectors.</p>
+</div>
+
+<h1>One implementation detail</h1>
+<p>Transformer implementations often compute all head queries using one large matrix multiplication.</p>
+<p>Instead of visibly storing:</p>
+<div class="math-display">\[W_1^Q,\;
+W_2^Q,\;
+\ldots,\;
+W_h^Q\]</div>
+<p>the implementation may store a combined projection:</p>
+<div class="math-display">\[W_{\text{combined}}^Q\]</div>
+<p>and then split the output into heads.</p>
+<p>Conceptually, however, each head still receives its own slice of the query projection and produces its own query coordinates.</p>
+<p>So the dating-service intuition remains useful:</p>
+<blockquote>
+<p>Every specialist matchmaking agency has its own Question Coach.</p>
+</blockquote>
+<h1>What the query does not contain</h1>
+<p>The query does not contain:</p>
+<ul>
+<li>a list of matching token indices;</li>
+<li>attention percentages;</li>
+<li>information copied from another token;</li>
+<li>the final contextual update;</li>
+<li>the answer to the token&#39;s request.</li>
+</ul>
+<p>It only represents what this token is looking for <strong>inside this head&#39;s matching system</strong>.</p>
+<p>The sequence is:</p>
+<pre><code class="language-text">current hidden state
+        ↓
+Question Coach
+        ↓
+query
+        ↓
+compare against Keys
+        ↓
+compatibility scores
+</code></pre>
+<p>We have completed only the first three steps.</p>
+<h1>Brain check</h1>
+<div class="exercise">
+
+<h2>1. What information does the Question Coach receive?</h2>
+<p>Only the current hidden state of the token being transformed.</p>
+<h2>2. Does <span class="math-inline">\(W^Q\)</span> inspect all other tokens?</h2>
+<p>No. It independently transforms each token state into a query. Cross-token comparison happens later through <span class="math-inline">\(QK^T\)</span>.</p>
+<h2>3. Is <span class="math-inline">\(q_{\text{sat}}\)</span> an English-language question?</h2>
+<p>No. It is a vector in a learned query space.</p>
+<h2>4. Why do THE, CAT, and SAT obtain different queries if the same <span class="math-inline">\(W^Q\)</span> is used?</h2>
+<p>Because their hidden-state vectors are different.</p>
+<h2>5. Does every attention head use the same <span class="math-inline">\(W^Q\)</span>?</h2>
+<p>In ordinary multi-head attention, no. Each head conceptually has its own query projection.</p>
+<h2>6. What is the shape of the result of <span class="math-inline">\((1 \times 4)(4 \times 2)\)</span>?</h2>
+<div class="math-display">\[1 \times 2\]</div>
+<h2>7. What is the difference between <span class="math-inline">\(W^Q\)</span>, <span class="math-inline">\(q_t\)</span>, and <span class="math-inline">\(Q\)</span>?</h2>
+<ul>
+<li><span class="math-inline">\(W^Q\)</span>: learned query transformation;</li>
+<li><span class="math-inline">\(q_t\)</span>: one token&#39;s query vector;</li>
+<li><span class="math-inline">\(Q\)</span>: all token query vectors stacked as rows.</li>
+</ul>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>A token begins with its current hidden state:</p>
+<div class="math-display">\[x_t\]</div>
+<p>The Question Coach transforms it:</p>
+<div class="math-display">\[q_t = x_tW^Q\]</div>
+<p>The result is a head-specific query vector:</p>
+<div class="math-display">\[q_t \in \mathbb{R}^{d_k}\]</div>
+<p>In the dating-service story:</p>
+<blockquote>
+<p><strong>The token explains its current situation. The Question Coach helps it express what kind of match it is looking for.</strong></p>
+</blockquote>
+<p>But SAT still has a problem.</p>
+<p>It has expressed what it wants, but the other tokens have not yet created searchable profiles.</p>
+<p><img src="chapter_2_graphics/06_handoff_to_keys.png" alt="SAT now has a query, but matching requires Keys"></p>
+<h1>Coming next: Meet the Profile Writer</h1>
+<p>Every visible token needs a searchable description of what kinds of requests it can match.</p>
+<p>That is the job of the Key Matrix:</p>
+<div class="math-display">\[W^K\]</div>
+<p>In Chapter 3, every token will meet the <strong>Profile Writer</strong>, and we will calculate:</p>
+<div class="math-display">\[k_t = x_tW^K\]</div>
+<p>Then, for the first time, SAT&#39;s query can be compared with another token&#39;s key:</p>
+<div class="math-display">\[q_{\text{sat}} \cdot k_j\]</div>

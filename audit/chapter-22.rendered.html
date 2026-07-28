@@ -1,0 +1,402 @@
+<h1>The question this chapter answers</h1>
+<p>A text model begins with token IDs.</p>
+<p>An image is a grid of pixel values. Audio is a waveform that changes over time. Video adds both space and time. A document can combine text, layout, tables, diagrams, handwriting, and photographs.</p>
+<p>How can one model accept such different inputs and still produce useful language?</p>
+<div class="big-idea">
+
+<p><strong>Multimodal systems first turn each modality into vectors, then build a learnable bridge into a shared reasoning or generation system. The bridge may be a projector, a cross-attention module, a shared token space, or an encoder–decoder interface.</strong></p>
+</div>
+
+<h1>The Senses Department</h1>
+<p>Imagine the language model working in a control room.</p>
+<p>It cannot directly accept a photograph or a pressure waveform. Specialised departments prepare reports first.</p>
+<pre><code class="language-text">image
+  -&gt; vision encoder
+  -&gt; visual features
+
+speech
+  -&gt; audio encoder
+  -&gt; acoustic features
+
+text
+  -&gt; tokenizer and embeddings
+  -&gt; language features
+</code></pre>
+<p>A connector then translates those features into a form the language system can use.</p>
+<p>The connector is not always the same.</p>
+<h1>Modality is about representation</h1>
+<p>A modality is a way information is measured or expressed.</p>
+<p>Examples include:</p>
+<ul>
+<li>text;</li>
+<li>images;</li>
+<li>audio;</li>
+<li>video;</li>
+<li>depth;</li>
+<li>point clouds;</li>
+<li>sensor streams;</li>
+<li>molecular structures;</li>
+<li>documents with layout;</li>
+<li>actions or robot states.</li>
+</ul>
+<p>A multimodal model combines at least two such information types.</p>
+<p>The model may consume several modalities, produce several modalities, or both.</p>
+<h1>Images become sequences of vectors</h1>
+<p>A vision Transformer commonly divides an image into patches.</p>
+<p>Suppose an image has height <span class="math-inline">\(H\)</span>, width <span class="math-inline">\(W\)</span>, and patch size <span class="math-inline">\(P\mathbin{×}P\)</span>.</p>
+<p>The number of non-overlapping patches is:</p>
+<div class="math-display">\[N
+=
+\frac{H}{P}
+\frac{W}{P}\]</div>
+<p>For a <span class="math-inline">\(224\mathbin{×}224\)</span> image with <span class="math-inline">\(16\mathbin{×}16\)</span> patches:</p>
+<div class="math-display">\[N
+=
+\frac{224}{16}
+\frac{224}{16}
+=14\cdot14
+=196\]</div>
+<p>Each patch is flattened and projected into a vector.</p>
+<p>The image can then be processed as a sequence of 196 visual tokens, often with positional information.</p>
+<pre><code class="language-text">pixels
+  -&gt; patches
+  -&gt; patch vectors
+  -&gt; vision Transformer
+  -&gt; contextual visual features
+</code></pre>
+<h1>Audio becomes time–frequency features</h1>
+<p>Raw audio is a one-dimensional waveform.</p>
+<p>Many speech systems transform it into a time–frequency representation such as a log-Mel spectrogram.</p>
+<p>Conceptually:</p>
+<pre><code class="language-text">waveform
+  -&gt; overlapping time windows
+  -&gt; frequency analysis
+  -&gt; spectrogram frames
+  -&gt; audio encoder
+</code></pre>
+<p>The encoder produces a sequence of acoustic hidden states.</p>
+<p>A text decoder can then generate transcription tokens while cross-attending to those audio features.</p>
+<p>This is an encoder–decoder pattern with different input and output modalities.</p>
+<h1>Four common connection patterns</h1>
+<h2>Pattern 1: projector into language-token space</h2>
+<p>A modality encoder produces features:</p>
+<div class="math-display">\[H_{\mathrm{mod}}
+\in
+\mathbb{R}^{N\mathbin{×}d_{\mathrm{mod}}}\]</div>
+<p>A learned projector maps them to the language-model width:</p>
+<div class="math-display">\[H_{\mathrm{bridge}}
+=
+H_{\mathrm{mod}}W_P+b_P\]</div>
+<p>where:</p>
+<div class="math-display">\[W_P
+\in
+\mathbb{R}^{d_{\mathrm{mod}}\mathbin{×}d_{\mathrm{model}}}\]</div>
+<p>The projected vectors can be inserted as pseudo-tokens in a decoder context.</p>
+<h2>Pattern 2: cross-attention</h2>
+<p>Language hidden states create Queries, while modality features create Keys and Values.</p>
+<div class="math-display">\[Q=H_{\mathrm{text}}W^Q\]</div>
+<div class="math-display">\[K=H_{\mathrm{mod}}W^K\]</div>
+<div class="math-display">\[V=H_{\mathrm{mod}}W^V\]</div>
+<p>The language stream retrieves visual or acoustic information through cross-attention.</p>
+<h2>Pattern 3: learned query bottleneck</h2>
+<p>A small set of learned query vectors attends to a large modality representation.</p>
+<pre><code class="language-text">many image patches
+  -&gt; learned query tokens inspect them
+  -&gt; compact set of visual tokens
+  -&gt; language model
+</code></pre>
+<p>This can reduce the amount of modality information passed into a frozen or expensive language model.</p>
+<h2>Pattern 4: unified token or latent space</h2>
+<p>A model may encode several modalities into one shared sequence or latent representation and process them with a common Transformer.</p>
+<p>The details can include modality-type embeddings, separate input stems, shared blocks, or modality-specific output heads.</p>
+<h1>A tiny projector calculation</h1>
+<p>Suppose a vision encoder produces one feature vector:</p>
+<div class="math-display">\[v
+=
+\begin{bmatrix}
+0.6&-0.2&0.5
+\end{bmatrix}\]</div>
+<p>A learned projection matrix is:</p>
+<div class="math-display">\[W_P
+=
+\begin{bmatrix}
+0.5&0.1\\
+-0.3&0.7\\
+0.4&-0.2
+\end{bmatrix}\]</div>
+<p>Ignoring bias:</p>
+<div class="math-display">\[p=vW_P\]</div>
+<p>First output coordinate:</p>
+<div class="math-display">\[0.6(0.5)+(-0.2)(-0.3)+0.5(0.4)\]</div>
+<div class="math-display">\[=0.30+0.06+0.20
+=0.56\]</div>
+<p>Second coordinate:</p>
+<div class="math-display">\[0.6(0.1)+(-0.2)(0.7)+0.5(-0.2)\]</div>
+<div class="math-display">\[=0.06-0.14-0.10
+=-0.18\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[p
+=
+\begin{bmatrix}
+0.56&-0.18
+\end{bmatrix}\]</div>
+<p>The projector has converted a three-dimensional visual feature into a two-dimensional vector compatible with the receiving system in this toy example.</p>
+<p>A real bridge may use a deeper MLP, normalisation, resampling, multiple tokens, or cross-attention.</p>
+<h1>Projecting dimensions is not enough</h1>
+<p>A matrix can make the shapes compatible without making the meanings compatible.</p>
+<p>Training must align the representations so that useful visual or acoustic distinctions affect language behaviour.</p>
+<p>The bridge must learn questions such as:</p>
+<ul>
+<li>Which visual features correspond to objects and attributes?</li>
+<li>Which acoustic features correspond to phonemes or speakers?</li>
+<li>Which regions support a caption or answer?</li>
+<li>Which modality details can be compressed safely?</li>
+<li>Which features should remain separate?</li>
+</ul>
+<p>Shape compatibility is necessary. Semantic alignment is learned.</p>
+<h1>Multimodal training objectives</h1>
+<p>A multimodal system may combine several objectives.</p>
+<h2>Contrastive alignment</h2>
+<p>Matched image–text pairs should have similar representations, while mismatched pairs should be less similar.</p>
+<p>For a batch, a simplified image-to-text contrastive loss can be written as:</p>
+<div class="math-display">\[\mathcal{L}_{i\rightarrow t}
+=
+-\frac{1}{B}
+\sum_{i=1}^{B}
+\log
+\frac{
+\exp(s(v_i,t_i)/\tau)
+}{
+\sum_{j=1}^{B}\exp(s(v_i,t_j)/\tau)
+}\]</div>
+<p>where <span class="math-inline">\(s\)</span> is a similarity function and <span class="math-inline">\(\tau\)</span> is a temperature.</p>
+<h2>Captioning or sequence generation</h2>
+<p>The model predicts text conditioned on modality features:</p>
+<div class="math-display">\[\mathcal{L}_{\mathrm{caption}}
+=
+-\sum_t
+\log p_\theta(y_t\mid y_{<t},H_{\mathrm{image}})\]</div>
+<h2>Matching</h2>
+<p>A classifier predicts whether an image and text belong together.</p>
+<h2>Reconstruction</h2>
+<p>The model reconstructs masked or corrupted portions of one modality.</p>
+<h2>Instruction tuning</h2>
+<p>Examples teach the system to answer questions, describe scenes, transcribe audio, follow document instructions, or use modality-aware tools.</p>
+<p>No single objective guarantees every multimodal capability.</p>
+<h1>Frozen and trainable components</h1>
+<p>A practical system may begin with strong pretrained parts.</p>
+<pre><code class="language-text">frozen vision encoder
+        +
+trainable bridge
+        +
+frozen or partly trainable language model
+</code></pre>
+<p>Training only the bridge is cheaper than updating everything, but it limits adaptation capacity.</p>
+<p>Other recipes unfreeze selected layers or train the full system end to end.</p>
+<p>The choice affects memory, data requirements, representation alignment, and catastrophic forgetting.</p>
+<h1>BLIP-2 as a bridge example</h1>
+<p>BLIP-2 connects a frozen image encoder and a frozen large language model with a lightweight Querying Transformer.</p>
+<p>Learned query tokens extract a compact visual representation, and training aligns that representation with language generation.</p>
+<p>The important lesson is architectural, not brand-specific:</p>
+<blockquote>
+<p>A small trainable bridge can connect two large pretrained systems when its objective teaches the interface successfully.</p>
+</blockquote>
+<h1>Flamingo as a cross-attention example</h1>
+<p>Flamingo connects vision and language components and introduces gated cross-attention layers so language representations can consult visual features.</p>
+<p>It supports interleaved images, videos, and text.</p>
+<p>Again, the broader lesson is that modality information can enter a language model through repeated cross-attention rather than only through one projected prefix.</p>
+<h1>Whisper as an audio encoder–text decoder example</h1>
+<p>Whisper processes audio features with an encoder and generates text with a decoder.</p>
+<p>The decoder uses causal self-attention over generated text and cross-attention over encoded audio.</p>
+<p>This is the same information-flow pattern studied in Chapter 19, with acoustic source positions instead of source-language words.</p>
+<h1>Early, middle, and late fusion</h1>
+<h2>Early fusion</h2>
+<p>Modalities are combined near the input.</p>
+<p>Example:</p>
+<pre><code class="language-text">visual tokens + text tokens
+  -&gt; shared Transformer
+</code></pre>
+<p>This permits deep interaction but can be computationally expensive.</p>
+<h2>Middle fusion</h2>
+<p>Separate encoders process modalities first, then hidden representations interact through shared layers or cross-attention.</p>
+<h2>Late fusion</h2>
+<p>Independent models produce predictions or scores that are combined near the output.</p>
+<p>Late fusion is modular but may miss fine-grained cross-modal relationships.</p>
+<h1>Spatial information is fragile</h1>
+<p>An image encoder must preserve enough information about location and relationships.</p>
+<p>Questions such as:</p>
+<ul>
+<li>What is left of the cup?</li>
+<li>Which arrow points to the valve?</li>
+<li>Is the label inside the box?</li>
+<li>Which row belongs to this heading?</li>
+</ul>
+<p>require spatial or layout reasoning, not only object recognition.</p>
+<p>Patch order, position encodings, image resolution, crops, and connector design all affect performance.</p>
+<h1>Documents are more than images</h1>
+<p>A scanned report contains:</p>
+<ul>
+<li>visual layout;</li>
+<li>machine-readable text;</li>
+<li>typography;</li>
+<li>tables;</li>
+<li>charts;</li>
+<li>page order;</li>
+<li>footnotes;</li>
+<li>handwriting or stamps.</li>
+</ul>
+<p>A document system may combine OCR, layout encoders, vision features, text tokens, and structural parsers.</p>
+<p>Simply shrinking the page into a low-resolution image can destroy small text and table detail.</p>
+<h1>Video adds time</h1>
+<p>Video contains many highly redundant frames.</p>
+<p>Processing every frame at full resolution can be prohibitively expensive.</p>
+<p>Systems may use:</p>
+<ul>
+<li>frame sampling;</li>
+<li>temporal pooling;</li>
+<li>clip encoders;</li>
+<li>motion features;</li>
+<li>learned resamplers;</li>
+<li>hierarchical attention;</li>
+<li>separate audio tracks.</li>
+</ul>
+<p>Temporal order matters. A model that recognises objects in individual frames may still misunderstand which event happened first.</p>
+<h1>Audio is not only speech</h1>
+<p>Audio models may need to represent:</p>
+<ul>
+<li>words;</li>
+<li>speaker identity;</li>
+<li>emotion or prosody;</li>
+<li>music;</li>
+<li>environmental sounds;</li>
+<li>overlapping speakers;</li>
+<li>silence and timing.</li>
+</ul>
+<p>A transcript discards many of those signals.</p>
+<p>A system that converts all audio immediately to text may lose information needed for the task.</p>
+<h1>Multimodal generation</h1>
+<p>Some systems only consume non-text modalities and generate text.</p>
+<p>Others can generate images, audio, or video.</p>
+<p>Output generation may use:</p>
+<ul>
+<li>autoregressive tokens;</li>
+<li>diffusion models;</li>
+<li>discrete codec tokens;</li>
+<li>neural vocoders;</li>
+<li>modality-specific decoders.</li>
+</ul>
+<p>A language model may plan or condition the output without directly producing final pixels or waveforms.</p>
+<h1>Grounding and hallucination</h1>
+<p>A multimodal model can hallucinate objects, text, relationships, or events.</p>
+<p>Possible causes include:</p>
+<ul>
+<li>low image resolution;</li>
+<li>ambiguous input;</li>
+<li>weak connector alignment;</li>
+<li>language priors overpowering evidence;</li>
+<li>cropping;</li>
+<li>OCR errors;</li>
+<li>missing frames;</li>
+<li>conflicting modalities;</li>
+<li>instruction tuning that rewards fluent guesses.</li>
+</ul>
+<p>The system should support uncertainty and abstention when evidence is insufficient.</p>
+<h1>Modality conflicts</h1>
+<p>Suppose an image shows a red sign but the prompt says it is blue.</p>
+<p>Which source should the model trust?</p>
+<p>Training and system instructions determine how conflicts are handled.</p>
+<p>A robust application can explicitly label sources:</p>
+<pre><code class="language-text">USER CLAIM: The sign is blue.
+IMAGE EVIDENCE: Visual input.
+TASK: Report what is visible and note disagreement.
+</code></pre>
+<p>Without source boundaries, the model may blend the claim and evidence.</p>
+<h1>Safety and privacy expand with modalities</h1>
+<p>Multimodal systems can expose:</p>
+<ul>
+<li>faces and identities;</li>
+<li>location metadata;</li>
+<li>voices;</li>
+<li>health information;</li>
+<li>documents visible in the background;</li>
+<li>copyrighted media;</li>
+<li>biometric characteristics;</li>
+<li>private conversations;</li>
+<li>sensitive screen content.</li>
+</ul>
+<p>Controls should address collection, retention, access, redaction, consent, and downstream use.</p>
+<h1>Evaluate each modality and the bridge</h1>
+<p>A multimodal evaluation should separate:</p>
+<ul>
+<li>encoder quality;</li>
+<li>connector alignment;</li>
+<li>cross-modal reasoning;</li>
+<li>text generation quality;</li>
+<li>OCR or transcription accuracy;</li>
+<li>spatial and temporal reasoning;</li>
+<li>robustness to noise;</li>
+<li>modality conflict handling;</li>
+<li>safety and privacy behaviour;</li>
+<li>latency and memory.</li>
+</ul>
+<p>Strong text fluency can hide weak perception.</p>
+<h1>Common multimodal mistakes</h1>
+<h2>Mistake 1: saying the language model reads pixels directly</h2>
+<p>Many systems use a separate vision encoder and bridge.</p>
+<h2>Mistake 2: assuming a projector automatically aligns semantics</h2>
+<p>Training is required to make projected features meaningful to the language system.</p>
+<h2>Mistake 3: treating image patches as words</h2>
+<p>Both are vectors, but their structure, training signals, and information content differ.</p>
+<h2>Mistake 4: saying every multimodal model uses cross-attention</h2>
+<p>Some use projected prefixes, shared token spaces, or other fusion mechanisms.</p>
+<h2>Mistake 5: judging visual understanding from fluent captions alone</h2>
+<p>Captions can be plausible while missing exact details.</p>
+<h2>Mistake 6: using transcripts when non-verbal audio matters</h2>
+<p>Transcription removes tone, speaker, and environmental information.</p>
+<h2>Mistake 7: ignoring resolution and preprocessing</h2>
+<p>A model cannot recover details removed before encoding.</p>
+<h2>Mistake 8: evaluating only average accuracy</h2>
+<p>Spatial, OCR, temporal, multilingual, and safety slices may fail differently.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. How many <span class="math-inline">\(16\mathbin{×}16\)</span> patches fit in a <span class="math-inline">\(224\mathbin{×}224\)</span> image?</h2>
+<div class="math-display">\[196\]</div>
+<h2>2. What does a modality encoder produce?</h2>
+<p>A sequence or set of learned feature vectors.</p>
+<h2>3. What does a projector do?</h2>
+<p>Maps modality features into a dimension and representation space usable by another component.</p>
+<h2>4. What was the projected vector in the numerical example?</h2>
+<div class="math-display">\[\begin{bmatrix}
+0.56&-0.18
+\end{bmatrix}\]</div>
+<h2>5. In multimodal cross-attention, where can Keys and Values come from?</h2>
+<p>From encoded image, audio, video, or other modality features.</p>
+<h2>6. What is a learned-query bottleneck?</h2>
+<p>A small set of trainable query vectors that extracts a compact representation from many modality features.</p>
+<h2>7. Is Whisper decoder-only?</h2>
+<p>No. It uses an audio encoder and text decoder.</p>
+<h2>8. Why can OCR and layout require special treatment?</h2>
+<p>Small text, tables, and spatial structure may be lost by ordinary image preprocessing.</p>
+<h2>9. Does a fluent description prove accurate perception?</h2>
+<p>No.</p>
+<h2>10. Why evaluate the connector separately?</h2>
+<p>The modality encoder may capture information that the bridge fails to deliver to the language system.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Multimodal models do not erase modality differences.</p>
+<p>They encode each input into vectors and learn interfaces that let information cross from one representation system into another.</p>
+<p>In our story:</p>
+<blockquote>
+<p><strong>The Vision and Audio departments do not hand the language model raw pixels or waveforms. They prepare structured reports. A trained bridge translates those reports into tokens or memories the language system can consult.</strong></p>
+</blockquote>
+<h1>Coming next: make the system affordable</h1>
+<p>The next chapter examines how models are compressed and served: quantisation, distillation, sparsity, mixture-of-experts routing, batching, caching, speculative decoding, latency, throughput, and memory trade-offs.</p>
+<h1>Further reading</h1>
+<ul>
+<li><a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></li>
+<li><a href="https://arxiv.org/abs/2204.14198">Flamingo: a Visual Language Model for Few-Shot Learning</a></li>
+<li><a href="https://arxiv.org/abs/2301.12597">BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models</a></li>
+<li><a href="https://arxiv.org/abs/2212.04356">Robust Speech Recognition via Large-Scale Weak Supervision</a></li>
+</ul>

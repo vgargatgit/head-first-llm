@@ -1,0 +1,497 @@
+<!-- chapter-06-art:hero:start -->
+<p><img src="../assets/chapter-06/01_chapter_hero_two_attention_heads.webp" alt="THE, CAT, and SAT send the same hidden-state matrix into two complete attention-head specialist agencies, each with its own learned projections and attention pipeline."></p>
+<!-- chapter-06-art:hero:end -->
+
+<h1>The question this chapter answers</h1>
+<p>Chapter 5 completed one causal self-attention head:</p>
+<div class="math-display">\[Z_1
+=
+\operatorname{softmax}
+\left(
+\frac{Q_1K_1^T}{\sqrt{d_k}}+M
+\right)V_1\]</div>
+<p>For our three-token sequence, that head produced:</p>
+<div class="math-display">\[Z_1\approx
+\begin{bmatrix}
+-0.220000 & -0.075000\\
+-0.033945 & 0.215415\\
+-0.145069 & 0.163369
+\end{bmatrix}\]</div>
+<p>One head gives every token one learned way to search, match, and retrieve information.</p>
+<p>But Transformers usually run several heads in parallel.</p>
+<p>Why should the model repeat attention instead of simply making one head wider?</p>
+<div class="big-idea">
+
+<p><strong>Each attention head learns its own Query, Key, and Value projections. Multiple heads let the same token sequence participate in several different learned matching-and-retrieval systems at the same time.</strong></p>
+</div>
+
+<h1>Cold open: one sentence, two specialists</h1>
+<p>Our sequence is still:</p>
+<blockquote>
+<p><strong>The cat sat</strong></p>
+</blockquote>
+<p>Imagine that two specialists inspect the same three token states.</p>
+<p>The first specialist uses:</p>
+<div class="math-display">\[W_1^Q,\quad W_1^K,\quad W_1^V\]</div>
+<p>The second specialist uses:</p>
+<div class="math-display">\[W_2^Q,\quad W_2^K,\quad W_2^V\]</div>
+<p>Both specialists receive the same input matrix:</p>
+<div class="math-display">\[X=
+\begin{bmatrix}
+0.21 & -0.37 & 0.58 & -0.11\\
+-0.42 & 0.73 & -0.15 & 0.36\\
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>But they transform it using different learned parameters.</p>
+<p>Therefore, they can produce different:</p>
+<ul>
+<li>Queries;</li>
+<li>Keys;</li>
+<li>Values;</li>
+<li>attention weights;</li>
+<li>retrieved outputs.</li>
+</ul>
+<p>The heads are not given human-written job descriptions. Their different behaviour emerges because their parameters are learned independently during training.</p>
+<!-- chapter-06-art:one-head:start -->
+<p><img src="../assets/chapter-06/02_one_head_complete_pipeline.webp" alt="A complete Head 1 blueprint shows its own Query, Key, and Value projections, score calculation, scaling, causal mask, row-wise softmax, Value retrieval, and two-coordinate output."></p>
+<!-- chapter-06-art:one-head:end -->
+
+<h1>One head is one complete attention system</h1>
+<p>For head (r):</p>
+<div class="math-display">\[Q_r=XW_r^Q\]</div>
+<div class="math-display">\[K_r=XW_r^K\]</div>
+<div class="math-display">\[V_r=XW_r^V\]</div>
+<div class="math-display">\[A_r=
+\operatorname{softmax}
+\left(
+\frac{Q_rK_r^T}{\sqrt{d_k}}+M
+\right)\]</div>
+<div class="math-display">\[Z_r=A_rV_r\]</div>
+<p>Every head performs the full attention procedure.</p>
+<p>A head is not merely one row of a matrix. It is one set of learned projections plus the matching, masking, normalisation, and retrieval operations that use those projections.</p>
+<h1>The dimensions of our two-head example</h1>
+<p>We use:</p>
+<div class="math-display">\[d_{\text{model}}=4\]</div>
+<p>and:</p>
+<div class="math-display">\[h=2\]</div>
+<p>Each head has:</p>
+<div class="math-display">\[d_k=d_v=2\]</div>
+<p>So one token state begins with four coordinates:</p>
+<div class="math-display">\[x_t\in\mathbb{R}^{1\times4}\]</div>
+<p>Each head produces a two-coordinate output:</p>
+<div class="math-display">\[z_t^{(r)}\in\mathbb{R}^{1\times2}\]</div>
+<p>Two such outputs can later be concatenated back into four coordinates:</p>
+<div class="math-display">\[2+2=4\]</div>
+<div class="translation">
+
+<h2>Why this split is common</h2>
+<p>When (h\cdot d_v=d_{\text{model}}), concatenating all head outputs restores the model width before the output projection.</p>
+<p>That is a common design, not a mathematical requirement of attention itself.</p>
+</div>
+
+<h1>Head 1: the result we already know</h1>
+<p>Chapter 4 produced Head 1&#39;s attention matrix:</p>
+<div class="math-display">\[A_1\approx
+\begin{bmatrix}
+1.000000 & 0 & 0\\
+0.472931 & 0.527069 & 0\\
+0.300981 & 0.389986 & 0.309033
+\end{bmatrix}\]</div>
+<p>Chapter 5 produced its Value matrix:</p>
+<div class="math-display">\[V_1=
+\begin{bmatrix}
+-0.220 & -0.075\\
+0.133 & 0.476\\
+-0.423 & 0.001
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[Z_1=A_1V_1\]</div>
+<p>and:</p>
+<div class="math-display">\[Z_1\approx
+\begin{bmatrix}
+-0.220000 & -0.075000\\
+-0.033945 & 0.215415\\
+-0.145069 & 0.163369
+\end{bmatrix}\]</div>
+<p>We will now build Head 2 from the same (X).</p>
+<h1>Head 2 uses different learned projections</h1>
+<p>Suppose Head 2 has these Query, Key, and Value matrices:</p>
+<div class="math-display">\[W_2^Q=
+\begin{bmatrix}
+0.3 & -0.5\\
+0.6 & 0.2\\
+-0.2 & 0.7\\
+0.4 & -0.1
+\end{bmatrix}\]</div>
+<div class="math-display">\[W_2^K=
+\begin{bmatrix}
+-0.4 & 0.6\\
+0.5 & -0.2\\
+0.3 & 0.1\\
+-0.6 & 0.4
+\end{bmatrix}\]</div>
+<div class="math-display">\[W_2^V=
+\begin{bmatrix}
+0.2 & 0.5\\
+-0.3 & 0.4\\
+0.6 & -0.2\\
+0.1 & 0.7
+\end{bmatrix}\]</div>
+<p>Each matrix has shape:</p>
+<div class="math-display">\[4\times2\]</div>
+<p>The same four-dimensional token state is therefore projected into a different two-dimensional space for this head.</p>
+<!-- chapter-06-art:head2-calculation:start -->
+<p><img src="../assets/chapter-06/03_head2_exact_calculation.webp" alt="Head 2 projects the same input into different Query, Key, and Value vectors, then computes SAT's raw compatibility score with THE as 0.092696."></p>
+<!-- chapter-06-art:head2-calculation:end -->
+
+<h1>Calculate Head 2&#39;s Queries</h1>
+<p>For the full sequence:</p>
+<div class="math-display">\[Q_2=XW_2^Q\]</div>
+<p>The result is:</p>
+<div class="math-display">\[Q_2=
+\begin{bmatrix}
+-0.319 & 0.238\\
+0.486 & 0.215\\
+-0.348 & 0.386
+\end{bmatrix}\]</div>
+<p>The rows are the Queries for THE, CAT, and SAT in Head 2.</p>
+<p>For example, SAT&#39;s Head 2 Query is:</p>
+<div class="math-display">\[q_{\text{sat}}^{(2)}=
+\begin{bmatrix}
+-0.348 & 0.386
+\end{bmatrix}\]</div>
+<p>This differs from SAT&#39;s Head 1 Query because:</p>
+<div class="math-display">\[W_1^Q\neq W_2^Q\]</div>
+<h1>Calculate Head 2&#39;s Keys</h1>
+<p>Similarly:</p>
+<div class="math-display">\[K_2=XW_2^K\]</div>
+<p>which gives:</p>
+<div class="math-display">\[K_2=
+\begin{bmatrix}
+-0.029 & 0.214\\
+0.272 & -0.269\\
+0.221 & 0.071
+\end{bmatrix}\]</div>
+<p>These rows are searchable descriptions in Head 2&#39;s learned Key space.</p>
+<h1>Calculate Head 2&#39;s Values</h1>
+<p>The Value matrix is:</p>
+<div class="math-display">\[V_2=XW_2^V\]</div>
+<p>which gives:</p>
+<div class="math-display">\[V_2=
+\begin{bmatrix}
+0.490 & -0.236\\
+-0.357 & 0.364\\
+0.465 & -0.369
+\end{bmatrix}\]</div>
+<p>These payloads differ from Head 1&#39;s payloads because:</p>
+<div class="math-display">\[W_1^V\neq W_2^V\]</div>
+<p>Even if two heads happened to assign similar attention weights, they could still retrieve different information because their Value vectors differ.</p>
+<h1>Head 2&#39;s raw compatibility scores</h1>
+<p>The raw score matrix is:</p>
+<div class="math-display">\[S_2=Q_2K_2^T\]</div>
+<p>Substituting the calculated matrices gives:</p>
+<div class="math-display">\[S_2=
+\begin{bmatrix}
+0.060183 & -0.150790 & -0.053601\\
+0.031916 & 0.074357 & 0.122671\\
+0.092696 & -0.198490 & -0.049502
+\end{bmatrix}\]</div>
+<p>One row belongs to each Query. One column belongs to each Key.</p>
+<h2>Verify SAT&#39;s score against THE</h2>
+<p>SAT&#39;s Query is:</p>
+<div class="math-display">\[q_{\text{sat}}^{(2)}=
+\begin{bmatrix}
+-0.348 & 0.386
+\end{bmatrix}\]</div>
+<p>THE&#39;s Key is:</p>
+<div class="math-display">\[k_{\text{The}}^{(2)}=
+\begin{bmatrix}
+-0.029 & 0.214
+\end{bmatrix}\]</div>
+<p>Their dot product is:</p>
+<div class="math-display">\[\begin{aligned}
+q_{\text{sat}}^{(2)}\cdot k_{\text{The}}^{(2)}
+&=(-0.348)(-0.029)+(0.386)(0.214)\\
+&=0.010092+0.082604\\
+&=0.092696
+\end{aligned}\]</div>
+<p>That is the first entry of SAT&#39;s score row.</p>
+<h1>Scale and causally mask Head 2</h1>
+<p>Because:</p>
+<div class="math-display">\[d_k=2\]</div>
+<p>we divide every raw score by:</p>
+<div class="math-display">\[\sqrt{2}\]</div>
+<p>The scaled scores are approximately:</p>
+<div class="math-display">\[\frac{S_2}{\sqrt{2}}
+\approx
+\begin{bmatrix}
+0.042556 & -0.106625 & -0.037902\\
+0.022568 & 0.052578 & 0.086741\\
+0.065546 & -0.140354 & -0.035003
+\end{bmatrix}\]</div>
+<p>Applying the causal mask gives:</p>
+<div class="math-display">\[L_2\approx
+\begin{bmatrix}
+0.042556 & -\infty & -\infty\\
+0.022568 & 0.052578 & -\infty\\
+0.065546 & -0.140354 & -0.035003
+\end{bmatrix}\]</div>
+<p>The mask is the same causal rule used by Head 1. The learned scores differ, but future positions remain forbidden for every head.</p>
+<!-- chapter-06-art:attention-maps:start -->
+<p><img src="../assets/chapter-06/04_two_attention_maps.webp" alt="Head 1 and Head 2 obey the same causal visibility rule but assign different attention weights to THE, CAT, and SAT, with both SAT rows highlighted for comparison."></p>
+<!-- chapter-06-art:attention-maps:end -->
+
+<h1>Head 2&#39;s attention weights</h1>
+<p>Applying softmax row by row gives:</p>
+<div class="math-display">\[A_2\approx
+\begin{bmatrix}
+1.000000 & 0 & 0\\
+0.492498 & 0.507502 & 0\\
+0.367883 & 0.299425 & 0.332692
+\end{bmatrix}\]</div>
+<p>Each row sums to 1, apart from tiny rounding differences.</p>
+<p>For SAT:</p>
+<table>
+<thead>
+<tr>
+<th>Source position</th>
+<th align="right">Head 1 weight</th>
+<th align="right">Head 2 weight</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>THE</td>
+<td align="right">0.300981</td>
+<td align="right">0.367883</td>
+</tr>
+<tr>
+<td>CAT</td>
+<td align="right">0.389986</td>
+<td align="right">0.299425</td>
+</tr>
+<tr>
+<td>SAT</td>
+<td align="right">0.309033</td>
+<td align="right">0.332692</td>
+</tr>
+</tbody></table>
+<p>The two heads are looking at the same visible positions, but they distribute attention differently.</p>
+<div class="warning">
+
+<h2>Different does not mean interpretable</h2>
+<p>It is tempting to name one head “grammar” and another “meaning.” Sometimes trained heads show patterns that humans can describe, but the architecture does not assign those roles.</p>
+<p>A head is defined by its learned computation, not by a guaranteed human-readable speciality.</p>
+</div>
+
+<h1>Retrieve Head 2&#39;s Values</h1>
+<p>The output is:</p>
+<div class="math-display">\[Z_2=A_2V_2\]</div>
+<p>Substituting the matrices:</p>
+<div class="math-display">\[Z_2
+=
+\begin{bmatrix}
+1.000000 & 0 & 0\\
+0.492498 & 0.507502 & 0\\
+0.367883 & 0.299425 & 0.332692
+\end{bmatrix}
+\begin{bmatrix}
+0.490 & -0.236\\
+-0.357 & 0.364\\
+0.465 & -0.369
+\end{bmatrix}\]</div>
+<p>The result is:</p>
+<div class="math-display">\[\boxed{
+Z_2\approx
+\begin{bmatrix}
+0.490000 & -0.236000\\
+0.060146 & 0.068501\\
+0.228069 & -0.100593
+\end{bmatrix}
+}\]</div>
+<h2>Verify SAT&#39;s first Head 2 output coordinate</h2>
+<p>For SAT:</p>
+<div class="math-display">\[z_{\text{sat}}^{(2)}
+=
+0.367883v_{\text{The}}^{(2)}
++
+0.299425v_{\text{cat}}^{(2)}
++
+0.332692v_{\text{sat}}^{(2)}\]</div>
+<p>The first coordinate is:</p>
+<div class="math-display">\[\begin{aligned}
+z_{\text{sat},1}^{(2)}
+&=0.367883(0.490)
++0.299425(-0.357)
++0.332692(0.465)\\
+&\approx0.180263-0.106895+0.154702\\
+&\approx0.228069
+\end{aligned}\]</div>
+<p>Head 2 has now completed its own retrieval.</p>
+<!-- chapter-06-art:head-outputs:start -->
+<p><img src="../assets/chapter-06/05_two_head_outputs.webp" alt="Two Information Couriers deliver separate Head 1 and Head 2 reports to SAT: negative 0.145069 and 0.163369 from Head 1, and 0.228069 and negative 0.100593 from Head 2."></p>
+<!-- chapter-06-art:head-outputs:end -->
+
+<h1>Put the two head outputs side by side</h1>
+<p>We now have:</p>
+<div class="math-display">\[Z_1\in\mathbb{R}^{3\times2}\]</div>
+<p>and:</p>
+<div class="math-display">\[Z_2\in\mathbb{R}^{3\times2}\]</div>
+<p>For one token position, concatenate the two head outputs along the feature dimension:</p>
+<div class="math-display">\[h_t=
+\operatorname{Concat}
+\left(
+z_t^{(1)},z_t^{(2)}
+\right)\]</div>
+<p>For SAT:</p>
+<div class="math-display">\[\begin{aligned}
+h_{\text{sat}}
+&=
+\operatorname{Concat}
+\left(
+\begin{bmatrix}
+-0.145069 & 0.163369
+\end{bmatrix},
+\begin{bmatrix}
+0.228069 & -0.100593
+\end{bmatrix}
+\right)\\
+&=
+\begin{bmatrix}
+-0.145069 & 0.163369 & 0.228069 & -0.100593
+\end{bmatrix}
+\end{aligned}\]</div>
+<p>For all positions:</p>
+<div class="math-display">\[H=
+\operatorname{Concat}(Z_1,Z_2)\]</div>
+<p>which gives:</p>
+<div class="math-display">\[\boxed{
+H\approx
+\begin{bmatrix}
+-0.220000 & -0.075000 & 0.490000 & -0.236000\\
+-0.033945 & 0.215415 & 0.060146 & 0.068501\\
+-0.145069 & 0.163369 & 0.228069 & -0.100593
+\end{bmatrix}
+}\]</div>
+<!-- chapter-06-art:concatenation:start -->
+<p><img src="../assets/chapter-06/06_concatenate_head_reports.webp" alt="A feature binder joins each token's two Head 1 coordinates beside its two Head 2 coordinates, preserving THE, CAT, and SAT rows while producing the three-by-four matrix H."></p>
+<!-- chapter-06-art:concatenation:end -->
+
+<h1>Concatenation preserves token rows</h1>
+<p>Concatenation happens across features, not across token positions.</p>
+<p>THE&#39;s Head 1 output is joined with THE&#39;s Head 2 output.</p>
+<p>CAT&#39;s Head 1 output is joined with CAT&#39;s Head 2 output.</p>
+<p>SAT&#39;s Head 1 output is joined with SAT&#39;s Head 2 output.</p>
+<p>The token dimension remains:</p>
+<div class="math-display">\[3\]</div>
+<p>while the feature width becomes:</p>
+<div class="math-display">\[2+2=4\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[(3\times2)+(3\times2)\xrightarrow{\text{concatenate columns}}3\times4\]</div>
+<div class="big-idea">
+
+<p><strong>Heads do not create extra token positions. They create extra feature views for each existing position.</strong></p>
+</div>
+
+<h1>Why not average the heads?</h1>
+<p>Averaging would produce:</p>
+<div class="math-display">\[\frac{Z_1+Z_2}{2}\]</div>
+<p>but this would force coordinate 1 of Head 1 to share meaning with coordinate 1 of Head 2.</p>
+<p>The architecture does not guarantee such alignment.</p>
+<p>Concatenation keeps the head outputs separate:</p>
+<div class="math-display">\[[z^{(1)}_1,z^{(1)}_2,z^{(2)}_1,z^{(2)}_2]\]</div>
+<p>A learned output projection can then decide how those coordinates should interact.</p>
+<h1>Conceptual heads versus packed implementation</h1>
+<p>The equations are easiest to understand head by head:</p>
+<div class="math-display">\[Q_r=XW_r^Q\]</div>
+<p>A practical implementation often stores all Query projections beside one another:</p>
+<div class="math-display">\[W_{\text{big}}^Q=
+\left[
+W_1^Q\mid W_2^Q\mid\cdots\mid W_h^Q
+\right]\]</div>
+<p>Then one large multiplication computes all Query coordinates:</p>
+<div class="math-display">\[Q_{\text{big}}=XW_{\text{big}}^Q\]</div>
+<p>The same idea applies to Keys and Values.</p>
+<p>The packed result is reshaped into a tensor such as:</p>
+<div class="math-display">\[(\text{batch},\text{heads},\text{tokens},\text{head width})\]</div>
+<p>The hardware may execute one large operation, but separate column blocks still contain separate learned head parameters.</p>
+<h1>Heads remain independent until concatenation</h1>
+<p>Before concatenation:</p>
+<ul>
+<li>Head 1 calculates its own score matrix;</li>
+<li>Head 2 calculates its own score matrix;</li>
+<li>softmax is performed independently within each head;</li>
+<li>each head mixes its own Values;</li>
+<li>one head&#39;s attention weights are not used to mix another head&#39;s Values.</li>
+</ul>
+<p>Only after each (Z_r) exists do we assemble:</p>
+<div class="math-display">\[H=\operatorname{Concat}(Z_1,\ldots,Z_h)\]</div>
+<h1>Common mistakes with multiple heads</h1>
+<h2>Mistake 1: splitting the tokens between heads</h2>
+<p>Every head normally receives representations for all token positions. Head 1 does not process THE while Head 2 processes CAT.</p>
+<h2>Mistake 2: sharing all projections in ordinary multi-head attention</h2>
+<p>Standard multi-head attention gives each head separate learned Q, K, and V projection blocks.</p>
+<p>Architectures such as grouped-query attention intentionally share some Keys and Values, but that is a variant introduced for efficiency.</p>
+<h2>Mistake 3: applying one softmax across all heads</h2>
+<p>Each head has its own attention-score rows and performs its own softmax over candidate Key positions.</p>
+<h2>Mistake 4: concatenating along the token dimension</h2>
+<p>The correct operation joins feature coordinates for corresponding positions. It does not turn three tokens into six tokens.</p>
+<h2>Mistake 5: assuming each head is understandable in isolation</h2>
+<p>A trained head may contribute useful distributed features without corresponding to one clean linguistic rule.</p>
+<h2>Mistake 6: stopping after concatenation</h2>
+<p>The concatenated matrix (H) is not yet the final multi-head attention output. A learned output projection still needs to mix the head coordinates.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What makes two heads different?</h2>
+<p>They have different learned Query, Key, and Value projection parameters and therefore can produce different scores, weights, payloads, and outputs.</p>
+<h2>2. Do heads receive different input tokens?</h2>
+<p>No. They normally receive the same sequence representation (X).</p>
+<h2>3. What is the output shape of one head in this example?</h2>
+<div class="math-display">\[Z_r\in\mathbb{R}^{3\times2}\]</div>
+<h2>4. What is the concatenated shape for two heads?</h2>
+<div class="math-display">\[H\in\mathbb{R}^{3\times4}\]</div>
+<h2>5. Along which dimension are head outputs concatenated?</h2>
+<p>Along the feature dimension for each corresponding token position.</p>
+<h2>6. Why are the heads not simply averaged?</h2>
+<p>Their coordinates are learned independently and are not guaranteed to have aligned meanings. Concatenation preserves all coordinates for learned mixing.</p>
+<h2>7. Does every head use the same causal mask?</h2>
+<p>In ordinary causal self-attention, yes. Every head must obey the same restriction against attending to future positions, although implementations may also apply other masks.</p>
+<h2>8. Does packed computation imply shared head parameters?</h2>
+<p>No. One large matrix can contain separate projection blocks for separate heads.</p>
+</div>
+
+<!-- chapter-06-art:packed-handoff:start -->
+<p><img src="../assets/chapter-06/07_packed_multihead_projection_and_handoff.webp" alt="Separate conceptual head projections are compared with one packed matrix multiplication and reshape; misconception panels reject splitting tokens or sharing one softmax, and the concatenated report H is delivered to the Chapter 7 Team Lead."></p>
+<!-- chapter-06-art:packed-handoff:end -->
+
+<h1>Chapter takeaway</h1>
+<p>For head (r):</p>
+<div class="math-display">\[Z_r
+=
+\operatorname{softmax}
+\left(
+\frac{(XW_r^Q)(XW_r^K)^T}{\sqrt{d_k}}+M
+\right)
+(XW_r^V)\]</div>
+<p>Multiple heads calculate multiple outputs:</p>
+<div class="math-display">\[Z_1,Z_2,\ldots,Z_h\]</div>
+<p>Those outputs are concatenated by feature:</p>
+<div class="math-display">\[H=\operatorname{Concat}(Z_1,\ldots,Z_h)\]</div>
+<p>For our two-head example:</p>
+<div class="math-display">\[H\approx
+\begin{bmatrix}
+-0.220000 & -0.075000 & 0.490000 & -0.236000\\
+-0.033945 & 0.215415 & 0.060146 & 0.068501\\
+-0.145069 & 0.163369 & 0.228069 & -0.100593
+\end{bmatrix}\]</div>
+<p>In our story:</p>
+<blockquote>
+<p><strong>Two specialists inspect the same clients using different learned criteria. Their reports stay separate until the organisation deliberately combines them.</strong></p>
+</blockquote>
+<h1>Coming next: combine the specialists&#39; reports</h1>
+<p>Concatenation places all head features beside one another, but it does not yet mix them.</p>
+<p>The model applies a learned output projection:</p>
+<div class="math-display">\[Y=HW^O\]</div>
+<p>Then the attention update rejoins the original token state through a residual connection and normalisation.</p>
+<p>That is the job of Chapter 7:</p>
+<h1><strong>The Team Lead Combines the Reports — Output Projection, Residuals, and LayerNorm</strong></h1>

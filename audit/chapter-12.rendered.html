@@ -1,0 +1,530 @@
+<h1>The question this chapter answers</h1>
+<p>Chapter 11 completed the inference path:</p>
+<pre><code class="language-text">current token sequence
+    -&gt; final hidden state
+    -&gt; vocabulary logits
+    -&gt; next-token distribution
+    -&gt; selected token
+</code></pre>
+<p>That explains how a trained model generates.</p>
+<p>Training begins with a different question:</p>
+<blockquote>
+<p>Given ordinary text, where do the questions and correct answers come from?</p>
+</blockquote>
+<p>A decoder-only language model learns by predicting the next token at every usable position.</p>
+<div class="big-idea">
+
+<p><strong>A token sequence supplies its own answer key. The tokens up to one position form the context, and the token immediately after that position is the target.</strong></p>
+</div>
+
+<h1>Cold open: the sentence becomes a classroom</h1>
+<p>Suppose the training text is:</p>
+<blockquote>
+<p>The cat sat on the mat.</p>
+</blockquote>
+<p>After tokenisation and the addition of boundary tokens, imagine this sequence:</p>
+<pre><code class="language-text">&lt;BOS&gt; | The | cat | sat | on | the | mat | . | &lt;EOS&gt;
+</code></pre>
+<p>The model can turn this one sequence into several next-token questions:</p>
+<table>
+<thead>
+<tr>
+<th>Context available so far</th>
+<th>Correct next token</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&lt;BOS&gt;</code></td>
+<td><code>The</code></td>
+</tr>
+<tr>
+<td><code>&lt;BOS&gt; The</code></td>
+<td><code>cat</code></td>
+</tr>
+<tr>
+<td><code>&lt;BOS&gt; The cat</code></td>
+<td><code>sat</code></td>
+</tr>
+<tr>
+<td><code>&lt;BOS&gt; The cat sat</code></td>
+<td><code>on</code></td>
+</tr>
+<tr>
+<td><code>&lt;BOS&gt; The cat sat on</code></td>
+<td><code>the</code></td>
+</tr>
+<tr>
+<td><code>&lt;BOS&gt; The cat sat on the</code></td>
+<td><code>mat</code></td>
+</tr>
+<tr>
+<td><code>&lt;BOS&gt; The cat sat on the mat</code></td>
+<td><code>.</code></td>
+</tr>
+<tr>
+<td><code>&lt;BOS&gt; The cat sat on the mat .</code></td>
+<td><code>&lt;EOS&gt;</code></td>
+</tr>
+</tbody></table>
+<p>One short sequence created eight prediction targets without a human writing eight separate labels.</p>
+<h1>Shift the sequence by one position</h1>
+<p>Let the complete token sequence be:</p>
+<div class="math-display">\[[t_0,t_1,t_2,\ldots,t_8]\]</div>
+<p>The model inputs are:</p>
+<div class="math-display">\[X_{\mathrm{ids}}
+=
+[t_0,t_1,t_2,\ldots,t_7]\]</div>
+<p>The targets are the same sequence shifted one step ahead:</p>
+<div class="math-display">\[Y_{\mathrm{ids}}
+=
+[t_1,t_2,t_3,\ldots,t_8]\]</div>
+<p>For our sentence:</p>
+<div class="math-display">\[X_{\mathrm{ids}}
+=
+[\mathtt{<BOS>},\mathtt{The},\mathtt{cat},\mathtt{sat},\mathtt{on},\mathtt{the},\mathtt{mat},\mathtt{.}]\]</div>
+<p>and:</p>
+<div class="math-display">\[Y_{\mathrm{ids}}
+=
+[\mathtt{The},\mathtt{cat},\mathtt{sat},\mathtt{on},\mathtt{the},\mathtt{mat},\mathtt{.},\mathtt{<EOS>}]\]</div>
+<p>The alignment is:</p>
+<table>
+<thead>
+<tr>
+<th align="right">Input position</th>
+<th>Input token</th>
+<th>Target token</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">0</td>
+<td><code>&lt;BOS&gt;</code></td>
+<td><code>The</code></td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td><code>The</code></td>
+<td><code>cat</code></td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td><code>cat</code></td>
+<td><code>sat</code></td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td><code>sat</code></td>
+<td><code>on</code></td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td><code>on</code></td>
+<td><code>the</code></td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td><code>the</code></td>
+<td><code>mat</code></td>
+</tr>
+<tr>
+<td align="right">6</td>
+<td><code>mat</code></td>
+<td><code>.</code></td>
+</tr>
+<tr>
+<td align="right">7</td>
+<td><code>.</code></td>
+<td><code>&lt;EOS&gt;</code></td>
+</tr>
+</tbody></table>
+<div class="translation">
+
+<h2>Read one row as a question</h2>
+<p>The row containing <code>sat</code> asks:</p>
+<blockquote>
+<p>After the prefix <code>&lt;BOS&gt; The cat sat</code>, which vocabulary token comes next?</p>
+</blockquote>
+<p>Its correct label is <code>on</code>.</p>
+</div>
+
+<h1>Token IDs make the alignment concrete</h1>
+<p>Use this tiny vocabulary:</p>
+<table>
+<thead>
+<tr>
+<th align="right">Token ID</th>
+<th>Token</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">0</td>
+<td><code>&lt;BOS&gt;</code></td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td><code>The</code></td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td><code>cat</code></td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td><code>sat</code></td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td><code>on</code></td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td><code>the</code></td>
+</tr>
+<tr>
+<td align="right">6</td>
+<td><code>mat</code></td>
+</tr>
+<tr>
+<td align="right">7</td>
+<td><code>.</code></td>
+</tr>
+<tr>
+<td align="right">8</td>
+<td><code>&lt;EOS&gt;</code></td>
+</tr>
+</tbody></table>
+<p>Then:</p>
+<div class="math-display">\[X_{\mathrm{ids}}=[0,1,2,3,4,5,6,7]\]</div>
+<p>and:</p>
+<div class="math-display">\[Y_{\mathrm{ids}}=[1,2,3,4,5,6,7,8]\]</div>
+<p>The shift changes the answer associated with each row. It does not change the vocabulary.</p>
+<h1>One forward pass creates all prediction rows</h1>
+<p>Chapter 11 used only the final row because generation needed the token after the current prefix.</p>
+<p>Training uses every valid row at once.</p>
+<p>For sequence length:</p>
+<div class="math-display">\[T=8\]</div>
+<p>and model width:</p>
+<div class="math-display">\[d_{\mathrm{model}}\]</div>
+<p>the Transformer stack produces:</p>
+<div class="math-display">\[H
+\in
+\mathbb{R}^{T\mathbin{×}d_{\mathrm{model}}}\]</div>
+<p>The vocabulary projection produces:</p>
+<div class="math-display">\[L=HW_{\mathrm{vocab}}+b\]</div>
+<p>with:</p>
+<div class="math-display">\[L
+\in
+\mathbb{R}^{T\mathbin{×}|\mathcal{V}|}\]</div>
+<p>Each row of (L) scores the vocabulary for one next-token target.</p>
+<table>
+<thead>
+<tr>
+<th align="right">Logit row</th>
+<th>Prefix represented by that row</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">0</td>
+<td><code>&lt;BOS&gt;</code></td>
+<td><code>The</code></td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td><code>&lt;BOS&gt; The</code></td>
+<td><code>cat</code></td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td><code>&lt;BOS&gt; The cat</code></td>
+<td><code>sat</code></td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td><code>&lt;BOS&gt; The cat sat</code></td>
+<td><code>on</code></td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td><code>&lt;BOS&gt; The cat sat on</code></td>
+<td><code>the</code></td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td><code>&lt;BOS&gt; The cat sat on the</code></td>
+<td><code>mat</code></td>
+</tr>
+<tr>
+<td align="right">6</td>
+<td><code>&lt;BOS&gt; The cat sat on the mat</code></td>
+<td><code>.</code></td>
+</tr>
+<tr>
+<td align="right">7</td>
+<td><code>&lt;BOS&gt; The cat sat on the mat .</code></td>
+<td><code>&lt;EOS&gt;</code></td>
+</tr>
+</tbody></table>
+<h1>Parallel calculation does not break causality</h1>
+<p>The entire matrix is processed in one forward pass during training.</p>
+<p>That does <strong>not</strong> mean an early position can read its answer from a later position.</p>
+<p>The causal mask still enforces:</p>
+<div class="math-display">\[M_{ij}
+=
+\begin{cases}
+0, & j\le i\\
+-\infty, & j>i
+\end{cases}\]</div>
+<p>So the hidden state at input position 3 can use:</p>
+<pre><code class="language-text">&lt;BOS&gt; | The | cat | sat
+</code></pre>
+<p>but cannot use:</p>
+<pre><code class="language-text">on | the | mat | .
+</code></pre>
+<p>The target <code>on</code> is used by the loss function only after position 3&#39;s logits have been produced.</p>
+<div class="warning">
+
+<h2>The answer is present in the batch, not visible through attention</h2>
+<p>Training software stores the complete sequence and shifted labels together. Causal masking prevents a prediction row from consulting future hidden states.</p>
+<p>The label scores the prediction; it is not an input feature to that prediction.</p>
+</div>
+
+<h1>Teacher forcing</h1>
+<p>During standard next-token pretraining, each position receives the true earlier tokens from the training sequence.</p>
+<p>For the question whose answer is <code>mat</code>, the model receives the true prefix:</p>
+<pre><code class="language-text">&lt;BOS&gt; The cat sat on the
+</code></pre>
+<p>It is not required to continue from mistakes it may have predicted at earlier training positions.</p>
+<p>This practice is commonly called <strong>teacher forcing</strong>.</p>
+<p>For position (i):</p>
+<ul>
+<li>token (t_i) is the current input token;</li>
+<li>tokens (t_0,\ldots,t_{i-1}) are visible through causal attention;</li>
+<li>token (t_{i+1}) is the target;</li>
+<li>the loss compares the model&#39;s row-(i) distribution with (t_{i+1}).</li>
+</ul>
+<h1>Training and generation use prefixes differently</h1>
+<p>During training:</p>
+<pre><code class="language-text">true prefix from the dataset
+    -&gt; predict all next-token targets in parallel
+</code></pre>
+<p>During generation:</p>
+<pre><code class="language-text">prompt plus previously selected model tokens
+    -&gt; predict one new token
+    -&gt; append it
+    -&gt; repeat
+</code></pre>
+<p>During training, the model normally sees clean ground-truth histories.</p>
+<p>During generation, it may need to continue from its own imperfect earlier selections.</p>
+<p>This difference is often called <strong>exposure bias</strong>. It does not invalidate teacher forcing, but it helps explain why low next-token loss is not the whole story of long-form generation quality.</p>
+<h1>The batch dimension</h1>
+<p>Suppose a batch contains (B) sequences, each with training length (T).</p>
+<p>Input IDs have shape:</p>
+<div class="math-display">\[X_{\mathrm{ids}}
+\in
+\mathbb{N}^{B\mathbin{×}T}\]</div>
+<p>Labels have shape:</p>
+<div class="math-display">\[Y_{\mathrm{ids}}
+\in
+\mathbb{N}^{B\mathbin{×}T}\]</div>
+<p>Final hidden states have shape:</p>
+<div class="math-display">\[H
+\in
+\mathbb{R}^{B\mathbin{×}T\mathbin{×}d_{\mathrm{model}}}\]</div>
+<p>Vocabulary logits have shape:</p>
+<div class="math-display">\[L
+\in
+\mathbb{R}^{B\mathbin{×}T\mathbin{×}|\mathcal{V}|}\]</div>
+<p>The loss compares every valid ((b,t)) logit row with one target token ID.</p>
+<h1>Variable-length sequences and padding</h1>
+<p>Sequences in one batch may have different lengths.</p>
+<p>A common solution pads shorter sequences to a shared tensor length:</p>
+<pre><code class="language-text">Sequence A: &lt;BOS&gt; The cat sat . &lt;EOS&gt;
+Sequence B: &lt;BOS&gt; The cat sat &lt;PAD&gt; &lt;PAD&gt;
+</code></pre>
+<p>Padding creates rectangular tensors, but padding positions should not normally contribute to the language-model loss.</p>
+<p>A loss mask can mark valid target positions:</p>
+<div class="math-display">\[m_{b,t}\in\{0,1\}\]</div>
+<p>where:</p>
+<ul>
+<li>(m_{b,t}=1): score this target;</li>
+<li>(m_{b,t}=0): ignore this target.</li>
+</ul>
+<p>Many software libraries use a special ignored label value, often <code>-100</code>. That is a library convention, not a vocabulary token the model must predict.</p>
+<h1>Attention masks and loss masks solve different problems</h1>
+<table>
+<thead>
+<tr>
+<th>Mask</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Causal attention mask</td>
+<td>Prevent a position from attending to future positions</td>
+</tr>
+<tr>
+<td>Padding attention mask</td>
+<td>Prevent attention from treating padding as meaningful context</td>
+</tr>
+<tr>
+<td>Loss mask</td>
+<td>Prevent selected target positions from contributing to the objective</td>
+</tr>
+</tbody></table>
+<p>A padding position may need to be blocked in attention and ignored in the loss.</p>
+<p>The two actions are related, but they are not the same operation.</p>
+<h1>Document boundaries matter</h1>
+<p>Suppose two unrelated documents are joined:</p>
+<pre><code class="language-text">Document A ends here. Document B begins here.
+</code></pre>
+<p>Without a boundary convention, the model may be trained to predict the first token of Document B directly after the final token of Document A.</p>
+<p>Pipelines can use:</p>
+<ul>
+<li>beginning- and end-of-sequence tokens;</li>
+<li>attention segmentation;</li>
+<li>packing metadata;</li>
+<li>loss masks around selected boundaries.</li>
+</ul>
+<p>The tokenizer, model, and data pipeline must agree on the convention.</p>
+<div class="warning">
+
+<h2>Efficient packing must preserve the intended task</h2>
+<p>Packing several short examples into one fixed-length tensor reduces wasted padding.</p>
+<p>But the implementation must decide whether examples may attend across boundaries and whether cross-boundary targets should be scored. Efficiency should not silently change the supervision.</p>
+</div>
+
+<h1>Long documents become context windows</h1>
+<p>If a document contains more tokens than the training context length (C), it must be divided into windows.</p>
+<p>Pipelines may use:</p>
+<ul>
+<li>non-overlapping windows;</li>
+<li>overlapping windows;</li>
+<li>document-aware packing;</li>
+<li>variable sequence lengths.</li>
+</ul>
+<p>These choices affect which relationships appear together and which targets contribute to the objective.</p>
+<h1>Boundary tokens are learnable events</h1>
+<p>The <code>&lt;BOS&gt;</code> token can mark a sequence beginning.</p>
+<p>The <code>&lt;EOS&gt;</code> token can teach the model when a sequence or document should end.</p>
+<p>For our example, the final pair is:</p>
+<pre><code class="language-text">input row:  .
+target:     &lt;EOS&gt;
+</code></pre>
+<p>Not every model uses the same special tokens, so this behaviour is architecture- and tokenizer-specific.</p>
+<h1>A probability record for the next chapter</h1>
+<p>Suppose a separate illustrative forward pass assigns these probabilities to the correct targets:</p>
+<table>
+<thead>
+<tr>
+<th>Input token</th>
+<th>Correct target</th>
+<th align="right">Correct-target probability</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&lt;BOS&gt;</code></td>
+<td><code>The</code></td>
+<td align="right">0.50</td>
+</tr>
+<tr>
+<td><code>The</code></td>
+<td><code>cat</code></td>
+<td align="right">0.25</td>
+</tr>
+<tr>
+<td><code>cat</code></td>
+<td><code>sat</code></td>
+<td align="right">0.10</td>
+</tr>
+<tr>
+<td><code>sat</code></td>
+<td><code>on</code></td>
+<td align="right">0.40</td>
+</tr>
+<tr>
+<td><code>on</code></td>
+<td><code>the</code></td>
+<td align="right">0.20</td>
+</tr>
+<tr>
+<td><code>the</code></td>
+<td><code>mat</code></td>
+<td align="right">0.60</td>
+</tr>
+<tr>
+<td><code>mat</code></td>
+<td><code>.</code></td>
+<td align="right">0.80</td>
+</tr>
+<tr>
+<td><code>.</code></td>
+<td><code>&lt;EOS&gt;</code></td>
+<td align="right">0.50</td>
+</tr>
+</tbody></table>
+<p>This full-sequence table is deliberately separate from Chapter 11&#39;s focused five-token distribution. Chapter 13 will use both examples for different calculations.</p>
+<p>A model that assigns higher probability to the correct target should receive a better score.</p>
+<p>How should these probabilities become one scalar objective?</p>
+<h1>Common training-example mistakes</h1>
+<h2>Mistake 1: using the same token as input and target</h2>
+<p>The target is normally the token one position ahead.</p>
+<h2>Mistake 2: shifting inputs and labels together</h2>
+<p>If both arrays move by the same amount, their relative alignment does not change.</p>
+<h2>Mistake 3: believing parallel training reveals future tokens</h2>
+<p>Parallel tensor execution and causal visibility are different concepts.</p>
+<h2>Mistake 4: scoring padding tokens</h2>
+<p>Padding is structural filler, not normally a genuine language target.</p>
+<h2>Mistake 5: confusing attention masks with loss masks</h2>
+<p>One controls information flow. The other controls which predictions contribute to the objective.</p>
+<h2>Mistake 6: forgetting document boundaries</h2>
+<p>Blind concatenation can create unintended contexts and targets.</p>
+<h2>Mistake 7: assuming one sequence creates one label</h2>
+<p>A segment containing (T+1) ordered tokens can supply up to (T) next-token targets.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. How are next-token labels created?</h2>
+<p>Shift the target sequence one position ahead relative to the inputs.</p>
+<h2>2. What is the target for the row containing <code>sat</code>?</h2>
+<p><code>on</code>.</p>
+<h2>3. Why can all rows be processed in parallel?</h2>
+<p>The causal mask still restricts which positions each row can use.</p>
+<h2>4. What is teacher forcing?</h2>
+<p>Supplying the true previous tokens from the training data as the prediction prefix.</p>
+<h2>5. Does teacher forcing reveal the current target to the prediction row?</h2>
+<p>No. The target is used only to score the causally restricted output.</p>
+<h2>6. What is the logit tensor shape for batch size (B), length (T), and vocabulary size (|\mathcal{V}|)?</h2>
+<div class="math-display">\[B\mathbin{×}T\mathbin{×}|\mathcal{V}|\]</div>
+<h2>7. Why ignore padding labels?</h2>
+<p>They do not represent genuine next-token targets.</p>
+<h2>8. What is the difference between an attention mask and a loss mask?</h2>
+<p>An attention mask controls accessible information. A loss mask controls whether a prediction is scored.</p>
+<h2>9. Why include an end-of-sequence target?</h2>
+<p>It provides direct supervision about termination at that boundary.</p>
+<h2>10. How many targets can nine ordered tokens provide after a one-position shift?</h2>
+<p>Eight.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Given:</p>
+<div class="math-display">\[[t_0,t_1,\ldots,t_T]\]</div>
+<p>the input is:</p>
+<div class="math-display">\[[t_0,t_1,\ldots,t_{T-1}]\]</div>
+<p>and the labels are:</p>
+<div class="math-display">\[[t_1,t_2,\ldots,t_T]\]</div>
+<p>One causal forward pass produces a vocabulary distribution for every valid input position.</p>
+<p>The next token in the dataset supplies the answer key.</p>
+<p>In our story:</p>
+<blockquote>
+<p><strong>The text writes its own quiz. Every token row must predict the token standing one step ahead, while the causal mask keeps the answer out of sight.</strong></p>
+</blockquote>
+<h1>Coming next: meet the scorekeeper</h1>
+<p>The model now produces one distribution per training position, and each position has one correct target.</p>
+<p>The next chapter will turn those predictions into:</p>
+<ul>
+<li>negative log-likelihood;</li>
+<li>cross-entropy loss;</li>
+<li>a masked batch average;</li>
+<li>perplexity;</li>
+<li>the first gradient signal telling the model which logits should move.</li>
+</ul>

@@ -1,0 +1,407 @@
+<h1>The question this chapter answers</h1>
+<p>A model may be accurate enough in a notebook and still be impractical in production.</p>
+<p>Its weights may not fit in memory. Its first token may arrive too slowly. Generation may stall when many users arrive. Long conversations may consume more memory than the parameters themselves. A smaller model may be fast but lose important capability.</p>
+<p>How do engineers reduce memory and computation without pretending every optimisation is free?</p>
+<div class="big-idea">
+
+<p><strong>Efficiency is a budget-allocation problem across memory, compute, bandwidth, latency, throughput, and quality. Every optimisation moves pressure somewhere else. The right design starts by identifying the real bottleneck.</strong></p>
+</div>
+
+<h1>Meet the Deployment Workshop</h1>
+<p>The trained model arrives as a huge machine.</p>
+<p>The Deployment Workshop has several specialists:</p>
+<pre><code class="language-text">Quantiser       -&gt; stores numbers with fewer bits
+Distiller       -&gt; trains a smaller student
+Cache Manager   -&gt; reuses earlier computation
+Batch Dispatcher-&gt; serves several requests together
+Router          -&gt; activates selected experts
+Scheduler       -&gt; balances latency and throughput
+</code></pre>
+<p>No specialist can improve every metric simultaneously.</p>
+<h1>The four main resource pressures</h1>
+<h2>Weight memory</h2>
+<p>How much memory is required to store model parameters?</p>
+<h2>Activation and cache memory</h2>
+<p>How much temporary state is required for the current batch and context?</p>
+<h2>Compute</h2>
+<p>How many arithmetic operations are needed?</p>
+<h2>Memory bandwidth and communication</h2>
+<p>How quickly can weights, activations, and distributed tensors move to the processors that need them?</p>
+<p>A model can be compute-bound in one regime and bandwidth-bound in another.</p>
+<h1>Latency and throughput are different</h1>
+<p><strong>Latency</strong> measures how long one request waits.</p>
+<p><strong>Throughput</strong> measures how much total work the system completes per unit time.</p>
+<p>For autoregressive generation, two latency measures are especially useful:</p>
+<ul>
+<li><strong>time to first token:</strong> prompt processing plus scheduling delay;</li>
+<li><strong>time per output token:</strong> speed of the repeated decoding loop.</li>
+</ul>
+<p>A system can improve throughput with larger batches while making an individual request wait longer.</p>
+<h1>Weight memory calculation</h1>
+<p>Suppose a model has 7 billion parameters.</p>
+<p>At 16 bits, each parameter uses 2 bytes.</p>
+<p>Ignoring metadata and runtime overhead:</p>
+<div class="math-display">\[7\times10^9\cdot2
+=14\times10^9\ \text{bytes}\]</div>
+<p>That is approximately 14 GB in decimal units.</p>
+<p>At 8 bits:</p>
+<div class="math-display">\[7\times10^9\cdot1
+=7\ \text{GB}\]</div>
+<p>At 4 bits:</p>
+<div class="math-display">\[7\times10^9\cdot0.5
+=3.5\ \text{GB}\]</div>
+<p>These are raw weight estimates.</p>
+<p>Actual memory also includes scales, zero points, embeddings, temporary buffers, framework overhead, and possibly higher-precision copies of selected tensors.</p>
+<h1>Quantisation</h1>
+<p>Quantisation represents values with fewer bits.</p>
+<p>A simple affine quantiser maps a real value <span class="math-inline">\(x\)</span> to an integer <span class="math-inline">\(q\)</span>:</p>
+<div class="math-display">\[q
+=
+\operatorname{round}
+\left(
+\frac{x}{s}
+\right)+z\]</div>
+<p>where:</p>
+<ul>
+<li><span class="math-inline">\(s\)</span> is a scale;</li>
+<li><span class="math-inline">\(z\)</span> is a zero point.</li>
+</ul>
+<p>Approximate dequantisation is:</p>
+<div class="math-display">\[\hat{x}
+=s(q-z)\]</div>
+<p>Quantisation introduces error:</p>
+<div class="math-display">\[\epsilon=x-\hat{x}\]</div>
+<p>The goal is to reduce storage and bandwidth while keeping the resulting model useful.</p>
+<h1>Weight-only versus activation quantisation</h1>
+<h2>Weight-only quantisation</h2>
+<p>Weights are stored at low precision, while activations may remain at higher precision.</p>
+<p>This reduces weight memory and bandwidth and is common for autoregressive inference.</p>
+<h2>Weight-and-activation quantisation</h2>
+<p>Both weights and activations use reduced precision.</p>
+<p>This can unlock faster hardware kernels but may require more calibration or quantisation-aware training.</p>
+<h2>KV-cache quantisation</h2>
+<p>The Keys and Values stored for previous tokens are quantised.</p>
+<p>This targets memory that grows with context length and batch size.</p>
+<p>Each choice has different numerical and kernel constraints.</p>
+<h1>Per-tensor, per-channel, and grouped scales</h1>
+<p>One scale for an entire matrix is cheap but may represent outliers poorly.</p>
+<p>Finer scaling can improve accuracy:</p>
+<ul>
+<li>per tensor;</li>
+<li>per output channel;</li>
+<li>per input channel;</li>
+<li>per group of weights;</li>
+<li>per token or per activation block.</li>
+</ul>
+<p>Finer scales add metadata and implementation complexity.</p>
+<h1>Post-training quantisation</h1>
+<p>Post-training quantisation starts from an existing trained checkpoint.</p>
+<p>A calibration set may be used to estimate ranges, outliers, or reconstruction error.</p>
+<p>Methods such as GPTQ quantise weights while attempting to minimise the effect of quantisation error on model outputs.</p>
+<p>Benefits:</p>
+<ul>
+<li>no full retraining run;</li>
+<li>smaller checkpoints;</li>
+<li>easier experimentation.</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li>quality loss on sensitive tasks;</li>
+<li>unsupported kernels;</li>
+<li>slower dequantisation paths;</li>
+<li>calibration mismatch;</li>
+<li>larger errors in small or unusual layers.</li>
+</ul>
+<h1>Quantisation-aware training</h1>
+<p>Quantisation-aware training simulates reduced-precision effects during training or fine-tuning.</p>
+<p>The model learns parameters that are more robust to the intended representation.</p>
+<p>This can improve quality but requires a training pipeline and careful numerical handling.</p>
+<h1>Fewer bits do not guarantee faster generation</h1>
+<p>A 4-bit checkpoint can be smaller without being faster.</p>
+<p>Speed depends on:</p>
+<ul>
+<li>hardware support;</li>
+<li>kernel implementation;</li>
+<li>dequantisation overhead;</li>
+<li>batch size;</li>
+<li>memory bandwidth;</li>
+<li>matrix shape;</li>
+<li>whether the bottleneck was weight loading;</li>
+<li>whether other components remain high precision.</li>
+</ul>
+<p>Measure end-to-end performance on the deployment hardware.</p>
+<h1>Distillation</h1>
+<p>Knowledge distillation trains a smaller <strong>student</strong> model to imitate a larger <strong>teacher</strong>.</p>
+<p>For classification logits, a temperature-softened teacher distribution is:</p>
+<div class="math-display">\[p_i^{(T)}
+=
+\frac{\exp(z_i/T)}
+{\sum_j\exp(z_j/T)}\]</div>
+<p>The student can minimise a combination of ordinary target loss and teacher-matching loss:</p>
+<div class="math-display">\[\mathcal{L}
+=
+\lambda\mathcal{L}_{\mathrm{hard}}
++(1-\lambda)T^2
+D_{\mathrm{KL}}
+\left(
+ p_{\mathrm{teacher}}^{(T)}
+ \,\|\,
+ p_{\mathrm{student}}^{(T)}
+\right)\]</div>
+<p>The teacher’s full probability distribution can reveal similarities between alternatives that a one-hot label does not show.</p>
+<h1>Distillation for language generation</h1>
+<p>A language-model student may imitate:</p>
+<ul>
+<li>token distributions;</li>
+<li>generated sequences;</li>
+<li>intermediate hidden states;</li>
+<li>attention patterns;</li>
+<li>reasoning traces when appropriate and permitted;</li>
+<li>preference rankings;</li>
+<li>task-specific outputs.</li>
+</ul>
+<p>The student can become much cheaper, but it has less capacity. It may lose rare knowledge, long-tail robustness, multilingual breadth, or complex reasoning.</p>
+<h1>Pruning and sparsity</h1>
+<p>Pruning removes or disables parameters, channels, heads, blocks, or activations judged less important.</p>
+<h2>Unstructured sparsity</h2>
+<p>Individual weights are zeroed.</p>
+<p>This can create high sparsity but may not run faster without specialised sparse kernels.</p>
+<h2>Structured sparsity</h2>
+<p>Whole groups such as channels, blocks, or heads are removed.</p>
+<p>This aligns better with ordinary dense hardware but may cause larger quality loss per removed parameter.</p>
+<p>A sparse file is not automatically a fast model.</p>
+<h1>Mixture of experts</h1>
+<p>A mixture-of-experts, or MoE, layer contains several expert networks and a router.</p>
+<p>For token representation <span class="math-inline">\(x\)</span>, the router produces scores:</p>
+<div class="math-display">\[r(x)
+=
+\operatorname{softmax}(W_rx)\]</div>
+<p>Only the top <span class="math-inline">\(k\)</span> experts may be activated:</p>
+<div class="math-display">\[y
+=
+\sum_{e\in\operatorname{TopK}(r(x))}
+\alpha_eE_e(x)\]</div>
+<p>This allows total parameter count to grow while keeping active computation per token smaller than using every expert.</p>
+<h1>MoE is not free capacity</h1>
+<p>MoE introduces:</p>
+<ul>
+<li>routing overhead;</li>
+<li>expert load imbalance;</li>
+<li>all-to-all communication;</li>
+<li>unused capacity when tokens concentrate on a few experts;</li>
+<li>more complicated batching;</li>
+<li>expert placement constraints;</li>
+<li>training-stability challenges.</li>
+</ul>
+<p>A trillion total parameters do not imply that every token uses a trillion parameters.</p>
+<p>Report both total and active parameters.</p>
+<h1>Prompt processing and token decoding</h1>
+<p>Autoregressive inference has two phases.</p>
+<h2>Prefill</h2>
+<p>The model processes the full prompt.</p>
+<p>Many prompt tokens can be processed in parallel inside each layer.</p>
+<p>Prefill is often compute-intensive.</p>
+<h2>Decode</h2>
+<p>The model generates one new token per sequence at a time.</p>
+<p>Previous Keys and Values are reused from cache.</p>
+<p>Decode often becomes sensitive to memory bandwidth and batching efficiency because each step performs relatively small matrix operations repeatedly.</p>
+<h1>The KV cache</h1>
+<p>For each decoder layer, earlier tokens contribute Keys and Values that future tokens need.</p>
+<p>Without caching, the model would recompute those projections for the whole prefix at every step.</p>
+<p>A simplified cache-memory estimate is:</p>
+<div class="math-display">\[\text{bytes}
+=
+B\cdot L\cdot T\cdot 2\cdot H_{kv}\cdot d_h\cdot b\]</div>
+<p>where:</p>
+<ul>
+<li><span class="math-inline">\(B\)</span> is batch size;</li>
+<li><span class="math-inline">\(L\)</span> is number of layers;</li>
+<li><span class="math-inline">\(T\)</span> is cached sequence length;</li>
+<li>the factor 2 represents Keys and Values;</li>
+<li><span class="math-inline">\(H_{kv}\)</span> is number of KV heads;</li>
+<li><span class="math-inline">\(d_h\)</span> is head dimension;</li>
+<li><span class="math-inline">\(b\)</span> is bytes per cache element.</li>
+</ul>
+<p>Cache memory grows linearly with batch size and sequence length.</p>
+<h1>Multi-query and grouped-query attention</h1>
+<p>Standard multi-head attention can use separate Keys and Values for every Query head.</p>
+<p>Multi-query attention shares one set of KV heads across many Query heads.</p>
+<p>Grouped-query attention uses fewer KV heads than Query heads but more than one.</p>
+<p>This reduces KV-cache memory and bandwidth while preserving multiple Query heads.</p>
+<p>The trade-off is reduced KV diversity.</p>
+<h1>Prefix caching</h1>
+<p>Many requests may share the same prefix:</p>
+<ul>
+<li>a long system prompt;</li>
+<li>a common document template;</li>
+<li>a fixed tool schema;</li>
+<li>shared retrieved context.</li>
+</ul>
+<p>Prefix caching stores intermediate state for the shared prefix so later requests can reuse it.</p>
+<p>The cache key must include every input that affects computation: model version, adapters, tokenisation, position handling, and relevant settings.</p>
+<h1>Batching</h1>
+<p>Batching combines requests so hardware performs larger, more efficient matrix operations.</p>
+<p>Static batching waits for a fixed group and often wastes capacity when sequences finish at different times.</p>
+<p>Continuous batching inserts new requests as others complete.</p>
+<p>This improves utilisation but requires careful scheduling and cache management.</p>
+<h1>Padding waste</h1>
+<p>If one request has 2,000 prompt tokens and another has 100, padding both to 2,000 can waste work.</p>
+<p>Useful strategies include:</p>
+<ul>
+<li>length-aware batching;</li>
+<li>packed prefill;</li>
+<li>variable-length attention kernels;</li>
+<li>separate queues for prompt and decode phases;</li>
+<li>chunked prefill.</li>
+</ul>
+<h1>Paged cache management</h1>
+<p>KV caches have variable lifetimes and sizes.</p>
+<p>Allocating one large contiguous block per request can fragment memory.</p>
+<p>Paged approaches divide cache memory into blocks and map logical token positions to physical pages.</p>
+<p>This allows flexible growth, sharing, and reclamation, at the cost of bookkeeping and specialised kernels.</p>
+<h1>Speculative decoding</h1>
+<p>Speculative decoding uses a smaller draft model to propose several tokens.</p>
+<p>A larger target model verifies the proposals in fewer expensive passes.</p>
+<pre><code class="language-text">draft model proposes: A B C D
+large model verifies probabilities
+accept matching prefix
+resample at first rejection
+</code></pre>
+<p>When the draft model’s proposals agree often enough, generation can accelerate without changing the target distribution under the exact algorithm.</p>
+<p>Performance depends on:</p>
+<ul>
+<li>draft-model speed;</li>
+<li>acceptance rate;</li>
+<li>verification cost;</li>
+<li>batch size;</li>
+<li>hardware;</li>
+<li>sequence characteristics.</li>
+</ul>
+<h1>Parallelism at inference</h1>
+<p>Large models may require several devices.</p>
+<h2>Tensor parallelism</h2>
+<p>Splits large matrix operations across devices.</p>
+<h2>Pipeline parallelism</h2>
+<p>Places different layers on different devices.</p>
+<h2>Expert parallelism</h2>
+<p>Distributes MoE experts across devices.</p>
+<h2>Data or replica parallelism</h2>
+<p>Runs independent model copies for different requests.</p>
+<p>More devices can provide capacity while adding communication and scheduling overhead.</p>
+<h1>Throughput calculation</h1>
+<p>Suppose a server produces 1,200 output tokens per second across a batch of 24 active sequences.</p>
+<p>Average throughput per active sequence is:</p>
+<div class="math-display">\[1200/24
+=50\ \text{tokens per second}\]</div>
+<p>This average does not reveal tail latency.</p>
+<p>Some requests may be faster, while others wait in the queue or compete for long prompts.</p>
+<p>Report distributions such as median, 95th percentile, and 99th percentile latency.</p>
+<h1>Quality has several dimensions</h1>
+<p>Compression may affect:</p>
+<ul>
+<li>average benchmark accuracy;</li>
+<li>rare facts;</li>
+<li>multilingual performance;</li>
+<li>code correctness;</li>
+<li>long-context stability;</li>
+<li>calibration;</li>
+<li>safety behaviour;</li>
+<li>formatting;</li>
+<li>tool-call syntax;</li>
+<li>robustness to adversarial input.</li>
+</ul>
+<p>A one-number quality report can hide important regressions.</p>
+<h1>Choose the bottleneck first</h1>
+<table>
+<thead>
+<tr>
+<th>Bottleneck</th>
+<th>Candidate techniques</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Weights do not fit</td>
+<td>Quantisation, sharding, smaller model, distillation</td>
+</tr>
+<tr>
+<td>KV cache is too large</td>
+<td>GQA or MQA, cache quantisation, shorter context, paging</td>
+</tr>
+<tr>
+<td>First token is slow</td>
+<td>Faster prefill kernels, prefix cache, shorter prompt, prompt compression</td>
+</tr>
+<tr>
+<td>Decode is slow</td>
+<td>Better batching, quantisation, speculative decoding, faster kernels</td>
+</tr>
+<tr>
+<td>Too many concurrent users</td>
+<td>Continuous batching, replicas, admission control, smaller models</td>
+</tr>
+<tr>
+<td>Network is limiting</td>
+<td>Better device placement, lower-communication parallelism</td>
+</tr>
+<tr>
+<td>Quality loss is unacceptable</td>
+<td>Higher precision, selective quantisation, retraining, larger student</td>
+</tr>
+</tbody></table>
+<h1>Common efficiency mistakes</h1>
+<h2>Mistake 1: comparing model sizes without precision</h2>
+<p>Seven billion 16-bit weights and seven billion 4-bit weights require very different storage.</p>
+<h2>Mistake 2: reporting total MoE parameters as active compute</h2>
+<p>Only routed experts are active for a token.</p>
+<h2>Mistake 3: ignoring the KV cache</h2>
+<p>At long context and high concurrency, cache memory can dominate serving capacity.</p>
+<h2>Mistake 4: assuming batching always lowers latency</h2>
+<p>Batching can increase waiting time.</p>
+<h2>Mistake 5: assuming lower precision always runs faster</h2>
+<p>Unsupported kernels can make a smaller model slower.</p>
+<h2>Mistake 6: evaluating compression only on perplexity</h2>
+<p>Task behaviour, safety, formatting, and long-context performance may regress differently.</p>
+<h2>Mistake 7: optimising average latency only</h2>
+<p>Users experience tail latency and queueing.</p>
+<h2>Mistake 8: calling sparsity efficient without hardware measurements</h2>
+<p>Zeros save compute only when the software and hardware exploit them.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. How much raw memory do 7 billion 16-bit weights require?</h2>
+<p>Approximately 14 GB in decimal units.</p>
+<h2>2. How much raw memory do the same weights require at 4 bits?</h2>
+<p>Approximately 3.5 GB.</p>
+<h2>3. Does 4-bit storage guarantee faster inference?</h2>
+<p>No.</p>
+<h2>4. What is distillation?</h2>
+<p>Training a smaller student to imitate a larger teacher or its outputs.</p>
+<h2>5. What is the difference between total and active MoE parameters?</h2>
+<p>Total parameters include all experts; active parameters include only those routed for a token.</p>
+<h2>6. Which inference phase processes the prompt?</h2>
+<p>Prefill.</p>
+<h2>7. Which memory grows with sequence length during decoding?</h2>
+<p>The KV cache.</p>
+<h2>8. What does continuous batching do?</h2>
+<p>Adds new requests as other sequences finish instead of waiting for a fixed batch to complete.</p>
+<h2>9. What does speculative decoding use?</h2>
+<p>A fast draft model that proposes tokens and a target model that verifies them.</p>
+<h2>10. Why measure tail latency?</h2>
+<p>Average latency can hide long waits experienced by a subset of requests.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Quantisation reduces numerical precision. Distillation transfers behaviour to a smaller student. Sparsity and MoE reduce which parameters are active. Caches reuse earlier computation. Batching and scheduling improve hardware utilisation.</p>
+<p>None is a free lunch.</p>
+<p>In our story:</p>
+<blockquote>
+<p><strong>The Deployment Workshop can shrink the machine, train an apprentice, reuse old notes, group customers, or send each token to a specialist. Every trick saves one resource by spending another, so the workshop measures before it celebrates.</strong></p>
+</blockquote>
+<h1>Coming next: trust, but verify</h1>
+<p>The final chapter builds an evaluation and monitoring system for capability, groundedness, calibration, bias, privacy, safety, contamination, latency, regressions, and production drift.</p>
+<h1>Further reading</h1>
+<ul>
+<li><a href="https://arxiv.org/abs/2210.17323">GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers</a></li>
+<li><a href="https://arxiv.org/abs/1503.02531">Distilling the Knowledge in a Neural Network</a></li>
+<li><a href="https://arxiv.org/abs/2101.03961">Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity</a></li>
+</ul>

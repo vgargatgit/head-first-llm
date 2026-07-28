@@ -1,0 +1,525 @@
+<h1>The question this chapter answers</h1>
+<p>Chapter 13 produced a loss for the prediction after:</p>
+<blockquote>
+<p>The cat sat</p>
+</blockquote>
+<p>The correct next token was <code>on</code>.</p>
+<p>At the vocabulary logits, the loss gradient was:</p>
+<div class="math-display">\[\frac{\partial\mathcal{L}}{\partial z}
+\approx
+\begin{bmatrix}
+-0.761069 & 0.052348 & 0.350118 & 0.053029 & 0.305575
+\end{bmatrix}\]</div>
+<p>That vector says which output scores need upward or downward pressure.</p>
+<p>But logits were produced by learned parameters throughout the network.</p>
+<p>How does the model discover which parameters contributed to the error?</p>
+<div class="big-idea">
+
+<p><strong>Backpropagation applies the chain rule from the loss toward the inputs. Every operation converts an incoming output gradient into gradients for its inputs and parameters.</strong></p>
+</div>
+
+<h1>Cold open: the correction request reaches the organisation</h1>
+<p>The Scorekeeper sends one message:</p>
+<pre><code class="language-text">The answer `on` was under-supported.
+The period and `mat` were over-supported.
+</code></pre>
+<p>That correction first reaches the vocabulary projection and then travels through:</p>
+<ul>
+<li>the final hidden state;</li>
+<li>final normalisation;</li>
+<li>Transformer blocks in reverse order;</li>
+<li>MLPs and attention heads;</li>
+<li>token and position parameters.</li>
+</ul>
+<p>Each component asks:</p>
+<blockquote>
+<p>How would a small change in my input or weight change the final loss?</p>
+</blockquote>
+<p>The answers are gradients.</p>
+<h1>A computational graph</h1>
+<p>The forward path is a graph of dependencies:</p>
+<pre><code class="language-text">parameters and token IDs
+        -&gt; embeddings
+        -&gt; Transformer blocks
+        -&gt; final hidden state h
+        -&gt; vocabulary logits z
+        -&gt; probabilities p
+        -&gt; loss L
+</code></pre>
+<p>The backward path visits those dependencies in reverse:</p>
+<pre><code class="language-text">loss gradient
+        -&gt; logits
+        -&gt; vocabulary weights and hidden state
+        -&gt; final normalisation
+        -&gt; Transformer blocks in reverse order
+        -&gt; embeddings and earlier parameters
+</code></pre>
+<p>Backpropagation does not run generated text backward. It traverses the mathematical computation graph backward.</p>
+<h1>What a gradient means</h1>
+<p>For scalar loss (\mathcal{L}) and parameter (w):</p>
+<div class="math-display">\[\frac{\partial\mathcal{L}}{\partial w}\]</div>
+<p>is the local rate at which loss changes as (w) changes.</p>
+<ul>
+<li>positive gradient: a small increase in (w) tends to raise loss;</li>
+<li>negative gradient: a small increase tends to lower loss;</li>
+<li>near-zero gradient: a small local change has little first-order effect.</li>
+</ul>
+<p>A gradient is a local slope, not a guarantee about a large movement.</p>
+<h1>Begin at softmax cross-entropy</h1>
+<p>For logits (z), probabilities (p), and one-hot target (y):</p>
+<div class="math-display">\[\frac{\partial\mathcal{L}}{\partial z}=p-y\]</div>
+<p>Chapter 11 produced:</p>
+<div class="math-display">\[p
+\approx
+\begin{bmatrix}
+0.238931 & 0.052348 & 0.350118 & 0.053029 & 0.305575
+\end{bmatrix}\]</div>
+<p>The target <code>on</code> is the first vocabulary entry:</p>
+<div class="math-display">\[y=
+\begin{bmatrix}
+1 & 0 & 0 & 0 & 0
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[g_z
+=
+\frac{\partial\mathcal{L}}{\partial z}
+\approx
+\begin{bmatrix}
+-0.761069 & 0.052348 & 0.350118 & 0.053029 & 0.305575
+\end{bmatrix}\]</div>
+<h1>Back through the vocabulary projection</h1>
+<p>Chapter 11 calculated:</p>
+<div class="math-display">\[z=hW_{\mathrm{vocab}}+b\]</div>
+<p>The shapes are:</p>
+<div class="math-display">\[h\in\mathbb{R}^{1\mathbin{×}4}\]</div>
+<div class="math-display">\[W_{\mathrm{vocab}}\in\mathbb{R}^{4\mathbin{×}5}\]</div>
+<div class="math-display">\[b,z,g_z\in\mathbb{R}^{1\mathbin{×}5}\]</div>
+<p>For a linear operation:</p>
+<div class="math-display">\[y=xW+b\]</div>
+<p>the backward rules are:</p>
+<div class="math-display">\[g_W=x^Tg_y\]</div>
+<div class="math-display">\[g_x=g_yW^T\]</div>
+<div class="math-display">\[g_b=g_y\]</div>
+<h1>The vocabulary-weight gradient</h1>
+<p>The final hidden state was:</p>
+<div class="math-display">\[h
+\approx
+\begin{bmatrix}
+-0.008859 & -0.111600 & 1.470933 & -1.350474
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\frac{\partial\mathcal{L}}{\partial W_{\mathrm{vocab}}}
+=h^Tg_z\]</div>
+<p>The outer product gives:</p>
+<div class="math-display">\[\boxed{
+\frac{\partial\mathcal{L}}{\partial W_{\mathrm{vocab}}}
+\approx
+\begin{bmatrix}
+0.006742 & -0.000464 & -0.003102 & -0.000470 & -0.002707\\
+0.084935 & -0.005842 & -0.039073 & -0.005918 & -0.034102\\
+-1.119482 & 0.077000 & 0.515000 & 0.078002 & 0.449480\\
+1.027804 & -0.070695 & -0.472825 & -0.071614 & -0.412671
+\end{bmatrix}
+}\]</div>
+<p>Every column belongs to one vocabulary candidate. Every row belongs to one hidden coordinate.</p>
+<p>The gradient has the same shape as the weight matrix it updates.</p>
+<h1>Read one vocabulary-weight gradient</h1>
+<p>Consider the weight connecting hidden coordinate 3 to the <code>on</code> logit.</p>
+<p>Its current value is:</p>
+<div class="math-display">\[w=0.2\]</div>
+<p>Its gradient is:</p>
+<div class="math-display">\[g_w\approx-1.119482\]</div>
+<p>The value is negative because hidden coordinate 3 is positive and the <code>on</code> logit needs to rise. Increasing this weight would locally increase that logit for this example.</p>
+<p>This does not mean hidden coordinate 3 literally represents <code>on</code>. It is one local dependency in one context.</p>
+<h1>The bias gradient</h1>
+<p>Because vocabulary bias is added directly:</p>
+<div class="math-display">\[\boxed{
+g_b=g_z
+}\]</div>
+<p>Thus:</p>
+<div class="math-display">\[g_b
+\approx
+\begin{bmatrix}
+-0.761069 & 0.052348 & 0.350118 & 0.053029 & 0.305575
+\end{bmatrix}\]</div>
+<h1>The hidden-state gradient</h1>
+<p>The output head must also report how loss depends on its input:</p>
+<div class="math-display">\[g_h
+=
+g_zW_{\mathrm{vocab}}^T\]</div>
+<p>Using Chapter 11&#39;s matrix:</p>
+<div class="math-display">\[\boxed{
+g_h
+\approx
+\begin{bmatrix}
+-0.294534 & 0.134536 & 0.184198 & 0.158436
+\end{bmatrix}
+}\]</div>
+<p>This becomes the incoming correction signal for final normalisation and the final Transformer block.</p>
+<div class="translation">
+
+<h2>The output head sends two reports</h2>
+<ol>
+<li>A parameter report for (W_{\mathrm{vocab}}) and (b).</li>
+<li>An upstream report for the final hidden state (h).</li>
+</ol>
+<p>The first is stored for the optimiser. The second continues backward.</p>
+</div>
+
+<h1>The chain rule connects operations</h1>
+<p>Suppose:</p>
+<div class="math-display">\[a=f(x)\]</div>
+<p>and:</p>
+<div class="math-display">\[\mathcal{L}=g(a)\]</div>
+<p>Then:</p>
+<div class="math-display">\[\frac{\partial\mathcal{L}}{\partial x}
+=
+\frac{\partial\mathcal{L}}{\partial a}
+\frac{\partial a}{\partial x}\]</div>
+<p>A deep network applies this principle repeatedly.</p>
+<p>Automatic differentiation records the forward graph and runs each local backward rule in reverse dependency order.</p>
+<h1>Back through a residual connection</h1>
+<p>A residual sublayer has the form:</p>
+<div class="math-display">\[y=x+f(x)\]</div>
+<p>Incoming gradient (g_y) follows two paths.</p>
+<p>The direct path contributes:</p>
+<div class="math-display">\[g_x^{\mathrm{direct}}=g_y\]</div>
+<p>The sublayer path contributes:</p>
+<div class="math-display">\[g_x^{\mathrm{sublayer}}
+=
+g_y\frac{\partial f}{\partial x}\]</div>
+<p>The shared input receives their sum:</p>
+<div class="math-display">\[g_x
+=
+g_x^{\mathrm{direct}}+g_x^{\mathrm{sublayer}}\]</div>
+<p>Residual connections therefore provide a direct gradient route around each sublayer.</p>
+<div class="warning">
+
+<h2>Forward branches copy values; backward branches add gradients</h2>
+<p>When one activation feeds several operations, every branch can send a gradient contribution back. Contributions are summed at the shared source.</p>
+</div>
+
+<h1>Back through the MLP</h1>
+<p>A simple MLP computes:</p>
+<div class="math-display">\[p=xW_1+b_1\]</div>
+<div class="math-display">\[u=\phi(p)\]</div>
+<div class="math-display">\[f=uW_2+b_2\]</div>
+<p>Backward propagation proceeds in reverse.</p>
+<p>For the second linear layer:</p>
+<div class="math-display">\[g_{W_2}=u^Tg_f\]</div>
+<div class="math-display">\[g_u=g_fW_2^T\]</div>
+<div class="math-display">\[g_{b_2}=g_f\]</div>
+<p>For the activation:</p>
+<div class="math-display">\[g_p=g_u\odot\phi'(p)\]</div>
+<p>For the first linear layer:</p>
+<div class="math-display">\[g_{W_1}=x^Tg_p\]</div>
+<div class="math-display">\[g_x=g_pW_1^T\]</div>
+<div class="math-display">\[g_{b_1}=g_p\]</div>
+<p>The symbol (\odot) denotes element-wise multiplication.</p>
+<h1>Activation derivatives gate gradients</h1>
+<p>For ReLU:</p>
+<div class="math-display">\[\operatorname{ReLU}(p)=\max(0,p)\]</div>
+<p>A common derivative convention is:</p>
+<div class="math-display">\[\operatorname{ReLU}'(p)=
+\begin{cases}
+1, & p>0\\
+0, & p<0
+\end{cases}\]</div>
+<p>A coordinate that was negative in the forward pass sends zero gradient through that ReLU on that example.</p>
+<p>GELU, SiLU, and gated MLPs use different derivatives, but the chain-rule structure is unchanged.</p>
+<h1>Back through normalisation</h1>
+<p>LayerNorm and RMSNorm depend on statistics from the current token row.</p>
+<p>Their backward rules:</p>
+<ul>
+<li>distribute gradient across the row&#39;s feature coordinates;</li>
+<li>produce gradients for learned scale parameters;</li>
+<li>produce shift gradients when a shift parameter exists.</li>
+</ul>
+<p>Changing one coordinate can affect the normalisation applied to the others, so the derivative contains coupled terms. Automatic differentiation handles the exact formula.</p>
+<p>Normalisation gradients remain within each token row, while shared normalisation parameters accumulate contributions across positions.</p>
+<h1>Back through attention retrieval</h1>
+<p>For one head:</p>
+<div class="math-display">\[Z=AV\]</div>
+<p>Given incoming gradient (g_Z):</p>
+<div class="math-display">\[g_A=g_ZV^T\]</div>
+<div class="math-display">\[g_V=A^Tg_Z\]</div>
+<p>The backward pass therefore asks both:</p>
+<ul>
+<li>how should retrieval weights have changed?</li>
+<li>how should Value payloads have changed?</li>
+</ul>
+<h1>Back through attention softmax</h1>
+<p>Attention weights are:</p>
+<div class="math-display">\[A=\operatorname{softmax}(S)\]</div>
+<p>For one row, a compact derivative is:</p>
+<div class="math-display">\[g_S
+=
+A\odot
+\left[
+ g_A-
+ \left(\sum_jg_{A,j}A_j\right)\mathbf{1}
+\right]\]</div>
+<p>Softmax entries are coupled through the shared denominator. Masked future entries remain excluded from ordinary attention probability and gradient flow.</p>
+<h1>Back through Query–Key scores</h1>
+<p>Before softmax:</p>
+<div class="math-display">\[S=\frac{QK^T}{\sqrt{d_k}}\]</div>
+<p>Given (g_S):</p>
+<div class="math-display">\[g_Q=\frac{g_SK}{\sqrt{d_k}}\]</div>
+<div class="math-display">\[g_K=\frac{g_S^TQ}{\sqrt{d_k}}\]</div>
+<p>The score gradient affects both sides of every allowed Query–Key comparison.</p>
+<h1>Back through Q, K, and V projections</h1>
+<p>For one head:</p>
+<div class="math-display">\[Q=XW^Q,
+\qquad
+K=XW^K,
+\qquad
+V=XW^V\]</div>
+<p>The parameter gradients are:</p>
+<div class="math-display">\[g_{W^Q}=X^Tg_Q\]</div>
+<div class="math-display">\[g_{W^K}=X^Tg_K\]</div>
+<div class="math-display">\[g_{W^V}=X^Tg_V\]</div>
+<p>The input contributions are:</p>
+<div class="math-display">\[g_X^{(Q)}=g_Q(W^Q)^T\]</div>
+<div class="math-display">\[g_X^{(K)}=g_K(W^K)^T\]</div>
+<div class="math-display">\[g_X^{(V)}=g_V(W^V)^T\]</div>
+<p>Because the same (X) fed all three projections:</p>
+<div class="math-display">\[g_X
+=
+g_X^{(Q)}+g_X^{(K)}+g_X^{(V)}\]</div>
+<p>Residual branches and other heads can add further contributions.</p>
+<h1>Multiple heads return to one residual stream</h1>
+<p>Concatenation splits the incoming feature gradient back into one slice per head.</p>
+<p>Each head calculates gradients for its own:</p>
+<div class="math-display">\[W_r^Q,
+\quad
+W_r^K,
+\quad
+W_r^V\]</div>
+<p>All heads began from the same layer input, so their input-gradient contributions are added there.</p>
+<p>The output projection (W^O) receives its own gradient from the concatenated result.</p>
+<h1>Back through the block stack</h1>
+<p>The forward pass used:</p>
+<div class="math-display">\[X^{(0)}
+\rightarrow
+X^{(1)}
+\rightarrow
+\cdots
+\rightarrow
+X^{(L)}\]</div>
+<p>The backward pass visits layers in reverse:</p>
+<div class="math-display">\[g_{X^{(L)}}
+\rightarrow
+g_{X^{(L-1)}}
+\rightarrow
+\cdots
+\rightarrow
+g_{X^{(0)}}\]</div>
+<p>Each block calculates gradients for its own parameters. Ordinary Transformer blocks do not share their attention and MLP matrices across depth.</p>
+<h1>Embedding gradients accumulate by token ID</h1>
+<p>An embedding lookup selects rows from an embedding table.</p>
+<p>If token ID 3 appears in a batch, its selected embedding gradient is added to row 3 of the table&#39;s gradient buffer.</p>
+<p>If the same token occurs several times, all contributions add.</p>
+<p>Rows for absent token IDs receive no direct lookup gradient from that batch.</p>
+<p>Learned absolute position tables behave similarly for position IDs.</p>
+<h1>Weight tying combines gradient sources</h1>
+<p>When:</p>
+<div class="math-display">\[W_{\mathrm{vocab}}=E_{\mathrm{token}}^T\]</div>
+<p>the input embedding table and output head share parameters.</p>
+<p>The shared object receives gradients from:</p>
+<ol>
+<li>embedding lookup use;</li>
+<li>vocabulary projection use.</li>
+</ol>
+<p>Those contributions add before the optimiser step.</p>
+<h1>Many token losses contribute to one matrix</h1>
+<p>For mean loss over (N) valid targets:</p>
+<div class="math-display">\[\mathcal{L}
+=
+\frac{1}{N}\sum_{i=1}^{N}\mathcal{L}_i\]</div>
+<p>parameter gradient is:</p>
+<div class="math-display">\[\frac{\partial\mathcal{L}}{\partial w}
+=
+\frac{1}{N}
+\sum_{i=1}^{N}
+\frac{\partial\mathcal{L}_i}{\partial w}\]</div>
+<p>Every valid token target can contribute to the same shared matrices. Over training, updates aggregate evidence from enormous numbers of contexts.</p>
+<h1>A simple gradient-descent update</h1>
+<p>Basic stochastic gradient descent uses:</p>
+<div class="math-display">\[w_{\mathrm{new}}
+=
+w_{\mathrm{old}}-\eta g_w\]</div>
+<p>Return to the vocabulary weight:</p>
+<div class="math-display">\[w_{\mathrm{old}}=0.2\]</div>
+<p>with:</p>
+<div class="math-display">\[g_w=-1.119482\]</div>
+<p>and learning rate:</p>
+<div class="math-display">\[\eta=0.05\]</div>
+<p>Then:</p>
+<div class="math-display">\[\begin{aligned}
+w_{\mathrm{new}}
+&=0.2-0.05(-1.119482)\\
+&=0.2+0.055974\\
+&\approx0.255974
+\end{aligned}\]</div>
+<p>The weight increased because increasing it locally helps raise the under-supported <code>on</code> logit for this hidden state.</p>
+<div class="warning">
+
+<h2>One worked update is not a complete training recipe</h2>
+<p>Real training uses batches, adaptive optimisers, schedules, regularisation, clipping, reduced precision, and many repeated steps. This calculation isolates one parameter so the sign remains visible.</p>
+</div>
+
+<h1>Why the learning rate matters</h1>
+<p>The gradient supplies a local direction and magnitude. The learning rate controls step size.</p>
+<ul>
+<li>too small: learning can be slow;</li>
+<li>too large: updates can overshoot or destabilise training;</li>
+<li>scheduled appropriately: larger early updates can transition to smaller refinements.</li>
+</ul>
+<p>The useful learning rate depends on optimiser, model size, batch size, precision, and parameterisation.</p>
+<h1>Beyond SGD: AdamW</h1>
+<p>Large language models commonly use adaptive optimisers such as AdamW.</p>
+<p>AdamW maintains moving estimates related to:</p>
+<ul>
+<li>the running gradient mean;</li>
+<li>the running squared-gradient magnitude.</li>
+</ul>
+<p>Those estimates scale updates coordinate by coordinate. AdamW also applies decoupled weight decay to selected parameter groups.</p>
+<p>The optimiser changes how gradients become updates. It does not change backpropagation&#39;s derivatives.</p>
+<h1>Weight decay is not applied blindly</h1>
+<p>Training recipes often exclude selected parameters from weight decay, such as:</p>
+<ul>
+<li>biases;</li>
+<li>normalisation scales;</li>
+<li>architecture-specific embeddings or parameter groups.</li>
+</ul>
+<p>The exact grouping is part of the training recipe.</p>
+<h1>Gradient clipping</h1>
+<p>A global norm can be written:</p>
+<div class="math-display">\[\lVert g\rVert_2\]</div>
+<p>With clipping threshold (c):</p>
+<div class="math-display">\[g_{\mathrm{clipped}}
+=
+g\cdot
+\min\left(1,\frac{c}{\lVert g\rVert_2}\right)\]</div>
+<p>If the norm is already below (c), nothing changes. Otherwise, one shared scale limits the update magnitude while preserving direction.</p>
+<h1>Gradient accumulation</h1>
+<p>When a full batch does not fit in memory:</p>
+<pre><code class="language-text">clear gradients
+forward microbatch 1 -&gt; backward -&gt; accumulate
+forward microbatch 2 -&gt; backward -&gt; accumulate
+forward microbatch 3 -&gt; backward -&gt; accumulate
+optimizer step
+clear gradients
+</code></pre>
+<p>Loss or gradient scaling must match the intended effective-batch mean or sum.</p>
+<h1>Mixed precision and loss scaling</h1>
+<p>Reduced-precision training improves speed and memory use, but very small gradients can underflow.</p>
+<p>Loss scaling uses:</p>
+<div class="math-display">\[\mathcal{L}_{\mathrm{scaled}}=s\mathcal{L}\]</div>
+<p>This scales gradients by (s). Before updating parameters, gradients are unscaled and checked for invalid values.</p>
+<p>The technique changes numerical representation, not the mathematical objective.</p>
+<h1>Gradients must be cleared deliberately</h1>
+<p>Most automatic-differentiation frameworks accumulate into gradient buffers.</p>
+<p>If old gradients are not cleared at the intended boundary, a new batch can be added to stale values accidentally.</p>
+<p>Clearing is skipped only when intentional gradient accumulation is in progress.</p>
+<h1>One complete training step</h1>
+<p>A simplified step is:</p>
+<pre><code class="language-text">1. Load token sequences.
+2. Create shifted inputs and targets.
+3. Build attention and loss masks.
+4. Run the forward pass.
+5. Calculate masked cross-entropy.
+6. Backpropagate gradients.
+7. Optionally unscale and clip.
+8. Apply the optimiser update.
+9. Clear gradients.
+</code></pre>
+<p>Repeated steps shape:</p>
+<ul>
+<li>token embeddings;</li>
+<li>trainable positional parameters;</li>
+<li>Query, Key, Value, and output projections;</li>
+<li>MLP weights;</li>
+<li>normalisation parameters;</li>
+<li>vocabulary-head parameters.</li>
+</ul>
+<h1>Backpropagation does not assign human concepts</h1>
+<p>A gradient does not say:</p>
+<blockquote>
+<p>This neuron should learn grammar.</p>
+</blockquote>
+<p>It says:</p>
+<blockquote>
+<p>A small change in this quantity would change the current loss by this local amount.</p>
+</blockquote>
+<p>Capabilities emerge from distributed updates across many parameters and examples.</p>
+<h1>Common backpropagation mistakes</h1>
+<h2>Mistake 1: saying the scalar loss itself flows backward</h2>
+<p>What flows backward are derivatives of loss with respect to intermediate quantities.</p>
+<h2>Mistake 2: updating activations instead of parameters</h2>
+<p>Activations are recomputed. The optimiser persistently changes learned parameters.</p>
+<h2>Mistake 3: forgetting branch contributions</h2>
+<p>All gradient paths into a shared source must be added.</p>
+<h2>Mistake 4: reversing matrix multiplication without transposes</h2>
+<p>For (y=xW), use (g_W=x^Tg_y) and (g_x=g_yW^T).</p>
+<h2>Mistake 5: assuming one target updates only one layer</h2>
+<p>One token loss can produce gradients through the complete stack.</p>
+<h2>Mistake 6: treating gradient as the final update</h2>
+<p>The optimiser transforms gradients using learning rates, moments, decay, clipping, and schedules.</p>
+<h2>Mistake 7: forgetting shared-parameter accumulation</h2>
+<p>Repeated tokens, tied weights, positions, and batch items can all contribute to one parameter.</p>
+<h2>Mistake 8: stepping before accumulation is complete</h2>
+<p>That changes effective-batch behaviour.</p>
+<h2>Mistake 9: forgetting to clear gradients</h2>
+<p>Unintended accumulation mixes separate training steps.</p>
+<h2>Mistake 10: assuming a negative gradient makes a parameter negative</h2>
+<p>Gradient sign describes local slope. The new value also depends on the old value and optimiser step.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What starts backpropagation for softmax cross-entropy?</h2>
+<div class="math-display">\[p-y\]</div>
+<h2>2. What is the vocabulary-weight gradient for (z=hW+b)?</h2>
+<div class="math-display">\[h^Tg_z\]</div>
+<h2>3. What continues into the hidden state?</h2>
+<div class="math-display">\[g_h=g_zW^T\]</div>
+<h2>4. What happens at a residual addition?</h2>
+<p>The incoming gradient follows both branches, and contributions add at the shared input.</p>
+<h2>5. Why are MLP gradients computed in reverse operation order?</h2>
+<p>The chain rule needs the later operation&#39;s gradient before earlier inputs can be differentiated.</p>
+<h2>6. Which quantities receive gradients from (Z=AV)?</h2>
+<p>Both (A) and (V).</p>
+<h2>7. Why can one embedding row receive several contributions?</h2>
+<p>The token can occur several times, and tied output weights can add another source.</p>
+<h2>8. What does learning rate control?</h2>
+<p>The scale of the optimiser update.</p>
+<h2>9. Why use gradient accumulation?</h2>
+<p>To obtain a larger effective batch than memory can hold in one microbatch.</p>
+<h2>10. Does backpropagation update parameters?</h2>
+<p>No. It calculates gradients. The optimiser updates parameters.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>The loss first differentiates with respect to logits:</p>
+<div class="math-display">\[g_z=p-y\]</div>
+<p>For the vocabulary projection:</p>
+<div class="math-display">\[g_W=h^Tg_z\]</div>
+<div class="math-display">\[g_h=g_zW^T\]</div>
+<p>The hidden-state gradient then moves through every dependent operation using the chain rule.</p>
+<p>An optimiser converts accumulated gradients into updates such as:</p>
+<div class="math-display">\[w_{\mathrm{new}}=w_{\mathrm{old}}-\eta g_w\]</div>
+<p>In our story:</p>
+<blockquote>
+<p><strong>The Scorekeeper does not know which employee made the mistake. Backpropagation follows every dependency, measures each local contribution, and delivers a correction request to every parameter involved.</strong></p>
+</blockquote>
+<h1>Coming next: training at scale and changing behaviour</h1>
+<p>We have followed one model from token input through inference, loss, and one parameter update.</p>
+<p>The next part of the book can explore:</p>
+<ul>
+<li>minibatches, epochs, data mixtures, and learning-rate schedules;</li>
+<li>validation and checkpoints;</li>
+<li>distributed training and memory costs;</li>
+<li>supervised fine-tuning;</li>
+<li>preference optimisation;</li>
+<li>parameter-efficient adaptation such as LoRA.</li>
+</ul>

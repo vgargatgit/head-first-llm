@@ -1,0 +1,545 @@
+<h1>The question this chapter answers</h1>
+<p>Chapter 7 completed the attention sublayer and produced one updated representation for every token:</p>
+<div class="math-display">\[N\approx
+\begin{bmatrix}
+-0.195555 & -0.563435 & 1.674888 & -0.915898\\
+-1.143160 & 1.404068 & -0.716785 & 0.455877\\
+-0.066680 & -0.316240 & 1.573850 & -1.190930
+\end{bmatrix}\]</div>
+<p>Attention allowed each token position to retrieve information from other visible positions.</p>
+<p>But a Transformer block contains another major sublayer: a feed-forward neural network, often called the <strong>MLP</strong>, <strong>FFN</strong>, or <strong>position-wise feed-forward network</strong>.</p>
+<p>Why is this network needed after attention, and why is it applied separately to every token?</p>
+<div class="big-idea">
+
+<p><strong>Attention moves and combines information across token positions. The MLP transforms the feature representation inside each token position. A Transformer block needs both kinds of computation.</strong></p>
+</div>
+
+<h1>Cold open: the meeting ends, private work begins</h1>
+<p>During attention, THE, CAT, and SAT participated in a shared meeting.</p>
+<p>Each position could retrieve a weighted blend of information from allowed positions.</p>
+<p>After the meeting, every token enters the same private thinking room.</p>
+<p>The room follows one learned procedure:</p>
+<ol>
+<li>expand the token&#39;s feature vector;</li>
+<li>apply a non-linear activation;</li>
+<li>contract the result back to the model width.</li>
+</ol>
+<p>The same room is used for every token, but each token enters with a different vector and therefore leaves with a different result.</p>
+<h1>The position-wise MLP</h1>
+<p>For one token row (n_t), a simple two-layer feed-forward network is:</p>
+<div class="math-display">\[p_t=n_tW_1+b_1\]</div>
+<div class="math-display">\[u_t=\phi(p_t)\]</div>
+<div class="math-display">\[f_t=u_tW_2+b_2\]</div>
+<p>Combining the steps:</p>
+<div class="math-display">\[\operatorname{FFN}(n_t)
+=
+\phi(n_tW_1+b_1)W_2+b_2\]</div>
+<p>For the entire sequence matrix:</p>
+<div class="math-display">\[P=NW_1+b_1\]</div>
+<div class="math-display">\[U=\phi(P)\]</div>
+<div class="math-display">\[F=UW_2+b_2\]</div>
+<p>The bias vectors are broadcast to every token row.</p>
+<h1>Position-wise means no token mixing</h1>
+<p>Suppose:</p>
+<div class="math-display">\[N=
+\begin{bmatrix}
+n_{\text{The}}\\
+n_{\text{cat}}\\
+n_{\text{sat}}
+\end{bmatrix}\]</div>
+<p>Then:</p>
+<div class="math-display">\[F=
+\begin{bmatrix}
+\operatorname{FFN}(n_{\text{The}})\\
+\operatorname{FFN}(n_{\text{cat}})\\
+\operatorname{FFN}(n_{\text{sat}})
+\end{bmatrix}\]</div>
+<p>There is no term such as:</p>
+<div class="math-display">\[n_{\text{The}}\cdot n_{\text{cat}}\]</div>
+<p>inside this MLP.</p>
+<p>THE&#39;s row is transformed independently of CAT&#39;s row. CAT&#39;s row is transformed independently of SAT&#39;s row.</p>
+<p>The same weights are reused across positions:</p>
+<div class="math-display">\[W_1,\quad b_1,\quad W_2,\quad b_2\]</div>
+<div class="translation">
+
+<h2>Communication versus private processing</h2>
+<p>Attention is the communication stage: token positions can influence one another.</p>
+<p>The MLP is the private-processing stage: each position reorganises and transforms the information now stored in its own feature vector.</p>
+</div>
+
+<h1>Expand, activate, contract</h1>
+<p>Our model width is:</p>
+<div class="math-display">\[d_{\text{model}}=4\]</div>
+<p>For a small worked example, choose an MLP hidden width:</p>
+<div class="math-display">\[d_{\text{ff}}=6\]</div>
+<p>The first matrix expands four coordinates into six:</p>
+<div class="math-display">\[W_1\in\mathbb{R}^{4\times6}\]</div>
+<p>The second matrix contracts six coordinates back into four:</p>
+<div class="math-display">\[W_2\in\mathbb{R}^{6\times4}\]</div>
+<p>So each token follows:</p>
+<div class="math-display">\[4\longrightarrow6\longrightarrow4\]</div>
+<p>In production Transformers, the intermediate width is often much larger than the model width. The exact ratio depends on the architecture, especially when gated MLPs are used.</p>
+<h1>Why expand the feature space?</h1>
+<p>A single linear transformation cannot represent an arbitrary non-linear feature transformation.</p>
+<p>The expansion creates a larger intermediate workspace in which the network can build many learned combinations of the token&#39;s current features.</p>
+<p>The activation then introduces non-linearity.</p>
+<p>The final projection recombines the activated intermediate features into the model&#39;s working width.</p>
+<p>Without the activation, two consecutive linear layers would collapse into one linear operation:</p>
+<div class="math-display">\[(nW_1)W_2=n(W_1W_2)\]</div>
+<p>The non-linearity is what prevents that collapse.</p>
+<h1>The MLP parameters for our example</h1>
+<p>Use:</p>
+<div class="math-display">\[W_1=
+\begin{bmatrix}
+0.4 & -0.2 & 0.1 & 0.5 & -0.3 & 0.2\\
+-0.1 & 0.6 & -0.4 & 0.2 & 0.5 & -0.2\\
+0.3 & 0.1 & 0.5 & -0.3 & 0.2 & 0.4\\
+0.2 & -0.5 & 0.2 & 0.4 & -0.1 & 0.3
+\end{bmatrix}\]</div>
+<p>and:</p>
+<div class="math-display">\[b_1=
+\begin{bmatrix}
+0.05 & -0.10 & 0.08 & 0 & 0.03 & -0.04
+\end{bmatrix}\]</div>
+<p>For the second layer, use:</p>
+<div class="math-display">\[W_2=
+\begin{bmatrix}
+0.3 & -0.2 & 0.1 & 0.4\\
+-0.1 & 0.5 & 0.2 & -0.3\\
+0.4 & 0.1 & -0.2 & 0.2\\
+0.2 & -0.4 & 0.3 & 0.1\\
+-0.3 & 0.2 & 0.5 & -0.1\\
+0.1 & 0.3 & -0.4 & 0.2
+\end{bmatrix}\]</div>
+<p>and:</p>
+<div class="math-display">\[b_2=
+\begin{bmatrix}
+0.02 & -0.01 & 0.03 & -0.02
+\end{bmatrix}\]</div>
+<h1>The activation for the worked example</h1>
+<p>To keep every number easy to inspect, we use ReLU:</p>
+<div class="math-display">\[\operatorname{ReLU}(x)=\max(0,x)\]</div>
+<p>ReLU leaves positive coordinates unchanged and replaces negative coordinates with zero.</p>
+<p>This is a teaching choice, not a claim that modern LLMs generally use ReLU. We will compare common modern activations later in the chapter.</p>
+<h1>Calculate SAT&#39;s expanded representation</h1>
+<p>SAT enters the MLP with the Chapter 7 output:</p>
+<div class="math-display">\[n_{\text{sat}}
+\approx
+\begin{bmatrix}
+-0.066680 & -0.316240 & 1.573850 & -1.190930
+\end{bmatrix}\]</div>
+<p>The pre-activation vector is:</p>
+<div class="math-display">\[p_{\text{sat}}=n_{\text{sat}}W_1+b_1\]</div>
+<p>The result is:</p>
+<div class="math-display">\[p_{\text{sat}}
+\approx
+\begin{bmatrix}
+0.288921 & 0.476442 & 0.748567 & -1.045115 & 0.325747 & 0.282173
+\end{bmatrix}\]</div>
+<h2>Verify the first expanded coordinate</h2>
+<p>The first column of (W_1) is:</p>
+<div class="math-display">\[\begin{bmatrix}
+0.4\\
+-0.1\\
+0.3\\
+0.2
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\begin{aligned}
+p_{\text{sat},1}
+&=(-0.066680)(0.4)
++(-0.316240)(-0.1)\\
+&\quad +(1.573850)(0.3)
++(-1.190930)(0.2)
++0.05\\
+&\approx-0.026672+0.031624+0.472155-0.238186+0.05\\
+&\approx0.288921
+\end{aligned}\]</div>
+<h1>Apply the activation</h1>
+<p>Applying ReLU coordinate by coordinate:</p>
+<div class="math-display">\[u_{\text{sat}}=\operatorname{ReLU}(p_{\text{sat}})\]</div>
+<p>The fourth coordinate is negative, so it becomes zero:</p>
+<div class="math-display">\[\boxed{
+u_{\text{sat}}
+\approx
+\begin{bmatrix}
+0.288921 & 0.476442 & 0.748567 & 0 & 0.325747 & 0.282173
+\end{bmatrix}
+}\]</div>
+<p>The activation creates a non-linear gate. The contribution carried by the fourth intermediate feature is removed for this token on this forward pass.</p>
+<p>Another token can activate a different subset of intermediate coordinates even though the weights are shared.</p>
+<h1>Contract SAT back to the model width</h1>
+<p>The second linear layer calculates:</p>
+<div class="math-display">\[f_{\text{sat}}=u_{\text{sat}}W_2+b_2\]</div>
+<p>The output is:</p>
+<div class="math-display">\[\boxed{
+f_{\text{sat}}
+\approx
+\begin{bmatrix}
+0.288952 & 0.395095 & 0.054471 & 0.126209
+\end{bmatrix}
+}\]</div>
+<h2>Verify the first contracted coordinate</h2>
+<p>The first column of (W_2) is:</p>
+<div class="math-display">\[\begin{bmatrix}
+0.3\\
+-0.1\\
+0.4\\
+0.2\\
+-0.3\\
+0.1
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\begin{aligned}
+f_{\text{sat},1}
+&=0.288921(0.3)
++0.476442(-0.1)
++0.748567(0.4)\\
+&\quad +0(0.2)
++0.325747(-0.3)
++0.282173(0.1)
++0.02\\
+&\approx0.086676-0.047644+0.299427+0\\
+&\quad -0.097724+0.028217+0.020000\\
+&\approx0.288952
+\end{aligned}\]</div>
+<p>The MLP has transformed SAT&#39;s four features through a six-dimensional non-linear workspace and returned a four-dimensional update.</p>
+<h1>Calculate the MLP for every token</h1>
+<p>For all positions:</p>
+<div class="math-display">\[P=NW_1+b_1\]</div>
+<p>The pre-activation matrix is:</p>
+<div class="math-display">\[P\approx
+\begin{bmatrix}
+0.347408 & 0.226488 & 0.940083 & -1.079290 & 0.233517 & 0.428762\\
+-0.671531 & 0.671456 & -0.863160 & 0.106620 & 0.886037 & -0.699397\\
+0.288921 & 0.476442 & 0.748567 & -1.045115 & 0.325747 & 0.282173
+\end{bmatrix}\]</div>
+<p>Applying ReLU gives:</p>
+<div class="math-display">\[U\approx
+\begin{bmatrix}
+0.347408 & 0.226488 & 0.940083 & 0 & 0.233517 & 0.428762\\
+0 & 0.671456 & 0 & 0.106620 & 0.886037 & 0\\
+0.288921 & 0.476442 & 0.748567 & 0 & 0.325747 & 0.282173
+\end{bmatrix}\]</div>
+<p>Then:</p>
+<div class="math-display">\[F=UW_2+b_2\]</div>
+<p>which gives:</p>
+<div class="math-display">\[\boxed{
+F\approx
+\begin{bmatrix}
+0.450428 & 0.303103 & -0.132725 & 0.301434\\
+-0.291633 & 0.460288 & 0.639296 & -0.299379\\
+0.288952 & 0.395095 & 0.054471 & 0.126209
+\end{bmatrix}
+}\]</div>
+<p>The rows differ because the token inputs differ, even though the same MLP parameters are used for all positions.</p>
+<div class="big-idea">
+
+<p><strong>Shared MLP parameters do not produce identical token outputs. They apply one learned transformation rule to different token representations.</strong></p>
+</div>
+
+<h1>The second residual connection</h1>
+<p>Like the attention sublayer, the MLP produces an update rather than replacing its input.</p>
+<p>In our post-norm-style example:</p>
+<div class="math-display">\[R_2=N+F\]</div>
+<p>Substituting the matrices gives:</p>
+<div class="math-display">\[\boxed{
+R_2\approx
+\begin{bmatrix}
+0.254873 & -0.260332 & 1.542164 & -0.614464\\
+-1.434793 & 1.864356 & -0.077489 & 0.156498\\
+0.222272 & 0.078855 & 1.628321 & -1.064721
+\end{bmatrix}
+}\]</div>
+<p>For SAT:</p>
+<div class="math-display">\[\begin{aligned}
+r_{2,\text{sat}}
+&=n_{\text{sat}}+f_{\text{sat}}\\
+&=
+\begin{bmatrix}
+-0.066680 & -0.316240 & 1.573850 & -1.190930
+\end{bmatrix}\\
+&\quad+
+\begin{bmatrix}
+0.288952 & 0.395095 & 0.054471 & 0.126209
+\end{bmatrix}\\
+&=
+\begin{bmatrix}
+0.222272 & 0.078855 & 1.628321 & -1.064721
+\end{bmatrix}
+\end{aligned}\]</div>
+<h1>The second normalisation</h1>
+<p>Applying LayerNorm row by row, again using identity (\gamma) and (eta) for the arithmetic, gives the block output:</p>
+<div class="math-display">\[O=\operatorname{LayerNorm}(R_2)\]</div>
+<div class="math-display">\[\boxed{
+O\approx
+\begin{bmatrix}
+0.029725 & -0.600171 & 1.603583 & -1.033137\\
+-1.331984 & 1.481456 & -0.174505 & 0.025033\\
+0.006373 & -0.143686 & 1.477529 & -1.340215
+\end{bmatrix}
+}\]</div>
+<p>This is the output of our simplified complete Transformer block.</p>
+<p>It still contains:</p>
+<ul>
+<li>one row per token position;</li>
+<li>four features per position.</li>
+</ul>
+<p>Therefore:</p>
+<div class="math-display">\[O\in\mathbb{R}^{3\times4}\]</div>
+<h1>Follow every MLP shape</h1>
+<p>The input has shape:</p>
+<div class="math-display">\[N\in\mathbb{R}^{n\times d_{\text{model}}}\]</div>
+<p>The first projection uses:</p>
+<div class="math-display">\[W_1\in\mathbb{R}^{d_{\text{model}}\times d_{\text{ff}}}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[P=NW_1+b_1
+\in
+\mathbb{R}^{n\times d_{\text{ff}}}\]</div>
+<p>The activation preserves the shape:</p>
+<div class="math-display">\[U\in\mathbb{R}^{n\times d_{\text{ff}}}\]</div>
+<p>The second projection uses:</p>
+<div class="math-display">\[W_2\in\mathbb{R}^{d_{\text{ff}}\times d_{\text{model}}}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[F=UW_2+b_2
+\in
+\mathbb{R}^{n\times d_{\text{model}}}\]</div>
+<p>The residual addition is valid:</p>
+<div class="math-display">\[N+F\]</div>
+<p>because both matrices have shape:</p>
+<div class="math-display">\[n\times d_{\text{model}}\]</div>
+<p>For our example:</p>
+<div class="math-display">\[(3\times4)(4\times6)=3\times6\]</div>
+<p>followed by:</p>
+<div class="math-display">\[(3\times6)(6\times4)=3\times4\]</div>
+<h1>Why the MLP often contains many parameters</h1>
+<p>Ignoring biases, the two matrices contain:</p>
+<div class="math-display">\[d_{\text{model}}d_{\text{ff}}
++
+d_{\text{ff}}d_{\text{model}}
+=
+2d_{\text{model}}d_{\text{ff}}\]</div>
+<p>parameters in this simple two-matrix design.</p>
+<p>When (d_{\text{ff}}) is several times (d_{\text{model}}), the MLP can contain a large fraction of a Transformer block&#39;s parameters.</p>
+<p>This is easy to overlook because attention receives much of the conceptual attention, while the feed-forward network performs substantial learned feature computation at every position.</p>
+<h1>Modern activations and gated MLPs</h1>
+<p>Our worked example used ReLU because it is easy to calculate by hand.</p>
+<p>Modern LLMs commonly use smoother activations or gated structures.</p>
+<h2>GELU</h2>
+<p>A GELU activation approximately weights an input according to how likely it is to be positive under a Gaussian view. It behaves like a smooth gate rather than ReLU&#39;s hard cutoff.</p>
+<p>A common approximation is:</p>
+<div class="math-display">\[\operatorname{GELU}(x)
+\approx
+\frac{x}{2}
+\left[
+1+
+\tanh
+\left(
+\sqrt{\frac{2}{\pi}}
+\left(x+0.044715x^3\right)
+\right)
+\right]\]</div>
+<h2>SiLU</h2>
+<p>SiLU, also called the swish activation, is:</p>
+<div class="math-display">\[\operatorname{SiLU}(x)=x\sigma(x)\]</div>
+<p>where:</p>
+<div class="math-display">\[\sigma(x)=\frac{1}{1+e^{-x}}\]</div>
+<h2>Gated MLPs</h2>
+<p>A gated structure creates two projections and multiplies them element by element.</p>
+<p>A simplified gated form is:</p>
+<div class="math-display">\[G=\phi(NW_g)\odot(NW_u)\]</div>
+<p>followed by:</p>
+<div class="math-display">\[F=GW_d\]</div>
+<p>SwiGLU uses a SiLU-like gate:</p>
+<div class="math-display">\[\operatorname{SwiGLU}(x)
+=
+\operatorname{SiLU}(xW_g)\odot(xW_u)\]</div>
+<p>and then applies a down projection.</p>
+<p>The exact matrices and widths vary by architecture, but the conceptual purpose remains:</p>
+<blockquote>
+<p>build a rich non-linear transformation inside each token position.</p>
+</blockquote>
+<div class="warning">
+
+<h2>Do not treat ReLU as the universal LLM activation</h2>
+<p>ReLU is used only for our transparent numerical example. Always inspect the target architecture before reproducing its MLP.</p>
+</div>
+
+<h1>The complete simplified Transformer block</h1>
+<p>We can now follow one block from input to output.</p>
+<h2>1. Create per-head projections</h2>
+<p>For each head (r):</p>
+<div class="math-display">\[Q_r=XW_r^Q\]</div>
+<div class="math-display">\[K_r=XW_r^K\]</div>
+<div class="math-display">\[V_r=XW_r^V\]</div>
+<h2>2. Calculate each head&#39;s attention output</h2>
+<div class="math-display">\[Z_r
+=
+\operatorname{softmax}
+\left(
+\frac{Q_rK_r^T}{\sqrt{d_k}}+M
+\right)V_r\]</div>
+<h2>3. Concatenate the heads</h2>
+<div class="math-display">\[H=\operatorname{Concat}(Z_1,\ldots,Z_h)\]</div>
+<h2>4. Mix the head features</h2>
+<div class="math-display">\[Y=HW^O\]</div>
+<h2>5. Complete the attention residual path</h2>
+<p>In our post-norm example:</p>
+<div class="math-display">\[N=\operatorname{LayerNorm}(X+Y)\]</div>
+<h2>6. Run the position-wise MLP</h2>
+<div class="math-display">\[F=\phi(NW_1+b_1)W_2+b_2\]</div>
+<h2>7. Complete the MLP residual path</h2>
+<div class="math-display">\[O=\operatorname{LayerNorm}(N+F)\]</div>
+<p>Combining the two sublayers conceptually:</p>
+<pre><code class="language-text">input token states
+        |
+        v
+multi-head causal self-attention
+        |
+        v
+output projection
+        |
+        +&lt;---- residual input
+        |
+        v
+normalisation
+        |
+        v
+position-wise MLP
+        |
+        +&lt;---- residual input to MLP
+        |
+        v
+normalisation
+        |
+        v
+block output
+</code></pre>
+<h1>What changes and what stays fixed through the block?</h1>
+<p>The number of token positions stays fixed:</p>
+<div class="math-display">\[n=3\]</div>
+<p>The model width at the block boundary stays fixed:</p>
+<div class="math-display">\[d_{\text{model}}=4\]</div>
+<p>Internally:</p>
+<ul>
+<li>each attention head temporarily uses width (d_k) and (d_v);</li>
+<li>concatenation restores (hd_v);</li>
+<li>(W^O) returns to (d_{\text{model}});</li>
+<li>the MLP temporarily expands to (d_{\text{ff}});</li>
+<li>the down projection returns to (d_{\text{model}}).</li>
+</ul>
+<p>This repeated return to the model width allows many blocks to be stacked.</p>
+<h1>What the block output means</h1>
+<p>The output row for SAT is:</p>
+<div class="math-display">\[o_{\text{sat}}
+\approx
+\begin{bmatrix}
+0.006373 & -0.143686 & 1.477529 & -1.340215
+\end{bmatrix}\]</div>
+<p>It is not a probability distribution and does not directly spell out a word.</p>
+<p>It is SAT&#39;s updated hidden state after:</p>
+<ul>
+<li>causal information retrieval from visible tokens;</li>
+<li>two attention heads;</li>
+<li>head mixing;</li>
+<li>residual preservation;</li>
+<li>non-linear position-wise processing;</li>
+<li>normalisation.</li>
+</ul>
+<p>A later Transformer block can use this row as its next-layer input.</p>
+<h1>Pre-norm form of the complete block</h1>
+<p>Many modern LLMs use a pre-norm layout. A simplified version is:</p>
+<div class="math-display">\[R=X+\operatorname{MHA}(\operatorname{Norm}_1(X))\]</div>
+<div class="math-display">\[O=R+\operatorname{MLP}(\operatorname{Norm}_2(R))\]</div>
+<p>The residual stream is not normalised after every addition in the same way as our post-norm arithmetic.</p>
+<p>The chapter&#39;s core distinctions still hold:</p>
+<ul>
+<li>attention mixes across positions;</li>
+<li>the MLP transforms within positions;</li>
+<li>both sublayers contribute residual updates;</li>
+<li>normalisation is placed according to the architecture.</li>
+</ul>
+<h1>Common MLP and block mistakes</h1>
+<h2>Mistake 1: saying the MLP attends to tokens</h2>
+<p>The standard position-wise MLP does not calculate cross-token attention. It processes each row independently.</p>
+<h2>Mistake 2: using different MLP weights for every position</h2>
+<p>The same learned MLP parameters are shared across token positions within the layer.</p>
+<h2>Mistake 3: removing the activation</h2>
+<p>Without a non-linearity or gating operation, the two linear layers can collapse into one linear transformation.</p>
+<h2>Mistake 4: forgetting the biases</h2>
+<p>Some architectures use biases and some omit them. A faithful implementation must follow the target model.</p>
+<h2>Mistake 5: assuming (d_{\text{ff}}=d_{\text{model}})</h2>
+<p>The MLP commonly expands to a larger intermediate width.</p>
+<h2>Mistake 6: adding the MLP output to the wrong tensor</h2>
+<p>The residual connection adds the MLP update to the representation that entered that MLP sublayer.</p>
+<h2>Mistake 7: treating the block output as logits</h2>
+<p>The block output is still a hidden representation. Many additional blocks and a final output head may remain.</p>
+<h2>Mistake 8: assuming every model uses the same block order</h2>
+<p>Pre-norm, post-norm, LayerNorm, RMSNorm, GELU, SiLU, and gated MLP choices differ across architectures.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What is the primary difference between attention and the MLP?</h2>
+<p>Attention mixes information across token positions. The MLP transforms features independently within each position.</p>
+<h2>2. Are the MLP parameters shared across token positions?</h2>
+<p>Yes. Every row uses the same (W_1), (b_1), (W_2), and (b_2) for that layer.</p>
+<h2>3. Why include a non-linear activation?</h2>
+<p>Without it, the two linear layers could be combined into one linear transformation, greatly limiting the network&#39;s expressive power.</p>
+<h2>4. What is the intermediate shape in our example?</h2>
+<div class="math-display">\[U\in\mathbb{R}^{3\times6}\]</div>
+<h2>5. What is the final MLP output shape?</h2>
+<div class="math-display">\[F\in\mathbb{R}^{3\times4}\]</div>
+<h2>6. Why does the second projection return to four coordinates?</h2>
+<p>It must return to the model width so the residual addition and the next Transformer block remain shape-compatible.</p>
+<h2>7. Does a zero ReLU coordinate mean the corresponding learned feature is permanently unused?</h2>
+<p>No. It is zero for that token on that forward pass. Other tokens or contexts can activate it.</p>
+<h2>8. Is ReLU the standard activation in every modern LLM?</h2>
+<p>No. GELU, SiLU, and gated variants such as SwiGLU are common.</p>
+<h2>9. What are the two residual updates in the simplified block?</h2>
+<p>One comes from multi-head attention, and the other comes from the position-wise MLP.</p>
+<h2>10. Can the output of this block become the input to another block?</h2>
+<p>Yes. Stacking such blocks is how a Transformer builds progressively richer hidden states.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Attention performs cross-token retrieval:</p>
+<div class="math-display">\[\operatorname{MHA}(X)\]</div>
+<p>The MLP performs position-wise non-linear feature transformation:</p>
+<div class="math-display">\[\operatorname{FFN}(n)
+=
+\phi(nW_1+b_1)W_2+b_2\]</div>
+<p>Both contribute residual updates.</p>
+<p>Our complete post-norm-style block is:</p>
+<div class="math-display">\[N=
+\operatorname{LayerNorm}
+\left(
+X+
+\operatorname{Concat}(Z_1,\ldots,Z_h)W^O
+\right)\]</div>
+<div class="math-display">\[O=
+\operatorname{LayerNorm}
+\left(
+N+
+\phi(NW_1+b_1)W_2+b_2
+\right)\]</div>
+<p>For our running example:</p>
+<div class="math-display">\[O\approx
+\begin{bmatrix}
+0.029725 & -0.600171 & 1.603583 & -1.033137\\
+-1.331984 & 1.481456 & -0.174505 & 0.025033\\
+0.006373 & -0.143686 & 1.477529 & -1.340215
+\end{bmatrix}\]</div>
+<p>In our story:</p>
+<blockquote>
+<p><strong>Attention is the group meeting. The MLP is private thinking. Residual connections preserve the evolving case file while each sublayer adds what it has learned.</strong></p>
+</blockquote>
+<h1>Coming next: stack the blocks and predict a token</h1>
+<p>We have completed one Transformer block, but an LLM normally contains many such blocks.</p>
+<p>The next stage of the book can follow:</p>
+<ul>
+<li>how hidden states evolve through a stack of layers;</li>
+<li>how the final position is converted into vocabulary logits;</li>
+<li>how softmax creates next-token probabilities;</li>
+<li>how greedy decoding, sampling, temperature, top-k, and top-p choose the next token.</li>
+</ul>
+<p>The reader now has all the machinery needed to connect attention mechanics to actual text generation.</p>

@@ -1,0 +1,437 @@
+<h1>The question this chapter answers</h1>
+<p>Chapter 15 built a complete training run from token batches, schedules, validation, and checkpoints.</p>
+<p>That loop still appeared to run on one machine.</p>
+<p>Large models create two separate pressures:</p>
+<ol>
+<li>one accelerator may not process enough tokens quickly enough;</li>
+<li>one accelerator may not have enough memory to hold the model, optimiser state, gradients, and activations.</li>
+</ol>
+<p>How can many accelerators cooperate without accidentally training different models?</p>
+<div class="big-idea">
+
+<p><strong>Distributed training divides either the data, the model state, or the model computation. Every strategy trades local memory and arithmetic for communication and coordination.</strong></p>
+</div>
+
+<h1>Cold open: four workers receive one lesson plan</h1>
+<p>Suppose four workers each process a different microbatch.</p>
+<pre><code class="language-text">worker 1 -&gt; data shard A -&gt; local gradients
+worker 2 -&gt; data shard B -&gt; local gradients
+worker 3 -&gt; data shard C -&gt; local gradients
+worker 4 -&gt; data shard D -&gt; local gradients
+</code></pre>
+<p>If each worker updates independently, their model copies immediately diverge.</p>
+<p>Instead, they must combine the gradient evidence and apply a consistent update.</p>
+<p>That is the central idea of <strong>data parallelism</strong>.</p>
+<h1>Data parallelism replicates the model</h1>
+<p>In ordinary synchronous data parallelism:</p>
+<ul>
+<li>every worker stores a complete model replica;</li>
+<li>every worker receives different training data;</li>
+<li>every worker computes local gradients;</li>
+<li>gradients are aggregated across workers;</li>
+<li>every worker applies the same optimiser step.</li>
+</ul>
+<p>For worker (r), let the local gradient be:</p>
+<div class="math-display">\[g^{(r)}\]</div>
+<p>With (D) workers, the averaged gradient is:</p>
+<div class="math-display">\[\bar{g}
+=
+\frac{1}{D}
+\sum_{r=1}^{D}g^{(r)}\]</div>
+<p>Every replica then updates with the same (\bar{g}).</p>
+<h1>A small gradient-reduction example</h1>
+<p>Suppose four workers produce gradients for two parameters:</p>
+<div class="math-display">\[g^{(1)}=
+\begin{bmatrix}
+0.2 & -0.1
+\end{bmatrix}\]</div>
+<div class="math-display">\[g^{(2)}=
+\begin{bmatrix}
+0.4 & 0.3
+\end{bmatrix}\]</div>
+<div class="math-display">\[g^{(3)}=
+\begin{bmatrix}
+-0.2 & 0.1
+\end{bmatrix}\]</div>
+<div class="math-display">\[g^{(4)}=
+\begin{bmatrix}
+0.0 & -0.3
+\end{bmatrix}\]</div>
+<p>Their sum is:</p>
+<div class="math-display">\[\sum_{r=1}^{4}g^{(r)}
+=
+\begin{bmatrix}
+0.4 & 0.0
+\end{bmatrix}\]</div>
+<p>The average is:</p>
+<div class="math-display">\[\bar{g}
+=
+\begin{bmatrix}
+0.1 & 0.0
+\end{bmatrix}\]</div>
+<p>All four replicas use that same result.</p>
+<p>The second parameter receives no update from this step because positive and negative evidence cancelled in the global batch.</p>
+<h1>Sum or average?</h1>
+<p>Distributed systems may reduce gradients by summing or averaging.</p>
+<p>Both can be correct when loss scaling and learning-rate conventions agree.</p>
+<p>If every worker computes a mean over the same number of valid tokens, averaging worker gradients gives the global mean.</p>
+<p>When workers contain unequal valid-token counts, the mathematically correct global mean should weight their gradient sums by valid-token count rather than treating every worker mean equally.</p>
+<h1>All-reduce keeps replicas aligned</h1>
+<p>A common collective communication operation is <strong>all-reduce</strong>.</p>
+<p>Conceptually, all-reduce:</p>
+<ol>
+<li>combines a tensor from every worker;</li>
+<li>applies an operation such as sum;</li>
+<li>returns the result to every worker.</li>
+</ol>
+<p>For gradient synchronisation:</p>
+<pre><code class="language-text">local gradients on every worker
+        -&gt; all-reduce sum
+        -&gt; optional divide by global count
+        -&gt; identical gradient result everywhere
+</code></pre>
+<p>The operation is collective: all participants must enter it in a compatible order and with compatible tensor shapes.</p>
+<h1>Data parallelism solves throughput, not model replication memory</h1>
+<p>Adding data-parallel workers increases the global batch and potential throughput.</p>
+<p>But every worker still stores a full copy of:</p>
+<ul>
+<li>model parameters;</li>
+<li>gradients;</li>
+<li>optimiser state;</li>
+<li>often some master-precision weights.</li>
+</ul>
+<p>If the model state itself does not fit on one worker, pure data parallelism is insufficient.</p>
+<h1>Where training memory goes</h1>
+<p>Peak training memory includes several categories.</p>
+<h2>Parameters</h2>
+<p>The learned weights used in the forward and backward passes.</p>
+<h2>Gradients</h2>
+<p>One derivative value for each trainable parameter.</p>
+<h2>Optimiser state</h2>
+<p>AdamW commonly keeps first- and second-moment estimates. Some mixed-precision recipes also retain higher-precision master weights.</p>
+<h2>Activations</h2>
+<p>Intermediate values needed by backward propagation.</p>
+<h2>Temporary buffers</h2>
+<p>Communication workspaces, attention intermediates, allocator fragmentation, and framework-specific state.</p>
+<div class="warning">
+
+<h2>Parameter count is not memory usage</h2>
+<p>A one-billion-parameter model does not consume only one billion bytes. The bytes per parameter depend on precision, gradients, optimiser state, sharding, and implementation.</p>
+</div>
+
+<h1>An illustrative bytes-per-parameter estimate</h1>
+<p>Consider one mixed-precision Adam-style training arrangement with approximately:</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th align="right">Illustrative bytes per parameter</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Reduced-precision parameter</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>Gradient</td>
+<td align="right">2</td>
+</tr>
+<tr>
+<td>Higher-precision master parameter</td>
+<td align="right">4</td>
+</tr>
+<tr>
+<td>First moment</td>
+<td align="right">4</td>
+</tr>
+<tr>
+<td>Second moment</td>
+<td align="right">4</td>
+</tr>
+<tr>
+<td><strong>Total before activations</strong></td>
+<td align="right"><strong>16</strong></td>
+</tr>
+</tbody></table>
+<p>For:</p>
+<div class="math-display">\[P=10^9\]</div>
+<p>parameters, this illustrative model-state requirement is:</p>
+<div class="math-display">\[16P
+=
+16\cdot10^9\]</div>
+<p>bytes, or roughly 16 GB in decimal units, before activations and temporary buffers.</p>
+<p>Actual systems can use different precisions and state layouts, so this is a planning model rather than a universal constant.</p>
+<h1>Sharded data parallelism divides model state</h1>
+<p>A sharded data-parallel strategy keeps data-parallel semantics while distributing selected state across workers.</p>
+<p>Depending on the sharding stage, workers can partition:</p>
+<ul>
+<li>optimiser state;</li>
+<li>gradients;</li>
+<li>parameters.</li>
+</ul>
+<p>With full sharding across (D) workers, the idealised persistent share of a state tensor is approximately:</p>
+<div class="math-display">\[\frac{1}{D}\]</div>
+<p>of its unsharded size per worker.</p>
+<p>For the illustrative 16 GB state across eight workers:</p>
+<div class="math-display">\[\frac{16\ \mathrm{GB}}{8}
+=
+2\ \mathrm{GB}\]</div>
+<p>per worker before replicated pieces, activations, buffers, and communication overhead.</p>
+<h1>Sharding creates communication</h1>
+<p>A worker cannot compute with a parameter shard it does not currently possess.</p>
+<p>Fully sharded execution therefore performs operations such as:</p>
+<ul>
+<li>gather parameter pieces before a layer computes;</li>
+<li>discard or reshard parameters after use;</li>
+<li>reduce-scatter gradients so each worker retains its shard;</li>
+<li>update local optimiser-state shards.</li>
+</ul>
+<p>The memory saving comes from not keeping every full tensor resident everywhere. The cost is additional communication and orchestration.</p>
+<h1>Gather and reduce-scatter</h1>
+<p>Two useful collective patterns are:</p>
+<h2>All-gather</h2>
+<p>Each worker contributes one shard and receives the full assembled tensor.</p>
+<pre><code class="language-text">worker shards -&gt; all-gather -&gt; full tensor on each participant
+</code></pre>
+<h2>Reduce-scatter</h2>
+<p>Workers first reduce corresponding tensor contributions, then each worker receives only one shard of the result.</p>
+<pre><code class="language-text">full gradient contributions
+        -&gt; reduce and partition
+        -&gt; one reduced shard per worker
+</code></pre>
+<p>Sharded training uses these primitives to make full layers temporarily available while keeping persistent state partitioned.</p>
+<h1>Tensor parallelism splits a layer&#39;s arithmetic</h1>
+<p>Sharding model state still allows one worker to execute a layer after gathering its parameters.</p>
+<p>For even larger layers, <strong>tensor parallelism</strong> divides one matrix operation across workers.</p>
+<p>Suppose:</p>
+<div class="math-display">\[Y=XW\]</div>
+<p>and the output dimension of (W) is divided into two column blocks:</p>
+<div class="math-display">\[W=
+\begin{bmatrix}
+W_1 & W_2
+\end{bmatrix}\]</div>
+<p>Then:</p>
+<div class="math-display">\[Y
+=
+\begin{bmatrix}
+XW_1 & XW_2
+\end{bmatrix}\]</div>
+<p>Worker 1 can compute (XW_1), worker 2 can compute (XW_2), and the partial output features can be concatenated.</p>
+<p>Other matrix splits require sums or reductions rather than concatenation.</p>
+<h1>Tensor-parallel communication depends on the split</h1>
+<p>A column-parallel projection may create separate output-feature shards.</p>
+<p>A row-parallel projection may produce partial sums that must be reduced:</p>
+<div class="math-display">\[Y
+=
+X_1W_1+X_2W_2\]</div>
+<p>The layout must match neighbouring operations so that communication is not introduced unnecessarily after every small step.</p>
+<p>Transformer implementations often choose compatible splits for Query, Key, Value, output, and MLP projections.</p>
+<h1>Attention heads are natural—but not free—split candidates</h1>
+<p>Multiple attention heads provide a convenient conceptual partition.</p>
+<p>Different workers can own subsets of heads, compute their local head outputs, and cooperate around the output projection.</p>
+<p>However:</p>
+<ul>
+<li>some tensors still need to be shared or reduced;</li>
+<li>grouped-query attention can make head counts asymmetric;</li>
+<li>sequence and batch dimensions affect communication volume;</li>
+<li>output mixing reconnects head features.</li>
+</ul>
+<p>“Put one head on each device” is an intuition, not a complete implementation plan.</p>
+<h1>Pipeline parallelism splits layers by depth</h1>
+<p>Instead of splitting each matrix, <strong>pipeline parallelism</strong> assigns different layer ranges to different stages.</p>
+<p>For a twelve-layer model:</p>
+<pre><code class="language-text">stage 1: layers 1-3
+stage 2: layers 4-6
+stage 3: layers 7-9
+stage 4: layers 10-12
+</code></pre>
+<p>Activations move forward from stage to stage. During backpropagation, activation gradients move backward.</p>
+<h1>Why use microbatches in a pipeline?</h1>
+<p>If the pipeline processes one full batch at a time, later stages wait while stage 1 starts, and early stages wait while the final stage finishes.</p>
+<p>Splitting the batch into microbatches allows stages to overlap:</p>
+<pre><code class="language-text">time -&gt;
+
+stage 1: M1  M2  M3  M4
+stage 2:     M1  M2  M3  M4
+stage 3:         M1  M2  M3  M4
+stage 4:             M1  M2  M3  M4
+</code></pre>
+<p>The empty slots at the beginning and end are called the <strong>pipeline bubble</strong>.</p>
+<p>More microbatches can improve utilisation, though scheduling, memory, and communication become more complex.</p>
+<h1>Pipeline balance matters</h1>
+<p>If stage 2 takes twice as long as every other stage, the whole pipeline waits for stage 2.</p>
+<p>Good partitioning tries to balance:</p>
+<ul>
+<li>parameter memory;</li>
+<li>forward compute;</li>
+<li>backward compute;</li>
+<li>activation sizes;</li>
+<li>communication links.</li>
+</ul>
+<p>Equal layer counts do not guarantee equal stage times.</p>
+<h1>Sequence or context parallelism</h1>
+<p>Long sequences create large activation and attention workloads.</p>
+<p>Some systems partition work along the sequence dimension so different workers own different token ranges or activation slices.</p>
+<p>This can reduce per-worker activation memory, but attention creates dependencies between token positions. The implementation must communicate the information needed for Queries to interact with Keys and Values across partitions.</p>
+<p>The exact algorithm depends on the attention method and hardware topology.</p>
+<h1>Activation checkpointing trades compute for memory</h1>
+<p>Backward propagation normally needs intermediate activations from the forward pass.</p>
+<p>Activation checkpointing stores only selected boundaries and recomputes missing intermediates during backward.</p>
+<pre><code class="language-text">ordinary training:
+    store many activations -&gt; less recomputation, more memory
+
+activation checkpointing:
+    store selected checkpoints -&gt; recompute sections, less memory
+</code></pre>
+<p>This is also called rematerialisation.</p>
+<p>It reduces activation memory but increases arithmetic and can lengthen each step.</p>
+<h1>Parallel strategies can be combined</h1>
+<p>A large run can use several dimensions of parallelism simultaneously.</p>
+<p>For example:</p>
+<ul>
+<li>data parallel groups process different examples;</li>
+<li>tensor-parallel workers split each large layer;</li>
+<li>pipeline stages split layer depth;</li>
+<li>sharding partitions optimiser state inside data-parallel groups;</li>
+<li>sequence parallelism partitions selected activations.</li>
+</ul>
+<p>The total worker count may be expressed conceptually as:</p>
+<div class="math-display">\[D_{\mathrm{total}}
+=
+D_{\mathrm{data}}
+D_{\mathrm{tensor}}
+D_{\mathrm{pipeline}}\]</div>
+<p>with additional groupings depending on the implementation.</p>
+<h1>Communication can dominate</h1>
+<p>Adding workers does not guarantee proportional speedup.</p>
+<p>One useful efficiency measure is:</p>
+<div class="math-display">\[E_N
+=
+\frac{T_1}{NT_N}\]</div>
+<p>where:</p>
+<ul>
+<li>(T_1) is the time on one worker;</li>
+<li>(T_N) is the time on (N) workers.</li>
+</ul>
+<p>If eight workers finish only four times faster, efficiency is:</p>
+<div class="math-display">\[E_8
+=
+\frac{4}{8}
+=0.5\]</div>
+<p>or 50% relative scaling efficiency.</p>
+<p>Causes of lost efficiency include:</p>
+<ul>
+<li>communication latency;</li>
+<li>limited network bandwidth;</li>
+<li>pipeline bubbles;</li>
+<li>workload imbalance;</li>
+<li>small matrix operations;</li>
+<li>input stalls;</li>
+<li>synchronisation barriers.</li>
+</ul>
+<h1>Overlap communication with computation</h1>
+<p>Distributed systems try to hide communication behind useful work.</p>
+<p>Examples include:</p>
+<ul>
+<li>reducing one gradient bucket while backward computes earlier layers;</li>
+<li>gathering the next layer&#39;s parameters while the current layer computes;</li>
+<li>prefetching future data batches;</li>
+<li>sending pipeline activations asynchronously.</li>
+</ul>
+<p>Overlap does not remove communication volume. It reduces how much of that communication appears on the critical path.</p>
+<h1>Hardware topology matters</h1>
+<p>Communication between accelerators in one server can be much faster than communication across servers.</p>
+<p>A topology-aware layout may keep high-frequency tensor-parallel collectives within fast local links while using data parallelism across slower network boundaries.</p>
+<p>The same mathematical parallel plan can perform very differently on a different interconnect.</p>
+<h1>Synchronous workers move at the speed of the slowest</h1>
+<p>In synchronous training, all workers must contribute before a collective step completes.</p>
+<p>A slow worker—sometimes called a straggler—can delay everyone.</p>
+<p>Stragglers may result from:</p>
+<ul>
+<li>hardware variation;</li>
+<li>network congestion;</li>
+<li>data-loading imbalance;</li>
+<li>thermal throttling;</li>
+<li>retries or transient errors.</li>
+</ul>
+<p>Monitoring per-worker step time is therefore essential.</p>
+<h1>Faults and resumable distributed state</h1>
+<p>A failure can interrupt hundreds or thousands of workers.</p>
+<p>Distributed checkpoints must produce a consistent model state even when tensors are sharded.</p>
+<p>A restart may need to restore:</p>
+<ul>
+<li>each parameter shard;</li>
+<li>each optimiser shard;</li>
+<li>scheduler and scaler state;</li>
+<li>random states;</li>
+<li>data progress;</li>
+<li>the mapping from shards to the new worker topology.</li>
+</ul>
+<p>Some systems can reshard a checkpoint when the resumed worker count changes; others require an identical layout.</p>
+<h1>Training parallelism is not the KV cache</h1>
+<p>The KV cache stores past attention Keys and Values during autoregressive inference.</p>
+<p>Distributed training state contains parameters, gradients, optimiser values, and activations.</p>
+<p>These solve different problems.</p>
+<p>During ordinary full-sequence teacher-forced training, a generation-style KV cache is generally not the mechanism used to avoid recomputing the sequence.</p>
+<h1>Common distributed-training mistakes</h1>
+<h2>Mistake 1: assuming data parallelism reduces model memory</h2>
+<p>An unsharded data-parallel worker stores a complete model replica.</p>
+<h2>Mistake 2: averaging unequal worker means equally</h2>
+<p>Weight reductions by valid-token counts when local workloads differ.</p>
+<h2>Mistake 3: treating sharding as free memory</h2>
+<p>Parameter gathers and gradient reductions create communication.</p>
+<h2>Mistake 4: confusing tensor parallelism with pipeline parallelism</h2>
+<p>Tensor parallelism splits operations inside layers. Pipeline parallelism splits layers by depth.</p>
+<h2>Mistake 5: ignoring the pipeline bubble</h2>
+<p>Stages are not fully occupied during pipeline fill and drain.</p>
+<h2>Mistake 6: assuming equal layers mean balanced pipeline stages</h2>
+<p>Layer compute and activation sizes can differ.</p>
+<h2>Mistake 7: forgetting activations</h2>
+<p>Even fully sharded model state can leave activation memory as the limiting factor.</p>
+<h2>Mistake 8: expecting linear speedup</h2>
+<p>Communication, synchronisation, and imbalance reduce scaling efficiency.</p>
+<h2>Mistake 9: placing communication-heavy groups across slow links</h2>
+<p>Parallel topology should reflect hardware topology.</p>
+<h2>Mistake 10: calling every distributed tensor a model shard</h2>
+<p>Data, parameters, gradients, optimiser state, activations, and sequence positions can be partitioned independently.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What does ordinary data parallelism replicate?</h2>
+<p>The full model and usually its unsharded training state on every worker.</p>
+<h2>2. What operation keeps data-parallel gradients consistent?</h2>
+<p>A collective reduction such as all-reduce.</p>
+<h2>3. What is the average of the four example gradients?</h2>
+<div class="math-display">\[\begin{bmatrix}
+0.1 & 0.0
+\end{bmatrix}\]</div>
+<h2>4. What does fully sharded training try to partition?</h2>
+<p>Parameters, gradients, and optimiser state, depending on the strategy.</p>
+<h2>5. What does tensor parallelism split?</h2>
+<p>The arithmetic and tensors within a layer or matrix operation.</p>
+<h2>6. What does pipeline parallelism split?</h2>
+<p>The model&#39;s layer depth into sequential stages.</p>
+<h2>7. Why use pipeline microbatches?</h2>
+<p>To overlap different stages and reduce idle time.</p>
+<h2>8. What does activation checkpointing trade?</h2>
+<p>Additional recomputation for lower activation memory.</p>
+<h2>9. Why can eight workers achieve less than eightfold speedup?</h2>
+<p>Communication, imbalance, bubbles, and synchronisation add overhead.</p>
+<h2>10. Is distributed training state the same as an inference KV cache?</h2>
+<p>No. They serve different phases and contain different tensors.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Data parallelism combines gradient evidence from different examples:</p>
+<div class="math-display">\[\bar{g}
+=
+\frac{1}{D}\sum_{r=1}^{D}g^{(r)}\]</div>
+<p>Sharding reduces persistent model-state memory. Tensor parallelism divides layer arithmetic. Pipeline parallelism divides depth. Activation checkpointing reduces stored intermediates.</p>
+<p>Every saving introduces a cost in communication, recomputation, scheduling, or complexity.</p>
+<p>In our story:</p>
+<blockquote>
+<p><strong>When the model outgrows one desk, the training organisation does not merely hire more employees. It decides who holds which pages, who performs which calculation, when reports must be exchanged, and how everyone signs the same final update.</strong></p>
+</blockquote>
+<h1>Coming next: pretraining is not yet assistant behaviour</h1>
+<p>A pretrained model becomes good at continuing token patterns.</p>
+<p>Chapter 17 explains how supervised demonstrations, preference data, and parameter-efficient adaptation shape that completion model into a more useful assistant.</p>

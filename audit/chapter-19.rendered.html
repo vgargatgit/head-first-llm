@@ -1,0 +1,388 @@
+<h1>The question this chapter answers</h1>
+<p>In self-attention, Queries, Keys, and Values are projected from the same sequence of hidden states.</p>
+<p>Cross-attention breaks that symmetry.</p>
+<p>The decoder is writing one target token at a time, but it needs information from a separate source sequence that the encoder has already read.</p>
+<p>How does a decoder position ask a question of the encoder memory and retrieve a source-aware answer?</p>
+<div class="big-idea">
+
+<p><strong>In encoder–decoder cross-attention, decoder hidden states create the Queries. Encoder outputs create the Keys and Values. The dot products decide which source positions matter, and the weighted Value sum carries source information back into the decoder.</strong></p>
+</div>
+
+<h1>The Translator and the wall of notes</h1>
+<p>Imagine a Translator drafting a sentence at a desk.</p>
+<p>Behind the desk is a wall of source-language notes prepared by the Encoder.</p>
+<p>For every target position, the Translator does two different things:</p>
+<ol>
+<li>reads the target prefix using causal self-attention;</li>
+<li>consults the source-note wall using cross-attention.</li>
+</ol>
+<pre><code class="language-text">target prefix
+    ↓
+decoder causal self-attention
+    ↓
+decoder hidden state
+    ↓ creates Query
+cross-attention ────────────────┐
+    ↑                           │
+encoder outputs create Keys and Values
+    ↑
+source sequence
+</code></pre>
+<p>The two attention sublayers have different jobs.</p>
+<h1>Self-attention and cross-attention are not interchangeable</h1>
+<p>For decoder self-attention:</p>
+<div class="math-display">\[Q_{\mathrm{self}}=H_{\mathrm{dec}}W^Q_{\mathrm{self}}\]</div>
+<div class="math-display">\[K_{\mathrm{self}}=H_{\mathrm{dec}}W^K_{\mathrm{self}}\]</div>
+<div class="math-display">\[V_{\mathrm{self}}=H_{\mathrm{dec}}W^V_{\mathrm{self}}\]</div>
+<p>All three come from decoder hidden states.</p>
+<p>For cross-attention:</p>
+<div class="math-display">\[Q_{\mathrm{cross}}=H_{\mathrm{dec}}W^Q_{\mathrm{cross}}\]</div>
+<p>but:</p>
+<div class="math-display">\[K_{\mathrm{cross}}=H_{\mathrm{enc}}W^K_{\mathrm{cross}}\]</div>
+<div class="math-display">\[V_{\mathrm{cross}}=H_{\mathrm{enc}}W^V_{\mathrm{cross}}\]</div>
+<p>The Query comes from the decoder side. The Keys and Values come from the encoder side.</p>
+<p>That source split is the defining fact of cross-attention.</p>
+<h1>Shape bookkeeping</h1>
+<p>Let:</p>
+<ul>
+<li>source length be <span class="math-inline">\(S\)</span>;</li>
+<li>target length be <span class="math-inline">\(T\)</span>;</li>
+<li>model width be <span class="math-inline">\(d_{\mathrm{model}}\)</span>;</li>
+<li>attention-head width be <span class="math-inline">\(d_k\)</span>;</li>
+<li>Value width be <span class="math-inline">\(d_v\)</span>.</li>
+</ul>
+<p>Then:</p>
+<div class="math-display">\[H_{\mathrm{enc}}
+\in
+\mathbb{R}^{S\mathbin{×}d_{\mathrm{model}}}\]</div>
+<div class="math-display">\[H_{\mathrm{dec}}
+\in
+\mathbb{R}^{T\mathbin{×}d_{\mathrm{model}}}\]</div>
+<p>The projected tensors are:</p>
+<div class="math-display">\[Q
+\in
+\mathbb{R}^{T\mathbin{×}d_k}\]</div>
+<div class="math-display">\[K
+\in
+\mathbb{R}^{S\mathbin{×}d_k}\]</div>
+<div class="math-display">\[V
+\in
+\mathbb{R}^{S\mathbin{×}d_v}\]</div>
+<p>The score matrix is:</p>
+<div class="math-display">\[QK^T
+\in
+\mathbb{R}^{T\mathbin{×}S}\]</div>
+<p>Every row corresponds to one target position.</p>
+<p>Every column corresponds to one source position.</p>
+<h1>The full cross-attention equation</h1>
+<p>Ignoring multi-head reshaping for the moment:</p>
+<div class="math-display">\[\operatorname{CrossAttention}(Q,K,V)
+=
+\operatorname{softmax}
+\left(
+\frac{QK^T}{\sqrt{d_k}}+M_{\mathrm{source}}
+\right)V\]</div>
+<p>The source mask blocks padding or otherwise forbidden source positions.</p>
+<p>Unlike decoder causal self-attention, ordinary encoder–decoder cross-attention does not need a lower-triangular target mask over source positions. A target token may usually inspect the complete encoded source.</p>
+<h1>A one-position numerical example</h1>
+<p>Suppose the encoder has produced notes for three source tokens:</p>
+<pre><code class="language-text">source position 0: THE
+source position 1: CAT
+source position 2: SLEEPS
+</code></pre>
+<p>At one decoder position, the projected Query is:</p>
+<div class="math-display">\[q
+=
+\begin{bmatrix}
+0.2&0.9
+\end{bmatrix}\]</div>
+<p>The encoder-side Keys are:</p>
+<div class="math-display">\[K
+=
+\begin{bmatrix}
+0.8&0.1\\
+0.2&1.1\\
+-0.4&0.5
+\end{bmatrix}\]</div>
+<p>The encoder-side Values are:</p>
+<div class="math-display">\[V
+=
+\begin{bmatrix}
+0.7&-0.2\\
+0.1&0.8\\
+-0.3&0.6
+\end{bmatrix}\]</div>
+<p>Here:</p>
+<div class="math-display">\[d_k=2\]</div>
+<h1>Step 1: compare the decoder Query with every encoder Key</h1>
+<p>The raw dot products are:</p>
+<div class="math-display">\[qK^T
+=
+\begin{bmatrix}
+0.2&0.9
+\end{bmatrix}
+\begin{bmatrix}
+0.8&0.2&-0.4\\
+0.1&1.1&0.5
+\end{bmatrix}\]</div>
+<p>For source position 0:</p>
+<div class="math-display">\[0.2(0.8)+0.9(0.1)
+=0.16+0.09
+=0.25\]</div>
+<p>For source position 1:</p>
+<div class="math-display">\[0.2(0.2)+0.9(1.1)
+=0.04+0.99
+=1.03\]</div>
+<p>For source position 2:</p>
+<div class="math-display">\[0.2(-0.4)+0.9(0.5)
+=-0.08+0.45
+=0.37\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[qK^T
+=
+\begin{bmatrix}
+0.25&1.03&0.37
+\end{bmatrix}\]</div>
+<p>The strongest raw compatibility is with source position 1, <code>CAT</code>.</p>
+<h1>Step 2: scale the scores</h1>
+<p>Scaled dot-product attention divides by:</p>
+<div class="math-display">\[\sqrt{d_k}=\sqrt{2}\]</div>
+<p>The scaled scores are:</p>
+<div class="math-display">\[s
+=
+\frac{1}{\sqrt{2}}
+\begin{bmatrix}
+0.25&1.03&0.37
+\end{bmatrix}\]</div>
+<div class="math-display">\[s
+\approx
+\begin{bmatrix}
+0.176777&0.728320&0.261630
+\end{bmatrix}\]</div>
+<p>Scaling moderates the magnitude before softmax.</p>
+<h1>Step 3: apply the source mask</h1>
+<p>Suppose all three source tokens are real, non-padding positions.</p>
+<p>Then:</p>
+<div class="math-display">\[M_{\mathrm{source}}
+=
+\begin{bmatrix}
+0&0&0
+\end{bmatrix}\]</div>
+<p>and the scores remain unchanged.</p>
+<p>If the third source position were padding, a typical additive mask would be:</p>
+<div class="math-display">\[M_{\mathrm{source}}
+=
+\begin{bmatrix}
+0&0&-\infty
+\end{bmatrix}\]</div>
+<p>After softmax, the padding position would receive weight zero.</p>
+<h1>Step 4: turn scores into attention weights</h1>
+<p>Apply softmax across the source positions:</p>
+<div class="math-display">\[a_j
+=
+\frac{e^{s_j}}
+{\sum_{r=1}^{3}e^{s_r}}\]</div>
+<p>The resulting weights are approximately:</p>
+<div class="math-display">\[a
+\approx
+\begin{bmatrix}
+0.261473&0.453899&0.284628
+\end{bmatrix}\]</div>
+<p>The weights sum to one:</p>
+<div class="math-display">\[0.261473+0.453899+0.284628
+=1.000000\]</div>
+<p>The decoder position pays the most attention to <code>CAT</code>, while still retrieving information from the other source positions.</p>
+<h1>Step 5: retrieve a weighted mixture of encoder Values</h1>
+<p>The cross-attention output is:</p>
+<div class="math-display">\[z=aV\]</div>
+<p>Substitute the values:</p>
+<div class="math-display">\[z
+=
+0.261473
+\begin{bmatrix}
+0.7&-0.2
+\end{bmatrix}
++
+0.453899
+\begin{bmatrix}
+0.1&0.8
+\end{bmatrix}
++
+0.284628
+\begin{bmatrix}
+-0.3&0.6
+\end{bmatrix}\]</div>
+<p>First coordinate:</p>
+<div class="math-display">\[0.261473(0.7)
++0.453899(0.1)
++0.284628(-0.3)
+\approx0.143033\]</div>
+<p>Second coordinate:</p>
+<div class="math-display">\[0.261473(-0.2)
++0.453899(0.8)
++0.284628(0.6)
+\approx0.481601\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[z
+\approx
+\begin{bmatrix}
+0.143033&0.481601
+\end{bmatrix}\]</div>
+<p>This vector is not a copy of one source token.</p>
+<p>It is a learned weighted mixture of encoder-side information.</p>
+<h1>What the output means</h1>
+<p>The decoder’s Query decided how to weight source Keys.</p>
+<p>The selected weights mixed source Values.</p>
+<p>The result carries source-conditioned information into the decoder stream.</p>
+<p>Conceptually:</p>
+<pre><code class="language-text">Query: What source information do I need now?
+Keys:  When is each source position relevant?
+Values: What information should each source position contribute?
+</code></pre>
+<h1>Extending from one target position to many</h1>
+<p>Suppose the decoder currently contains four target positions.</p>
+<p>Then:</p>
+<div class="math-display">\[Q
+\in
+\mathbb{R}^{4\mathbin{×}2}\]</div>
+<p>and the source still has three positions:</p>
+<div class="math-display">\[K,V
+\in
+\mathbb{R}^{3\mathbin{×}2}\]</div>
+<p>The score matrix becomes:</p>
+<div class="math-display">\[QK^T
+\in
+\mathbb{R}^{4\mathbin{×}3}\]</div>
+<p>Each target row produces a separate distribution over the same three source columns.</p>
+<p>The first target token may focus on one source word. A later target token may focus on another.</p>
+<h1>Cross-attention is directional</h1>
+<p>The decoder attends to the encoder memory.</p>
+<p>That does not mean the encoder hidden states are recomputed after every target token.</p>
+<p>A standard inference flow is:</p>
+<pre><code class="language-text">1. Encode the source once.
+2. Project or cache encoder-side Keys and Values.
+3. Generate target token 1 using cross-attention.
+4. Generate target token 2 using the same source memory.
+5. Continue until stopping.
+</code></pre>
+<p>This is one reason encoder–decoder inference can reuse source-side computation.</p>
+<h1>Source Keys and Values can be cached</h1>
+<p>For each cross-attention layer, the encoder memory is fixed during generation of one target sequence.</p>
+<p>The projected source Keys and Values can therefore be computed once and reused.</p>
+<p>Decoder self-attention has a different cache: it grows as target tokens are generated.</p>
+<pre><code class="language-text">cross-attention cache
+    fixed source length
+
+self-attention KV cache
+    grows with generated target length
+</code></pre>
+<p>Keeping these caches conceptually separate prevents many implementation mistakes.</p>
+<h1>Multi-head cross-attention</h1>
+<p>As with self-attention, a real block usually uses multiple heads.</p>
+<p>For head <span class="math-inline">\(h\)</span>:</p>
+<div class="math-display">\[Q_h=H_{\mathrm{dec}}W_h^Q\]</div>
+<div class="math-display">\[K_h=H_{\mathrm{enc}}W_h^K\]</div>
+<div class="math-display">\[V_h=H_{\mathrm{enc}}W_h^V\]</div>
+<p>Then:</p>
+<div class="math-display">\[Z_h
+=
+\operatorname{softmax}
+\left(
+\frac{Q_hK_h^T}{\sqrt{d_k}}+M
+\right)V_h\]</div>
+<p>The head outputs are concatenated and mixed through an output projection.</p>
+<p>Different heads can learn different source–target relationships such as lexical alignment, syntax, position, speaker identity, acoustic events, or formatting cues.</p>
+<h1>Where cross-attention appears</h1>
+<p>Cross-attention is common when one representation conditions another sequence.</p>
+<p>Examples include:</p>
+<ul>
+<li>machine translation;</li>
+<li>summarisation;</li>
+<li>text-to-text transformation;</li>
+<li>speech recognition with an audio encoder and text decoder;</li>
+<li>image-conditioned text generation;</li>
+<li>retrieval or memory modules inserted into a decoder;</li>
+<li>multimodal systems that let language tokens inspect visual features.</li>
+</ul>
+<p>Not every multimodal system uses the same connector. Some use projectors or shared token spaces instead of a classic encoder–decoder cross-attention block.</p>
+<h1>Cross-attention versus concatenating everything into one prompt</h1>
+<p>A decoder-only model can concatenate source and target into one causal sequence:</p>
+<pre><code class="language-text">[source tokens][separator][target tokens]
+</code></pre>
+<p>Target positions can attend backward to source positions.</p>
+<p>That can emulate conditional generation without a separate encoder.</p>
+<p>The trade-off is architectural:</p>
+<ul>
+<li>the source is processed through the same causal stack;</li>
+<li>source and target share one sequence budget;</li>
+<li>there is no separately reusable bidirectional source memory;</li>
+<li>source representations may be computed differently from a dedicated encoder.</li>
+</ul>
+<p>Neither approach is universally better. The design depends on data, scale, latency, modality, and task structure.</p>
+<h1>Masks in encoder–decoder systems</h1>
+<p>Three masks may appear in one training example.</p>
+<h2>Encoder padding mask</h2>
+<p>Blocks padded source positions from encoder self-attention.</p>
+<h2>Decoder causal mask</h2>
+<p>Prevents target positions from seeing later target labels.</p>
+<h2>Cross-attention source mask</h2>
+<p>Prevents decoder Queries from attending to padded or forbidden encoder positions.</p>
+<p>The cross-attention source mask usually follows source validity, not target causality.</p>
+<h1>Common cross-attention mistakes</h1>
+<h2>Mistake 1: projecting all Q, K, and V from the decoder</h2>
+<p>That describes decoder self-attention, not encoder–decoder cross-attention.</p>
+<h2>Mistake 2: applying the decoder causal triangle across source positions</h2>
+<p>The source has already been encoded. Cross-attention usually allows each target position to inspect every valid source position.</p>
+<h2>Mistake 3: mixing up score and output shapes</h2>
+<p>The score matrix has shape <span class="math-inline">\(T\mathbin{×}S\)</span>. The retrieved output has shape <span class="math-inline">\(T\mathbin{×}d_v\)</span>.</p>
+<h2>Mistake 4: saying attention copies the highest-scoring source token</h2>
+<p>Softmax normally creates a distribution, and the output is a weighted mixture of Values.</p>
+<h2>Mistake 5: re-encoding the source for every generated target token</h2>
+<p>The encoder outputs and source-side cross-attention projections can normally be reused.</p>
+<h2>Mistake 6: confusing source Values with vocabulary logits</h2>
+<p>Values are internal vectors. Vocabulary logits are produced later by the output head.</p>
+<h2>Mistake 7: assuming every decoder contains cross-attention</h2>
+<p>Decoder-only language models generally use causal self-attention without a separate encoder memory.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. Which side produces cross-attention Queries?</h2>
+<p>The decoder side.</p>
+<h2>2. Which side produces cross-attention Keys and Values?</h2>
+<p>The encoder side.</p>
+<h2>3. If target length is 5 and source length is 8, what is the score-matrix shape?</h2>
+<div class="math-display">\[5\mathbin{×}8\]</div>
+<h2>4. What is the raw score between <span class="math-inline">\(q=[0.2,0.9]\)</span> and the second Key <span class="math-inline">\([0.2,1.1]\)</span>?</h2>
+<div class="math-display">\[0.2(0.2)+0.9(1.1)=1.03\]</div>
+<h2>5. Why divide by <span class="math-inline">\(\sqrt{d_k}\)</span>?</h2>
+<p>To control score scale before softmax as head width grows.</p>
+<h2>6. Which source position received the largest weight in the numerical example?</h2>
+<p>Position 1, <code>CAT</code>, with approximately <span class="math-inline">\(0.453899\)</span>.</p>
+<h2>7. What was the retrieved vector?</h2>
+<div class="math-display">\[\begin{bmatrix}
+0.143033&0.481601
+\end{bmatrix}\]</div>
+<h2>8. Does the cross-attention output equal one encoder Value row?</h2>
+<p>Not generally. It is a weighted mixture.</p>
+<h2>9. Which cache grows during target generation?</h2>
+<p>The decoder self-attention KV cache.</p>
+<h2>10. Which cache remains fixed for one encoded source?</h2>
+<p>The source-side cross-attention Keys and Values.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Cross-attention creates a controlled information bridge between two sequences.</p>
+<p>The decoder asks with Queries. The encoder memory advertises relevance through Keys and supplies content through Values.</p>
+<p>In our story:</p>
+<blockquote>
+<p><strong>The Translator writes from the target prefix, pauses, points to the Encoder’s wall of notes, and asks: “Which parts of the source matter for the word I am writing now?”</strong></p>
+</blockquote>
+<h1>Coming next: where did the model come from?</h1>
+<p>We now know how major Transformer families move information.</p>
+<p>The next chapter zooms out from architecture to the model lifecycle: pretraining, base checkpoints, foundation models, continued pretraining, fine-tuning, instruction tuning, adapters, preferences, prompting, and retrieval.</p>
+<h1>Further reading</h1>
+<ul>
+<li><a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a></li>
+<li><a href="https://arxiv.org/abs/1910.10683">Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer</a></li>
+<li><a href="https://arxiv.org/abs/2212.04356">Robust Speech Recognition via Large-Scale Weak Supervision</a></li>
+</ul>

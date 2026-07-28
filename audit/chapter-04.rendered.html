@@ -1,0 +1,485 @@
+<!-- chapter-04-art:hero:start -->
+<p><img src="../assets/chapter-04/01_chapter_hero_matching_desk.png" alt="THE, CAT and SAT meet the Question Coach at the Chapter 4 matching desk."></p>
+<!-- chapter-04-art:hero:end -->
+
+<h1>The question this chapter answers</h1>
+<p>The previous chapters created two learned views of every token state:</p>
+<div class="math-display">\[Q=XW^Q\]</div>
+<p>and:</p>
+<div class="math-display">\[K=XW^K\]</div>
+<p>A Query says what one token position is looking for. A Key says how one token position should participate in matching.</p>
+<p>But the model still needs to answer:</p>
+<blockquote>
+<p>How strongly should each Query attend to each available Key?</p>
+</blockquote>
+<p>That answer is produced in four stages:</p>
+<ol>
+<li>compare Queries with Keys using dot products;</li>
+<li>scale the scores by (\sqrt{d_k});</li>
+<li>mask forbidden positions;</li>
+<li>apply softmax row by row.</li>
+</ol>
+<div class="big-idea">
+
+<p><strong>Queries and Keys do not move information by themselves. They produce weights that decide where information will later come from.</strong></p>
+</div>
+
+<h1>Cold open: SAT reaches the matching desk</h1>
+<p>SAT arrives with the Query created in Chapter 2:</p>
+<div class="math-display">\[q_{\text{sat}}
+=
+\begin{bmatrix}
+-0.364 & 0.060
+\end{bmatrix}\]</div>
+<p>The matching desk has three available Keys from Chapter 3:</p>
+<div class="math-display">\[K=
+\begin{bmatrix}
+0.510 & -0.152\\
+-0.453 & 0.112\\
+0.371 & -0.373
+\end{bmatrix}\]</div>
+<p>The rows belong to:</p>
+<div class="math-display">\[\text{The},\quad \text{cat},\quad \text{sat}\]</div>
+<p>SAT does not choose a single Key immediately. Its Query is compared with every allowed Key.</p>
+<p>For one candidate position (j), the raw compatibility score is:</p>
+<div class="math-display">\[s_{\text{sat},j}=q_{\text{sat}}\cdot k_j\]</div>
+<p>The matching desk produces one number per candidate.</p>
+<h1>Stage 1: Query–Key dot products</h1>
+<p>For any querying position (i) and candidate position (j):</p>
+<div class="math-display">\[s_{ij}=q_i\cdot k_j\]</div>
+<p>If the vectors have width (d_k), then:</p>
+<div class="math-display">\[s_{ij}=\sum_{r=1}^{d_k}q_{ir}k_{jr}\]</div>
+<p>A dot product multiplies corresponding coordinates and adds the results.</p>
+<p>For SAT and THE:</p>
+<div class="math-display">\[\begin{aligned}
+s_{\text{sat},\text{The}}
+&=
+(-0.364)(0.510)+(0.060)(-0.152)\\
+&=-0.18564-0.00912\\
+&=-0.19476
+\end{aligned}\]</div>
+<p>For SAT and CAT:</p>
+<div class="math-display">\[\begin{aligned}
+s_{\text{sat},\text{cat}}
+&=
+(-0.364)(-0.453)+(0.060)(0.112)\\
+&=0.164892+0.00672\\
+&=0.171612
+\end{aligned}\]</div>
+<p>For SAT and itself:</p>
+<div class="math-display">\[\begin{aligned}
+s_{\text{sat},\text{sat}}
+&=
+(-0.364)(0.371)+(0.060)(-0.373)\\
+&=-0.135044-0.02238\\
+&=-0.157424
+\end{aligned}\]</div>
+<p>So SAT&#39;s raw score row is:</p>
+<div class="math-display">\[\begin{bmatrix}
+-0.194760 & 0.171612 & -0.157424
+\end{bmatrix}\]</div>
+<p>The largest raw score is the score for CAT.</p>
+<div class="warning">
+
+<h2>A negative score is not automatically a rejection</h2>
+<p>Raw attention scores are not probabilities and do not need to lie between 0 and 1.</p>
+<p>A negative score can still receive substantial attention if it is large relative to the other allowed scores in the same row.</p>
+<p>Softmax cares about relative differences, not whether every input is positive.</p>
+</div>
+
+<!-- chapter-04-art:dot-product:start -->
+<p><img src="../assets/chapter-04/02_query_key_dot_product.png" alt="SAT's Query is compared coordinate by coordinate with THE, CAT and SAT Keys."></p>
+<!-- chapter-04-art:dot-product:end -->
+
+<h1>All comparisons in one matrix multiplication</h1>
+<!-- chapter-04-art:score-matrix:start -->
+<p><img src="../assets/chapter-04/03_full_score_matrix.png" alt="The complete three-by-three raw Query-Key score matrix."></p>
+<!-- chapter-04-art:score-matrix:end -->
+
+
+<p>The complete Query matrix is:</p>
+<div class="math-display">\[Q=
+\begin{bmatrix}
+-0.167 & -0.044\\
+0.013 & 0.628\\
+-0.364 & 0.060
+\end{bmatrix}\]</div>
+<p>The complete Key matrix is:</p>
+<div class="math-display">\[K=
+\begin{bmatrix}
+0.510 & -0.152\\
+-0.453 & 0.112\\
+0.371 & -0.373
+\end{bmatrix}\]</div>
+<p>To compare every Query with every Key, transpose (K):</p>
+<div class="math-display">\[K^T=
+\begin{bmatrix}
+0.510 & -0.453 & 0.371\\
+-0.152 & 0.112 & -0.373
+\end{bmatrix}\]</div>
+<p>Then calculate:</p>
+<div class="math-display">\[S=QK^T\]</div>
+<p>Using the rounded Query and Key values from the previous chapters:</p>
+<div class="math-display">\[S=
+\begin{bmatrix}
+-0.078482 & 0.070723 & -0.045545\\
+-0.088826 & 0.064447 & -0.229421\\
+-0.194760 & 0.171612 & -0.157424
+\end{bmatrix}\]</div>
+<p>Each row belongs to a Query. Each column belongs to a Key.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th align="right">Key: THE</th>
+<th align="right">Key: CAT</th>
+<th align="right">Key: SAT</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Query: THE</td>
+<td align="right">-0.078482</td>
+<td align="right">0.070723</td>
+<td align="right">-0.045545</td>
+</tr>
+<tr>
+<td>Query: CAT</td>
+<td align="right">-0.088826</td>
+<td align="right">0.064447</td>
+<td align="right">-0.229421</td>
+</tr>
+<tr>
+<td>Query: SAT</td>
+<td align="right">-0.194760</td>
+<td align="right">0.171612</td>
+<td align="right">-0.157424</td>
+</tr>
+</tbody></table>
+<h1>Follow the shapes</h1>
+<p>For three tokens and a Query/Key width of two:</p>
+<div class="math-display">\[Q\in\mathbb{R}^{3\times2}\]</div>
+<div class="math-display">\[K\in\mathbb{R}^{3\times2}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[K^T\in\mathbb{R}^{2\times3}\]</div>
+<p>and:</p>
+<div class="math-display">\[(3\times2)(2\times3)=(3\times3)\]</div>
+<p>So:</p>
+<div class="math-display">\[S\in\mathbb{R}^{3\times3}\]</div>
+<p>More generally, for (n) token positions:</p>
+<div class="math-display">\[Q\in\mathbb{R}^{n\times d_k}\]</div>
+<div class="math-display">\[K^T\in\mathbb{R}^{d_k\times n}\]</div>
+<p>and:</p>
+<div class="math-display">\[QK^T\in\mathbb{R}^{n\times n}\]</div>
+<div class="translation">
+
+<h2>Reading the score matrix</h2>
+<ul>
+<li>row (i): the search performed by token position (i);</li>
+<li>column (j): the searchable Key belonging to token position (j);</li>
+<li>cell ((i,j)): how compatible Query (i) is with Key (j).</li>
+</ul>
+</div>
+
+<h1>Stage 2: why divide by (\sqrt{d_k})?</h1>
+<!-- chapter-04-art:scale:start -->
+<p><img src="../assets/chapter-04/04_scale_by_sqrt_dk.png" alt="The scale calibrator divides every score by the square root of the Query-Key width."></p>
+<!-- chapter-04-art:scale:end -->
+
+
+<p>The Transformer does not normally send the raw dot products directly into softmax. It first scales them:</p>
+<div class="math-display">\[\widetilde{S}=\frac{QK^T}{\sqrt{d_k}}\]</div>
+<p>Why?</p>
+<p>As the vector width (d_k) grows, a dot product adds more products:</p>
+<div class="math-display">\[q_i\cdot k_j
+=
+q_{i1}k_{j1}+q_{i2}k_{j2}+\cdots+q_{id_k}k_{jd_k}\]</div>
+<p>Under a simplified assumption that the coordinates are independent, centred, and have similar variance, the variance of that sum grows roughly in proportion to (d_k). Its standard deviation therefore grows roughly like:</p>
+<div class="math-display">\[\sqrt{d_k}\]</div>
+<p>Large-magnitude logits can push softmax into a very sharp region where one position receives almost all the weight and the others receive almost none. That can make gradients through softmax less useful during training.</p>
+<p>Dividing by (\sqrt{d_k}) keeps the score scale more stable as the head width changes.</p>
+<div class="big-idea">
+
+<p><strong>The scaling factor is not a semantic penalty. It is a numerical stabiliser for the logits entering softmax.</strong></p>
+</div>
+
+<p>In our example:</p>
+<div class="math-display">\[d_k=2\]</div>
+<p>so:</p>
+<div class="math-display">\[\sqrt{d_k}=\sqrt{2}\approx1.414214\]</div>
+<p>The scaled score matrix is:</p>
+<div class="math-display">\[\widetilde{S}
+=
+\frac{S}{\sqrt{2}}
+\approx
+\begin{bmatrix}
+-0.055495 & 0.050009 & -0.032205\\
+-0.062809 & 0.045571 & -0.162225\\
+-0.137716 & 0.121348 & -0.111316
+\end{bmatrix}\]</div>
+<p>Scaling changes the distances between logits but preserves their ordering within a row because every score is divided by the same positive number.</p>
+<h1>Stage 3: causal masking</h1>
+<!-- chapter-04-art:causal-mask:start -->
+<p><img src="../assets/chapter-04/05_causal_mask_by_row.png" alt="The lower-triangular causal mask blocks future positions before softmax."></p>
+<!-- chapter-04-art:causal-mask:end -->
+
+
+<p>Our running model is a causal language model. A token may use information from:</p>
+<ul>
+<li>itself;</li>
+<li>earlier positions.</li>
+</ul>
+<p>It may not use information from future positions.</p>
+<p>For the sequence:</p>
+<blockquote>
+<p>THE CAT SAT</p>
+</blockquote>
+<p>THE may attend only to THE.</p>
+<p>CAT may attend to THE and CAT.</p>
+<p>SAT may attend to THE, CAT, and SAT.</p>
+<p>We represent this rule with a causal mask (M):</p>
+<div class="math-display">\[M=
+\begin{bmatrix}
+0 & -\infty & -\infty\\
+0 & 0 & -\infty\\
+0 & 0 & 0
+\end{bmatrix}\]</div>
+<p>The zeros leave allowed scores unchanged. The (-\infty) entries eliminate forbidden scores before softmax.</p>
+<p>Add the mask to the scaled scores:</p>
+<div class="math-display">\[L=\frac{QK^T}{\sqrt{d_k}}+M\]</div>
+<p>For our example:</p>
+<div class="math-display">\[L\approx
+\begin{bmatrix}
+-0.055495 & -\infty & -\infty\\
+-0.062809 & 0.045571 & -\infty\\
+-0.137716 & 0.121348 & -0.111316
+\end{bmatrix}\]</div>
+<p>We will call (L) the matrix of <strong>masked attention logits</strong>.</p>
+<div class="warning">
+
+<h2>Mask before softmax, not after</h2>
+<p>Setting a forbidden probability to zero after softmax is incomplete because the remaining probabilities would no longer sum to 1 unless they were renormalised.</p>
+<p>The standard approach removes forbidden positions at the logit stage. Since:</p>
+<div class="math-display">\[e^{-\infty}=0\]</div>
+<p>those positions naturally receive zero probability during softmax.</p>
+</div>
+
+<h1>The mask is different for every row</h1>
+<p>Causal masking is based on position, not token identity.</p>
+<p>The rule for row (i) and column (j) is:</p>
+<div class="math-display">\[M_{ij}=
+\begin{cases}
+0, & j\le i\\
+-\infty, & j>i
+\end{cases}\]</div>
+<p>This means the same Key can be visible to a later Query and invisible to an earlier Query.</p>
+<p>For example, SAT&#39;s Key is:</p>
+<ul>
+<li>invisible to THE;</li>
+<li>invisible to CAT;</li>
+<li>visible to SAT.</li>
+</ul>
+<p>Nothing about SAT&#39;s Key itself changed. Only the permission relationship changed.</p>
+<h1>Stage 4: softmax turns logits into weights</h1>
+<!-- chapter-04-art:softmax:start -->
+<p><img src="../assets/chapter-04/06_rowwise_softmax.png" alt="Independent softmax panels turn each Query row into weights that sum to one."></p>
+<!-- chapter-04-art:softmax:end -->
+
+
+<p>For one Query row (i), softmax is:</p>
+<div class="math-display">\[a_{ij}
+=
+\frac{e^{L_{ij}}}{\sum_{r=1}^{n}e^{L_{ir}}}\]</div>
+<p>Softmax is applied <strong>independently to each row</strong>.</p>
+<p>The resulting matrix is usually called the attention-weight matrix:</p>
+<div class="math-display">\[A=\operatorname{softmax}(L)\]</div>
+<p>Every row of (A):</p>
+<ul>
+<li>contains non-negative values;</li>
+<li>sums to 1;</li>
+<li>assigns zero weight to masked positions.</li>
+</ul>
+<h1>Exact softmax for CAT</h1>
+<p>CAT&#39;s allowed logits are:</p>
+<div class="math-display">\[\begin{bmatrix}
+-0.062809 & 0.045571
+\end{bmatrix}\]</div>
+<p>Exponentiating gives approximately:</p>
+<div class="math-display">\[\begin{bmatrix}
+0.939122 & 1.046625
+\end{bmatrix}\]</div>
+<p>Their sum is:</p>
+<div class="math-display">\[0.939122+1.046625=1.985747\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\begin{aligned}
+a_{\text{cat},\text{The}}
+&=\frac{0.939122}{1.985747}
+\approx0.472931\\
+a_{\text{cat},\text{cat}}
+&=\frac{1.046625}{1.985747}
+\approx0.527069
+\end{aligned}\]</div>
+<p>CAT gives slightly more weight to itself than to THE.</p>
+<h1>Exact softmax for SAT</h1>
+<p>SAT can see all three positions. Its logits are:</p>
+<div class="math-display">\[\begin{bmatrix}
+-0.137716 & 0.121348 & -0.111316
+\end{bmatrix}\]</div>
+<p>Exponentiating gives approximately:</p>
+<div class="math-display">\[\begin{bmatrix}
+0.871346 & 1.129018 & 0.894656
+\end{bmatrix}\]</div>
+<p>Their sum is:</p>
+<div class="math-display">\[0.871346+1.129018+0.894656=2.895020\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\begin{aligned}
+a_{\text{sat},\text{The}}&\approx0.300981\\
+a_{\text{sat},\text{cat}}&\approx0.389986\\
+a_{\text{sat},\text{sat}}&\approx0.309033
+\end{aligned}\]</div>
+<p>The largest weight goes to CAT, but the attention is distributed across all three allowed positions.</p>
+<h1>The complete attention-weight matrix</h1>
+<!-- chapter-04-art:attention-matrix:start -->
+<p><img src="../assets/chapter-04/07_attention_weight_matrix.png" alt="The final attention matrix is handed to the Information Courier for Value mixing."></p>
+<!-- chapter-04-art:attention-matrix:end -->
+
+
+<p>Applying row-wise softmax to the masked logits gives:</p>
+<div class="math-display">\[A\approx
+\begin{bmatrix}
+1.000000 & 0 & 0\\
+0.472931 & 0.527069 & 0\\
+0.300981 & 0.389986 & 0.309033
+\end{bmatrix}\]</div>
+<p>Check each row:</p>
+<div class="math-display">\[1.000000=1\]</div>
+<div class="math-display">\[0.472931+0.527069=1\]</div>
+<div class="math-display">\[0.300981+0.389986+0.309033=1\]</div>
+<p>The matrix now answers:</p>
+<blockquote>
+<p>For every Query, how much influence should each allowed token position have in this attention head?</p>
+</blockquote>
+<h1>Why softmax is row-wise</h1>
+<p>Each row represents a different search.</p>
+<p>THE&#39;s Query asks one question.</p>
+<p>CAT&#39;s Query asks another.</p>
+<p>SAT&#39;s Query asks another.</p>
+<p>They must each receive their own probability distribution over candidate Keys.</p>
+<p>Applying one softmax over the entire (n\times n) matrix would mix unrelated searches and would not make each Query&#39;s weights sum to 1.</p>
+<h1>Softmax depends on differences</h1>
+<p>Adding the same constant (c) to every allowed logit in one row does not change the softmax result:</p>
+<div class="math-display">\[\operatorname{softmax}(z)
+=
+\operatorname{softmax}(z+c)\]</div>
+<p>This is why implementations use a numerically stable form:</p>
+<div class="math-display">\[\operatorname{softmax}(z)_j
+=
+\frac{e^{z_j-m}}{\sum_r e^{z_r-m}}\]</div>
+<p>where:</p>
+<div class="math-display">\[m=\max_r z_r\]</div>
+<p>Subtracting the row maximum prevents unnecessarily large exponentials without changing the probabilities.</p>
+<h1>The compact attention-weight formula</h1>
+<p>The four stages can be written in one expression:</p>
+<div class="math-display">\[\boxed{
+A
+=
+\operatorname{softmax}
+\left(
+\frac{QK^T}{\sqrt{d_k}}+M
+\right)
+}\]</div>
+<p>Read it from the inside out:</p>
+<ol>
+<li>(QK^T): compare every Query with every Key;</li>
+<li>divide by (\sqrt{d_k}): stabilise the score scale;</li>
+<li>add (M): remove forbidden positions;</li>
+<li>softmax: normalise each Query row into attention weights.</li>
+</ol>
+<h1>Scores are not explanations</h1>
+<!-- chapter-04-art:guardrails:start -->
+<p><img src="../assets/chapter-04/08_scores_are_not_payloads_or_explanations.png" alt="Four guardrails distinguish scores from probabilities, masking from negative scores, Keys from Values, and attention weights from complete explanations."></p>
+<!-- chapter-04-art:guardrails:end -->
+
+
+<p>An attention matrix is mathematically observable, but it should not automatically be treated as a complete explanation of a model&#39;s behaviour.</p>
+<p>A high weight tells us that a Value vector contributed strongly to this head&#39;s output at this layer and position. It does not by itself tell us:</p>
+<ul>
+<li>why the model produced its final answer;</li>
+<li>what a human-readable concept the head represents;</li>
+<li>whether changing that weight alone would preserve all other computations;</li>
+<li>how later layers transform the result.</li>
+</ul>
+<p>Attention weights are part of the mechanism, not a guaranteed explanation of the entire network.</p>
+<h1>Common mistakes at the matching desk</h1>
+<h2>Mistake 1: comparing Query with Value</h2>
+<p>Compatibility is calculated with Keys:</p>
+<div class="math-display">\[QK^T\]</div>
+<p>not:</p>
+<div class="math-display">\[QV^T\]</div>
+<p>Values are used only after the weights have been calculated.</p>
+<h2>Mistake 2: forgetting the transpose</h2>
+<p>If:</p>
+<div class="math-display">\[Q,K\in\mathbb{R}^{n\times d_k}\]</div>
+<p>then (QK) is generally not dimensionally valid. The required comparison is:</p>
+<div class="math-display">\[QK^T\]</div>
+<h2>Mistake 3: applying softmax down columns</h2>
+<p>The normalisation is per Query row, not per Key column.</p>
+<h2>Mistake 4: treating the largest raw score as a hard selection</h2>
+<p>Attention usually produces a distribution, not an argmax. Several positions can contribute simultaneously.</p>
+<h2>Mistake 5: masking by multiplying scores by zero</h2>
+<p>Multiplying a forbidden logit by zero makes it zero, which may still receive positive softmax probability. Forbidden logits should be replaced by a very negative value, conceptually (-\infty).</p>
+<h1>How implementations hold the tensors</h1>
+<p>With batches and multiple heads, the score tensor often has shape:</p>
+<div class="math-display">\[(\text{batch},\;\text{heads},\;\text{query positions},\;\text{key positions})\]</div>
+<p>A common layout is:</p>
+<div class="math-display">\[B\times H\times N\times N\]</div>
+<p>for self-attention over a sequence of length (N).</p>
+<p>The matrix multiplication is performed independently for each batch item and head, even when the hardware executes the work in one fused operation.</p>
+<p>The mask is broadcast across whichever dimensions share the same causal rule.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What does one cell (S_{ij}) represent?</h2>
+<p>The raw dot-product compatibility between Query (i) and Key (j).</p>
+<h2>2. Why is (K) transposed?</h2>
+<p>So every Query row can take a dot product with every Key row, producing one score per Query–Key pair.</p>
+<h2>3. Why divide by (\sqrt{d_k})?</h2>
+<p>To keep dot-product logits at a manageable scale as the Query/Key width grows, preventing softmax from becoming unnecessarily saturated.</p>
+<h2>4. When is a causal position forbidden?</h2>
+<p>For Query position (i), Key position (j) is forbidden when (j&gt;i).</p>
+<h2>5. Why does a masked logit receive zero weight?</h2>
+<p>It is set conceptually to (-\infty), and (e^{-\infty}=0).</p>
+<h2>6. Along which dimension is softmax applied?</h2>
+<p>Across the candidate Key positions in each Query row.</p>
+<h2>7. Must a negative logit receive a small weight?</h2>
+<p>Not necessarily. Its weight depends on the other allowed logits in the same row.</p>
+<h2>8. What is the shape of the attention matrix for (n) tokens?</h2>
+<div class="math-display">\[A\in\mathbb{R}^{n\times n}\]</div>
+<p>for one self-attention head.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Queries and Keys create compatibility scores:</p>
+<div class="math-display">\[S=QK^T\]</div>
+<p>The scores are scaled:</p>
+<div class="math-display">\[\widetilde{S}=\frac{S}{\sqrt{d_k}}\]</div>
+<p>Forbidden future positions are masked:</p>
+<div class="math-display">\[L=\widetilde{S}+M\]</div>
+<p>Softmax converts each row into attention weights:</p>
+<div class="math-display">\[A=\operatorname{softmax}(L)\]</div>
+<p>For our three-token example:</p>
+<div class="math-display">\[A\approx
+\begin{bmatrix}
+1.000000 & 0 & 0\\
+0.472931 & 0.527069 & 0\\
+0.300981 & 0.389986 & 0.309033
+\end{bmatrix}\]</div>
+<p>These weights decide <strong>where to retrieve from</strong>.</p>
+<p>They do not yet tell us <strong>what information is retrieved</strong>.</p>
+<h1>Coming next: the information behind the match</h1>
+<p>A strong match is useful only if the matched position has something to contribute.</p>
+<p>Every token therefore creates a third learned representation:</p>
+<div class="math-display">\[v_t=x_tW^V\]</div>
+<p>The attention weights will mix those Value vectors:</p>
+<div class="math-display">\[Z=AV\]</div>
+<p>That is the job of Chapter 5:</p>
+<h1><strong>Meet the Information Courier — Values and the Weighted Sum</strong></h1>

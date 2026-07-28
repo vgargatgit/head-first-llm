@@ -1,0 +1,579 @@
+<h1>The question this chapter answers</h1>
+<p>A model can produce impressive examples and still fail unpredictably.</p>
+<p>A benchmark score can rise while factuality falls. A safer model can become less useful. A compressed model can preserve average accuracy while breaking tool syntax. A retrieval system can quote real documents but cite the wrong passage. A production model can drift even when its weights never change because the users, data, tools, and environment change around it.</p>
+<p>How do we decide whether an LLM system is actually ready for its intended use?</p>
+<div class="big-idea">
+
+<p><strong>Evaluation is not one benchmark and not one final test. It is a continuing measurement system that connects a specific use case to capability, reliability, safety, privacy, efficiency, and real production outcomes.</strong></p>
+</div>
+
+<h1>Meet the Evaluation Clinic</h1>
+<p>The model enters a clinic with several specialists.</p>
+<pre><code class="language-text">Capability Examiner  -&gt; Can it do the task?
+Reliability Inspector-&gt; Does it behave consistently?
+Grounding Auditor    -&gt; Are claims supported?
+Calibration Nurse    -&gt; Does confidence match correctness?
+Safety Reviewer      -&gt; Can it cause harm or misuse?
+Privacy Officer      -&gt; Does it expose protected data?
+Operations Monitor   -&gt; What happens in production?
+</code></pre>
+<p>A single score cannot replace the whole clinic.</p>
+<h1>Start with the decision, not the benchmark</h1>
+<p>Before choosing a dataset, define:</p>
+<ul>
+<li>who will use the system;</li>
+<li>what decision or action it supports;</li>
+<li>what inputs it will receive;</li>
+<li>what outputs are acceptable;</li>
+<li>what errors are tolerable;</li>
+<li>what errors are catastrophic;</li>
+<li>whether humans review the output;</li>
+<li>whether the system can take actions;</li>
+<li>what latency and cost limits apply;</li>
+<li>what laws, policies, or contracts apply.</li>
+</ul>
+<p>The same model can be acceptable for brainstorming and unacceptable for autonomous medical advice.</p>
+<h1>Evaluate the whole system</h1>
+<p>A deployed LLM application may include:</p>
+<pre><code class="language-text">user interface
+prompt template
+retriever
+reranker
+model
+safety filters
+tools
+permission checks
+citation renderer
+post-processing
+human review
+monitoring
+</code></pre>
+<p>Testing only the base model misses interactions among these components.</p>
+<p>A retrieval bug can look like a model hallucination. A prompt-template change can look like a capability regression. A tool schema mismatch can look like reasoning failure.</p>
+<h1>Build an evaluation matrix</h1>
+<p>Organise tests along at least four axes.</p>
+<h2>Tasks</h2>
+<p>Examples: summarisation, extraction, question answering, code generation, classification, tool use.</p>
+<h2>User and data slices</h2>
+<p>Examples: language, region, domain, document type, input length, accessibility need, device, customer tier.</p>
+<h2>Failure modes</h2>
+<p>Examples: hallucination, refusal, leakage, bias, prompt injection, formatting error, stale retrieval.</p>
+<h2>Operating conditions</h2>
+<p>Examples: long context, high load, missing documents, tool timeout, low-quality image, conflicting evidence.</p>
+<p>The matrix prevents one easy benchmark from standing in for the actual deployment.</p>
+<h1>Offline and online evaluation</h1>
+<h2>Offline evaluation</h2>
+<p>Runs on a fixed dataset before or between releases.</p>
+<p>Benefits:</p>
+<ul>
+<li>reproducibility;</li>
+<li>fast comparison;</li>
+<li>controlled labels;</li>
+<li>regression tracking;</li>
+<li>safe testing of dangerous cases.</li>
+</ul>
+<p>Limitations:</p>
+<ul>
+<li>datasets become stale;</li>
+<li>benchmarks may be contaminated;</li>
+<li>synthetic prompts may not match real users;</li>
+<li>fixed metrics may miss emergent behaviour.</li>
+</ul>
+<h2>Online evaluation</h2>
+<p>Measures real or staged production behaviour.</p>
+<p>Examples include:</p>
+<ul>
+<li>A/B tests;</li>
+<li>shadow deployments;</li>
+<li>human review queues;</li>
+<li>user-correction rates;</li>
+<li>task completion;</li>
+<li>escalation rates;</li>
+<li>tool success;</li>
+<li>latency and cost;</li>
+<li>incident reports.</li>
+</ul>
+<p>Online experiments require guardrails because users bear the consequences of mistakes.</p>
+<h1>Capability metrics</h1>
+<p>The metric should match the task.</p>
+<h2>Classification</h2>
+<p>Possible metrics:</p>
+<ul>
+<li>accuracy;</li>
+<li>precision;</li>
+<li>recall;</li>
+<li>F1;</li>
+<li>area under a curve;</li>
+<li>cost-weighted error.</li>
+</ul>
+<h2>Extraction</h2>
+<p>Possible metrics:</p>
+<ul>
+<li>exact match;</li>
+<li>token-level F1;</li>
+<li>field-level precision and recall;</li>
+<li>schema validity.</li>
+</ul>
+<h2>Generation</h2>
+<p>Possible metrics:</p>
+<ul>
+<li>human rubric scores;</li>
+<li>factual consistency;</li>
+<li>groundedness;</li>
+<li>completeness;</li>
+<li>style adherence;</li>
+<li>edit distance;</li>
+<li>task-specific success.</li>
+</ul>
+<p>Automatic overlap metrics can be useful but may reward wording similarity rather than correctness.</p>
+<h2>Code and tools</h2>
+<p>Possible metrics:</p>
+<ul>
+<li>unit-test pass rate;</li>
+<li>compilation success;</li>
+<li>execution correctness;</li>
+<li>tool-call schema validity;</li>
+<li>argument accuracy;</li>
+<li>side-effect safety.</li>
+</ul>
+<h1>Accuracy is not enough</h1>
+<p>Suppose a model answers 90% of routine questions correctly but fails nearly every question for one language or one document type.</p>
+<p>The overall average hides the failure.</p>
+<p>Always inspect slices such as:</p>
+<ul>
+<li>short versus long prompts;</li>
+<li>common versus rare categories;</li>
+<li>majority versus minority languages;</li>
+<li>clean versus noisy input;</li>
+<li>familiar versus new domains;</li>
+<li>seen versus unseen templates;</li>
+<li>authorised versus unauthorised requests.</li>
+</ul>
+<h1>Hallucination</h1>
+<p>A hallucination is generated content that is unsupported, incorrect, or inconsistent with the available evidence or task constraints.</p>
+<p>Different settings need different definitions.</p>
+<h2>Closed-book factuality</h2>
+<p>Is the claim correct according to an external reference?</p>
+<h2>Summarisation faithfulness</h2>
+<p>Is every claim supported by the source document?</p>
+<h2>RAG groundedness</h2>
+<p>Is every answer claim supported by the retrieved passages?</p>
+<h2>Tool-use faithfulness</h2>
+<p>Does the explanation match the actual tool result?</p>
+<h2>Creative generation</h2>
+<p>Invented content may be expected. The failure is violating requested facts or constraints, not imagination itself.</p>
+<h1>Claim-level groundedness</h1>
+<p>Long answers should be broken into atomic claims.</p>
+<p>For each claim, label:</p>
+<ul>
+<li>supported;</li>
+<li>contradicted;</li>
+<li>not found;</li>
+<li>subjective or not externally verifiable.</li>
+</ul>
+<p>An answer-level label can hide one dangerous unsupported sentence inside an otherwise correct response.</p>
+<h1>Abstention and selective answering</h1>
+<p>A reliable system should sometimes say:</p>
+<blockquote>
+<p>The supplied evidence is insufficient.</p>
+</blockquote>
+<p>Let coverage be the fraction of questions the system answers, and risk be the error rate among answered questions.</p>
+<p>A selective system can trade coverage for lower risk by abstaining when confidence or evidence is weak.</p>
+<p>The correct threshold depends on the cost of errors and the availability of human review.</p>
+<h1>Calibration</h1>
+<p>A system is calibrated when events assigned probability <span class="math-inline">\(p\)</span> occur about <span class="math-inline">\(p\)</span> of the time.</p>
+<p>Among predictions made with 80% confidence, roughly 80% should be correct under the evaluated distribution.</p>
+<p>A common proper scoring rule for binary outcomes is the Brier score:</p>
+<div class="math-display">\[\operatorname{Brier}
+=
+\frac{1}{N}
+\sum_{i=1}^{N}(p_i-y_i)^2\]</div>
+<p>where <span class="math-inline">\(p_i\)</span> is predicted probability and <span class="math-inline">\(y_i\in\{0,1\}\)</span> is the outcome.</p>
+<p>Lower is better.</p>
+<h1>A Brier-score calculation</h1>
+<p>Suppose a system gives probabilities:</p>
+<div class="math-display">\[p=
+\begin{bmatrix}
+0.9&0.7&0.6&0.8
+\end{bmatrix}\]</div>
+<p>and the outcomes are:</p>
+<div class="math-display">\[y=
+\begin{bmatrix}
+1&0&1&1
+\end{bmatrix}\]</div>
+<p>The squared errors are:</p>
+<div class="math-display">\[(0.9-1)^2=0.01\]</div>
+<div class="math-display">\[(0.7-0)^2=0.49\]</div>
+<div class="math-display">\[(0.6-1)^2=0.16\]</div>
+<div class="math-display">\[(0.8-1)^2=0.04\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\operatorname{Brier}
+=
+\frac{0.01+0.49+0.16+0.04}{4}
+=0.175\]</div>
+<p>The confident wrong second prediction is heavily penalised.</p>
+<h1>Verbal confidence is not automatically calibrated</h1>
+<p>A model saying “I am 95% certain” does not establish a 95% empirical success rate.</p>
+<p>Confidence can be estimated from:</p>
+<ul>
+<li>output probabilities where available;</li>
+<li>repeated sampling;</li>
+<li>self-consistency;</li>
+<li>auxiliary confidence models;</li>
+<li>evidence coverage;</li>
+<li>retrieval quality;</li>
+<li>task-specific verifiers;</li>
+<li>calibrated post-processors.</li>
+</ul>
+<p>Every method needs evaluation on representative data.</p>
+<h1>Benchmark contamination</h1>
+<p>A benchmark is contaminated when its questions, answers, or close variants appear in training or adaptation data.</p>
+<p>The model may appear to generalise when it is recalling or matching familiar material.</p>
+<p>Possible warning signs include:</p>
+<ul>
+<li>suspiciously exact benchmark phrasing;</li>
+<li>performance far above nearby variants;</li>
+<li>answers matching reference wording unusually closely;</li>
+<li>public test sets used repeatedly during development;</li>
+<li>benchmark content included in web-scale corpora.</li>
+</ul>
+<p>Mitigations include:</p>
+<ul>
+<li>private or newly created test sets;</li>
+<li>held-out time periods;</li>
+<li>paraphrased and adversarial variants;</li>
+<li>canary strings;</li>
+<li>deduplication;</li>
+<li>contamination audits;</li>
+<li>reporting uncertainty about training data.</li>
+</ul>
+<h1>Train, validation, and test separation</h1>
+<p>The training set updates parameters.</p>
+<p>The validation set guides choices such as hyperparameters, prompts, thresholds, and checkpoints.</p>
+<p>The test set should estimate final performance after those choices.</p>
+<p>If a team repeatedly inspects test failures and changes the system, the test set has become part of development.</p>
+<p>A new holdout is then needed.</p>
+<h1>Human evaluation</h1>
+<p>Human reviewers are essential for nuanced qualities such as usefulness, tone, faithfulness, and harm.</p>
+<p>A reliable process needs:</p>
+<ul>
+<li>a clear rubric;</li>
+<li>reviewer training;</li>
+<li>examples of each score;</li>
+<li>blinded comparisons where possible;</li>
+<li>multiple reviewers for subjective cases;</li>
+<li>disagreement measurement;</li>
+<li>expert reviewers for specialist domains;</li>
+<li>support for reviewer wellbeing on disturbing content.</li>
+</ul>
+<p>Human judgement is not automatically objective. Reviewers can share biases, miss subtle errors, or prefer fluent style.</p>
+<h1>Model-as-judge evaluation</h1>
+<p>Another model can score outputs at scale.</p>
+<p>Benefits:</p>
+<ul>
+<li>speed;</li>
+<li>lower cost than full human review;</li>
+<li>consistent formatting;</li>
+<li>ability to explain rubric decisions.</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li>position bias;</li>
+<li>verbosity bias;</li>
+<li>preference for its own style;</li>
+<li>sensitivity to judge prompts;</li>
+<li>shared errors with the evaluated model;</li>
+<li>weak specialist knowledge;</li>
+<li>vulnerability to text that manipulates the judge.</li>
+</ul>
+<p>Model judges should be calibrated against human or programmatic ground truth where feasible.</p>
+<h1>Pairwise and pointwise judging</h1>
+<h2>Pointwise</h2>
+<p>Score one answer against a rubric.</p>
+<pre><code class="language-text">correctness: 1–5
+completeness: 1–5
+style: 1–5
+</code></pre>
+<h2>Pairwise</h2>
+<p>Choose which of two answers is better.</p>
+<p>Pairwise comparison can be easier for humans and models, but it still needs randomised order and tie handling.</p>
+<h1>Programmatic evaluation</h1>
+<p>Some tasks allow exact checks.</p>
+<p>Examples:</p>
+<ul>
+<li>JSON schema validation;</li>
+<li>unit tests;</li>
+<li>SQL execution against a test database;</li>
+<li>mathematical verification;</li>
+<li>citation-ID validation;</li>
+<li>forbidden-term detection;</li>
+<li>permission-policy simulation.</li>
+</ul>
+<p>Programmatic checks are powerful because they are repeatable, but they cover only what has been encoded in the checker.</p>
+<h1>Bias and fairness</h1>
+<p>Bias evaluation asks whether performance or treatment differs across relevant groups or contexts.</p>
+<p>Possible concerns include:</p>
+<ul>
+<li>quality gaps across languages or dialects;</li>
+<li>stereotyped associations;</li>
+<li>unequal refusal rates;</li>
+<li>name or demographic sensitivity;</li>
+<li>accessibility barriers;</li>
+<li>harmful ranking differences;</li>
+<li>historical bias reproduced from data.</li>
+</ul>
+<p>The correct groups and metrics depend on the use case and jurisdiction.</p>
+<p>Aggregate fairness claims without task-specific analysis are rarely meaningful.</p>
+<h1>Privacy evaluation</h1>
+<p>Test whether the system can expose:</p>
+<ul>
+<li>personal data from training;</li>
+<li>secrets from prompts or logs;</li>
+<li>another user’s retrieved documents;</li>
+<li>hidden system instructions;</li>
+<li>credentials in tool outputs;</li>
+<li>sensitive image or audio content;</li>
+<li>information beyond the user’s permission scope.</li>
+</ul>
+<p>Privacy testing should include access-control failures, membership or memorisation risks where relevant, retention behaviour, and incident response.</p>
+<h1>Safety evaluation</h1>
+<p>Safety is not one refusal benchmark.</p>
+<p>Evaluate:</p>
+<ul>
+<li>harmful-content generation;</li>
+<li>assistance that increases real-world capability for misuse;</li>
+<li>self-harm response quality;</li>
+<li>discrimination and harassment;</li>
+<li>fraud and impersonation;</li>
+<li>cyber misuse;</li>
+<li>dangerous tool actions;</li>
+<li>over-refusal of benign requests;</li>
+<li>jailbreak and prompt-injection robustness;</li>
+<li>escalation and human handoff.</li>
+</ul>
+<p>A useful system must balance preventing harm with serving legitimate requests.</p>
+<h1>Red teaming</h1>
+<p>Red teaming actively searches for failures rather than sampling ordinary use.</p>
+<p>A red team may vary:</p>
+<ul>
+<li>language;</li>
+<li>indirect phrasing;</li>
+<li>role-play;</li>
+<li>encoded text;</li>
+<li>multi-turn setup;</li>
+<li>tool results;</li>
+<li>retrieved documents;</li>
+<li>image text;</li>
+<li>long contexts;</li>
+<li>conflicting instructions.</li>
+</ul>
+<p>Findings should become regression tests, not anecdotes that disappear after a report.</p>
+<h1>RAG evaluation</h1>
+<p>Evaluate each stage.</p>
+<h2>Retrieval</h2>
+<ul>
+<li>Did the correct source enter the candidate set?</li>
+<li>Was it ranked high enough?</li>
+<li>Were permissions enforced?</li>
+<li>Were stale versions removed?</li>
+</ul>
+<h2>Generation</h2>
+<ul>
+<li>Did the answer use the evidence?</li>
+<li>Were claims supported?</li>
+<li>Were citations valid?</li>
+<li>Did the system abstain when evidence was missing?</li>
+</ul>
+<h2>End to end</h2>
+<ul>
+<li>Did the user complete the task?</li>
+<li>Was latency acceptable?</li>
+<li>Could the answer be audited?</li>
+</ul>
+<h1>Tool-use evaluation</h1>
+<p>Test:</p>
+<ul>
+<li>whether the correct tool was selected;</li>
+<li>schema validity;</li>
+<li>argument accuracy;</li>
+<li>permission checks;</li>
+<li>confirmation behaviour;</li>
+<li>timeout and error recovery;</li>
+<li>idempotency;</li>
+<li>response consistency with tool results;</li>
+<li>resistance to malicious tool output;</li>
+<li>safe handling of write actions.</li>
+</ul>
+<p>A model that calls the right API with the wrong account ID has failed even if its final prose is excellent.</p>
+<h1>Long-context evaluation</h1>
+<p>Long context should be tested with more than one fact placed near the beginning.</p>
+<p>Vary:</p>
+<ul>
+<li>relevant information position;</li>
+<li>distractor density;</li>
+<li>repeated entities;</li>
+<li>conflicting versions;</li>
+<li>tables and code;</li>
+<li>multi-document synthesis;</li>
+<li>context length;</li>
+<li>question order.</li>
+</ul>
+<p>Measure whether the system retrieves, attributes, and combines the correct evidence.</p>
+<h1>Robustness and distribution shift</h1>
+<p>A system may face inputs unlike its evaluation set.</p>
+<p>Sources of shift include:</p>
+<ul>
+<li>new products;</li>
+<li>policy changes;</li>
+<li>new slang;</li>
+<li>different user populations;</li>
+<li>adversarial behaviour;</li>
+<li>document-format changes;</li>
+<li>OCR degradation;</li>
+<li>new tools;</li>
+<li>changed retrieval indexes;</li>
+<li>model-provider updates.</li>
+</ul>
+<p>Robustness testing deliberately perturbs inputs and operating conditions.</p>
+<h1>Production monitoring</h1>
+<p>After launch, monitor signals such as:</p>
+<ul>
+<li>request volume;</li>
+<li>latency percentiles;</li>
+<li>token usage;</li>
+<li>error and timeout rates;</li>
+<li>tool failures;</li>
+<li>retrieval empty-result rate;</li>
+<li>citation rate;</li>
+<li>abstention rate;</li>
+<li>user corrections;</li>
+<li>escalation rate;</li>
+<li>safety-filter triggers;</li>
+<li>cost per successful task;</li>
+<li>drift in input topics or languages.</li>
+</ul>
+<p>Monitoring should respect privacy and data-minimisation requirements.</p>
+<h1>Feedback loops</h1>
+<p>Production feedback can improve the system, but naive logging can create new risks.</p>
+<p>Before using interactions for training or evaluation, define:</p>
+<ul>
+<li>consent and notice;</li>
+<li>retention period;</li>
+<li>redaction;</li>
+<li>access controls;</li>
+<li>sampling policy;</li>
+<li>reviewer permissions;</li>
+<li>deletion handling;</li>
+<li>whether feedback is representative;</li>
+<li>how malicious examples are filtered.</li>
+</ul>
+<p>User clicks are not automatically high-quality labels.</p>
+<h1>Release gates</h1>
+<p>A release gate turns evaluation into a decision.</p>
+<p>Example:</p>
+<pre><code class="language-text">ship only if:
+- critical safety tests have zero unresolved severe failures
+- grounded answer accuracy is at least 92%
+- citation validity is at least 99%
+- tool schema validity is at least 99.9%
+- p95 latency remains below the product target
+- no protected-slice regression exceeds the allowed threshold
+</code></pre>
+<p>Thresholds must come from the use case and risk tolerance, not from convenient round numbers.</p>
+<h1>Regression testing</h1>
+<p>Every fixed bug should become a test.</p>
+<p>A regression suite may include:</p>
+<ul>
+<li>previously failed user cases;</li>
+<li>safety incidents;</li>
+<li>retrieval misses;</li>
+<li>formatting errors;</li>
+<li>tool mistakes;</li>
+<li>language-specific failures;</li>
+<li>long-context failures;</li>
+<li>latency regressions.</li>
+</ul>
+<p>Run the suite whenever the model, prompt, retriever, tools, index, safety policy, or application code changes.</p>
+<h1>Version everything</h1>
+<p>Record:</p>
+<ul>
+<li>model and checkpoint;</li>
+<li>quantisation or adapter;</li>
+<li>tokenizer;</li>
+<li>system prompt;</li>
+<li>decoding settings;</li>
+<li>retriever and embedding model;</li>
+<li>index snapshot;</li>
+<li>tool versions;</li>
+<li>evaluation dataset version;</li>
+<li>rubric and judge version;</li>
+<li>code commit;</li>
+<li>date and environment.</li>
+</ul>
+<p>Without versioning, a score cannot be reproduced.</p>
+<h1>Common evaluation mistakes</h1>
+<h2>Mistake 1: choosing the benchmark before defining the use case</h2>
+<p>The metric may not represent the real decision.</p>
+<h2>Mistake 2: reporting only averages</h2>
+<p>Important slices can fail badly.</p>
+<h2>Mistake 3: treating fluent explanations as evidence</h2>
+<p>Style is not correctness.</p>
+<h2>Mistake 4: using the test set repeatedly during development</h2>
+<p>The test set becomes contaminated by decisions.</p>
+<h2>Mistake 5: trusting model judges without validation</h2>
+<p>Judges have biases and failure modes.</p>
+<h2>Mistake 6: evaluating RAG only end to end</h2>
+<p>Retriever and generator errors need separate diagnosis.</p>
+<h2>Mistake 7: measuring safety only by refusal rate</h2>
+<p>Both harmful compliance and unnecessary refusal matter.</p>
+<h2>Mistake 8: ignoring latency and cost</h2>
+<p>A correct system that cannot meet operational limits is not ready.</p>
+<h2>Mistake 9: stopping evaluation at launch</h2>
+<p>Production introduces new users, data, tools, and attacks.</p>
+<h2>Mistake 10: failing to turn incidents into regression tests</h2>
+<p>The same failure returns.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What should be defined before choosing a benchmark?</h2>
+<p>The use case, users, decisions, acceptable errors, and operating constraints.</p>
+<h2>2. Why evaluate the whole application rather than only the model?</h2>
+<p>Prompts, retrieval, tools, filters, permissions, and post-processing create their own failures.</p>
+<h2>3. What is claim-level groundedness?</h2>
+<p>Checking whether each atomic claim is supported by the available evidence.</p>
+<h2>4. What was the Brier score in the numerical example?</h2>
+<div class="math-display">\[0.175\]</div>
+<h2>5. Does verbal confidence prove calibration?</h2>
+<p>No.</p>
+<h2>6. What is benchmark contamination?</h2>
+<p>Training or development exposure to benchmark content or close variants.</p>
+<h2>7. Why inspect evaluation slices?</h2>
+<p>Aggregate metrics can hide severe failures for particular groups or conditions.</p>
+<h2>8. What should happen to a discovered production failure?</h2>
+<p>It should be investigated, fixed where appropriate, and added to the regression suite.</p>
+<h2>9. What is a release gate?</h2>
+<p>A set of measurable conditions that must be satisfied before deployment.</p>
+<h2>10. Why version the retriever and index as well as the model?</h2>
+<p>Changing external evidence can change system behaviour even when model weights stay fixed.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Evaluation connects technical measurements to real consequences.</p>
+<p>A responsible process tests capability, groundedness, calibration, fairness, privacy, safety, efficiency, and operational behaviour across relevant slices and conditions.</p>
+<p>In our story:</p>
+<blockquote>
+<p><strong>The model does not graduate because it gave one brilliant answer. It graduates only after the clinic tests the right skills, checks the dangerous edge cases, records the exact version, and keeps watching after deployment.</strong></p>
+</blockquote>
+<h1>The complete journey</h1>
+<p>We began with one token that needed context.</p>
+<p>We followed Queries, Keys, Values, attention scores, multiple heads, residual streams, MLPs, positions, stacked blocks, logits, decoding, training targets, loss, gradients, distributed training, post-training, architecture families, cross-attention, foundation models, retrieval, multimodality, efficiency, and evaluation.</p>
+<p>The recurring lesson is simple:</p>
+<blockquote>
+<p><strong>An LLM is not magic and not merely a matrix multiplication. It is a layered system of representations, objectives, data, software, hardware, interfaces, and human decisions. Understanding it means tracing each layer precisely enough to know both what it can do and where it can fail.</strong></p>
+</blockquote>
+<h1>Further reading</h1>
+<ul>
+<li><a href="https://www.nist.gov/itl/ai-risk-management-framework">NIST AI Risk Management Framework</a></li>
+<li><a href="https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence">NIST Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile</a></li>
+<li><a href="https://arxiv.org/abs/2211.09110">Holistic Evaluation of Language Models</a></li>
+</ul>

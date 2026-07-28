@@ -1,0 +1,460 @@
+<h1>The question this chapter answers</h1>
+<p>The words surrounding modern models are easy to blur together.</p>
+<p>A model may be described as pretrained, foundational, base, instruct, chat, fine-tuned, aligned, adapted, retrieved, or prompted.</p>
+<p>Some of those words describe how the weights were learned. Others describe which checkpoint we are holding. Others describe what happens only at runtime.</p>
+<p>What exactly changes at each stage, and which terms should not be treated as synonyms?</p>
+<div class="big-idea">
+
+<p><strong>A model lifecycle has three distinct layers: broad training creates reusable capability, weight adaptation changes the checkpoint for narrower behaviour, and runtime conditioning supplies temporary instructions or information without rewriting the weights.</strong></p>
+</div>
+
+<h1>The model-development map</h1>
+<p>A simplified lifecycle is:</p>
+<pre><code class="language-text">raw data
+   ↓
+pretraining
+   ↓
+pretrained base checkpoint
+   ├── continued pretraining
+   ├── supervised fine-tuning
+   ├── instruction tuning
+   ├── preference tuning
+   └── parameter-efficient adapters
+
+at runtime, any checkpoint may also receive:
+   prompts, examples, retrieved documents, tools, or external memory
+</code></pre>
+<p>The arrows are not a universal recipe.</p>
+<p>Projects may skip stages, repeat stages, combine losses, train jointly, or use several adaptation branches from one shared base.</p>
+<p>The map is still useful because it asks the right question at every step:</p>
+<blockquote>
+<p><strong>Did the model weights change, or did the application only change the context?</strong></p>
+</blockquote>
+<h1>Pretraining</h1>
+<p>Pretraining learns broad statistical structure from large datasets using a scalable objective.</p>
+<p>For a decoder-only language model, the objective is often next-token prediction:</p>
+<div class="math-display">\[\mathcal{L}_{\mathrm{pretrain}}
+=
+-\sum_t
+\log p_\theta(x_t\mid x_{<t})\]</div>
+<p>For an encoder, pretraining may use masked-token reconstruction or another representation objective.</p>
+<p>For an encoder–decoder model, pretraining may corrupt an input and train the model to reconstruct or transform it.</p>
+<p>For multimodal systems, pretraining may combine contrastive, matching, captioning, reconstruction, or generative objectives.</p>
+<p>Pretraining is not defined by one architecture or one loss. It is the broad capability-building stage before narrower adaptation.</p>
+<h1>What pretraining can teach</h1>
+<p>Large-scale pretraining can produce reusable abilities such as:</p>
+<ul>
+<li>syntax and local language patterns;</li>
+<li>semantic associations;</li>
+<li>factual correlations represented imperfectly in parameters;</li>
+<li>broad task patterns;</li>
+<li>code structure;</li>
+<li>multilingual correspondences;</li>
+<li>visual or acoustic features in multimodal systems;</li>
+<li>in-context pattern completion.</li>
+</ul>
+<p>The model does not store a clean database of sentences. Training adjusts distributed parameters so that many contexts lead to useful probability distributions.</p>
+<h1>The pretrained or base model</h1>
+<p>The checkpoint produced by broad pretraining is often called a <strong>pretrained model</strong> or <strong>base model</strong>.</p>
+<p>For a decoder-only model, a base checkpoint may be very good at continuation but unreliable as an assistant.</p>
+<p>Given:</p>
+<pre><code class="language-text">Write three reasons to recycle:
+</code></pre>
+<p>it might answer appropriately, continue with another example, imitate nearby web text, or drift into a different format.</p>
+<p>The base model has capability, but it has not necessarily practised one stable interaction contract.</p>
+<h1>Foundation model</h1>
+<p>A <strong>foundation model</strong> is a broadly trained model intended to support many downstream tasks, applications, or adaptations.</p>
+<p>The term highlights two properties:</p>
+<ol>
+<li>broad training creates reusable capability;</li>
+<li>many later systems are built on top of the same model.</li>
+</ol>
+<p>A foundation model is not necessarily:</p>
+<ul>
+<li>a language model;</li>
+<li>decoder-only;</li>
+<li>a chatbot;</li>
+<li>publicly released;</li>
+<li>the largest model available;</li>
+<li>safe for every downstream use.</li>
+</ul>
+<p>A vision model, audio model, multimodal model, or scientific model can also serve as a foundation.</p>
+<div class="warning">
+
+<h2>Foundation does not mean finished</h2>
+<p>A building foundation is valuable because other structures depend on it. It is also incomplete. Errors, biases, limitations, and security weaknesses can propagate into many adapted systems.</p>
+</div>
+
+<h1>Architecture and lifecycle are different axes</h1>
+<p>Consider these labels:</p>
+<pre><code class="language-text">encoder-only      -&gt; architecture
+base               -&gt; checkpoint stage
+domain-adapted     -&gt; training history
+instruction-tuned  -&gt; adaptation objective
+chat               -&gt; interaction behaviour
+foundation model   -&gt; broad reusable role
+multimodal         -&gt; supported modalities
+quantised          -&gt; numerical representation
+</code></pre>
+<p>One checkpoint can have several labels at once.</p>
+<p>For example, a model may be:</p>
+<blockquote>
+<p>decoder-only, pretrained, instruction-tuned, multimodal, quantised, and deployed with retrieval.</p>
+</blockquote>
+<p>No single label replaces the others.</p>
+<h1>Continued pretraining</h1>
+<p>Continued pretraining resumes a broad pretraining-style objective from an existing checkpoint.</p>
+<p>The new data may be:</p>
+<ul>
+<li>more recent;</li>
+<li>from a specialised domain;</li>
+<li>in a new language;</li>
+<li>cleaned differently;</li>
+<li>longer-context;</li>
+<li>code-heavy;</li>
+<li>organisation-specific.</li>
+</ul>
+<p>If the original objective was causal next-token prediction, continued pretraining may keep that objective while changing the data distribution.</p>
+<p>Conceptually:</p>
+<div class="math-display">\[\theta_{\mathrm{new}}
+=
+\operatorname{Train}
+(\theta_{\mathrm{base}},D_{\mathrm{domain}},
+\mathcal{L}_{\mathrm{causal}})\]</div>
+<p>This is often called domain-adaptive or task-adaptive pretraining when the data is selected for a domain or downstream setting.</p>
+<h1>Continued pretraining versus fine-tuning</h1>
+<p>The boundary is sometimes fuzzy, but the intent differs.</p>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Continued pretraining</th>
+<th>Fine-tuning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Main aim</td>
+<td>Extend broad modelling of a data distribution</td>
+<td>Improve a narrower task, format, or behaviour</td>
+</tr>
+<tr>
+<td>Typical data</td>
+<td>Unlabelled or naturally occurring domain text</td>
+<td>Labelled examples, demonstrations, preferences, or task records</td>
+</tr>
+<tr>
+<td>Typical objective</td>
+<td>Same or similar to pretraining</td>
+<td>Task-specific or behaviour-specific objective</td>
+</tr>
+<tr>
+<td>Output</td>
+<td>More domain-adapted base capability</td>
+<td>A specialised checkpoint or adapter</td>
+</tr>
+</tbody></table>
+<p>A project should describe the actual data and objective instead of relying only on the label.</p>
+<h1>Fine-tuning</h1>
+<p>Fine-tuning starts from a pretrained checkpoint and updates parameters for a narrower purpose.</p>
+<p>Examples include:</p>
+<ul>
+<li>sentiment classification;</li>
+<li>medical coding;</li>
+<li>legal document extraction;</li>
+<li>summarisation;</li>
+<li>translation;</li>
+<li>response formatting;</li>
+<li>tool-call syntax;</li>
+<li>domain-specific assistant behaviour.</li>
+</ul>
+<p>The fine-tuning objective may be classification loss, token-level loss, sequence loss, ranking loss, preference loss, or a combination.</p>
+<h1>Full fine-tuning</h1>
+<p>Full fine-tuning allows updates across most or all original model parameters.</p>
+<p>A gradient step is still:</p>
+<div class="math-display">\[\theta
+\leftarrow
+\theta-\eta\nabla_\theta\mathcal{L}\]</div>
+<p>The difference from pretraining is the data, objective, scale, and intended behaviour.</p>
+<p>Full fine-tuning offers high adaptation capacity but requires substantial memory for gradients and optimiser state and produces a complete new checkpoint.</p>
+<h1>Supervised fine-tuning</h1>
+<p>Supervised fine-tuning, or SFT, learns from input–target examples.</p>
+<p>For an assistant:</p>
+<pre><code class="language-text">instruction + context
+        ↓
+desired response
+</code></pre>
+<p>The common language-model implementation still uses next-token cross-entropy, often with a loss mask that scores only the desired response region.</p>
+<div class="math-display">\[\mathcal{L}_{\mathrm{SFT}}
+=
+-\frac{1}{\sum_i m_i}
+\sum_i m_i
+\log p_\theta(y_i\mid x,y_{<i})\]</div>
+<p>SFT teaches imitation of the supplied demonstrations.</p>
+<h1>Instruction tuning</h1>
+<p>Instruction tuning is supervised fine-tuning on a diverse collection of instructions and responses.</p>
+<p>The goal is not merely to master one task. It is to practise the general pattern:</p>
+<pre><code class="language-text">read an instruction
+identify the requested operation
+produce an appropriate response
+</code></pre>
+<p>Instruction-tuning data may mix writing, extraction, classification, reasoning, dialogue, coding, formatting, and tool-use examples.</p>
+<p>The breadth and consistency of the data strongly shape generalisation.</p>
+<h1>Chat tuning</h1>
+<p>Chat tuning uses conversation-formatted examples with role boundaries such as system, user, assistant, and tool.</p>
+<p>A chat template converts those roles into model-specific tokens.</p>
+<p>Chat is therefore not a new architecture family. It is an interface and training distribution layered on top of an architecture.</p>
+<h1>Preference tuning</h1>
+<p>Preference tuning uses comparisons or reward signals to favour some responses over others.</p>
+<p>A preference record may contain:</p>
+<div class="math-display">\[(x,y_c,y_r)\]</div>
+<p>where <span class="math-inline">\(y_c\)</span> is chosen and <span class="math-inline">\(y_r\)</span> is rejected.</p>
+<p>Methods include reward-model-based reinforcement learning and direct comparison objectives such as DPO.</p>
+<p>Preference tuning can shape helpfulness, style, safety behaviour, brevity, formatting, and other rubric-defined properties.</p>
+<p>It does not automatically create factual truth. The result follows the quality and coverage of the feedback process.</p>
+<h1>Parameter-efficient fine-tuning</h1>
+<p>Parameter-efficient fine-tuning, or PEFT, freezes most base parameters and trains a smaller set.</p>
+<p>Examples include:</p>
+<ul>
+<li>LoRA adapters;</li>
+<li>prefix or prompt parameters;</li>
+<li>bottleneck adapters;</li>
+<li>selected-layer tuning;</li>
+<li>bias-only updates;</li>
+<li>other low-dimensional update methods.</li>
+</ul>
+<p>For LoRA:</p>
+<div class="math-display">\[W
+=
+W_0+\frac{\alpha}{r}AB\]</div>
+<p>The base matrix <span class="math-inline">\(W_0\)</span> stays frozen while low-rank matrices <span class="math-inline">\(A\)</span> and <span class="math-inline">\(B\)</span> are trained.</p>
+<p>PEFT changes <strong>where</strong> updates are stored. The training objective still determines <strong>what</strong> behaviour is learned.</p>
+<h1>QLoRA</h1>
+<p>QLoRA combines a quantised frozen base model with trainable low-rank adapters.</p>
+<p>Conceptually:</p>
+<pre><code class="language-text">quantised base weights: frozen
+adapter weights: trainable at higher precision
+activations and gradients: still required
+</code></pre>
+<p>The technique can reduce memory pressure for adaptation, but it does not make training free. Activation memory, temporary buffers, adapter gradients, and optimiser state remain.</p>
+<h1>Prompting</h1>
+<p>Prompting supplies instructions, examples, or context at runtime without updating weights.</p>
+<pre><code class="language-text">same checkpoint
++ different prompt
+= different temporary behaviour
+</code></pre>
+<p>Prompting can be extremely flexible, but the effect disappears when the context is removed.</p>
+<p>The model has not permanently learned the new instruction through gradient descent.</p>
+<h1>In-context learning</h1>
+<p>In-context learning uses demonstrations inside the prompt.</p>
+<pre><code class="language-text">input: 2 + 3
+output: 5
+
+input: 4 + 6
+output: 10
+
+input: 7 + 8
+output:
+</code></pre>
+<p>The model conditions on the pattern and predicts a continuation.</p>
+<p>No parameter update is required during ordinary inference.</p>
+<p>In-context learning is therefore runtime adaptation, not fine-tuning.</p>
+<h1>Retrieval-augmented generation</h1>
+<p>Retrieval-augmented generation, or RAG, fetches external documents and adds relevant material to the model context.</p>
+<p>The weights remain unchanged during ordinary retrieval and generation.</p>
+<pre><code class="language-text">question
+  -&gt; retrieve documents
+  -&gt; assemble context
+  -&gt; generate grounded answer
+</code></pre>
+<p>RAG can update available information without retraining the model, but it introduces new failure points: retrieval quality, document freshness, access control, prompt injection, citation alignment, and context limits.</p>
+<h1>Tool use</h1>
+<p>Tool use lets a model request an external operation such as:</p>
+<ul>
+<li>calculator execution;</li>
+<li>database lookup;</li>
+<li>web search;</li>
+<li>code execution;</li>
+<li>calendar access;</li>
+<li>file retrieval;</li>
+<li>transaction initiation.</li>
+</ul>
+<p>The model generally generates a structured call. An application validates and executes it, then returns a result to the model.</p>
+<p>Tool use is an orchestration pattern. It is not proof that the model weights contain the tool’s information or capability.</p>
+<h1>What changes the weights?</h1>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th align="right">Weights change?</th>
+<th align="right">New information persists without context?</th>
+<th>Typical purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Pretraining</td>
+<td align="right">Yes</td>
+<td align="right">Yes, imperfectly</td>
+<td>Broad capability</td>
+</tr>
+<tr>
+<td>Continued pretraining</td>
+<td align="right">Yes</td>
+<td align="right">Yes, imperfectly</td>
+<td>New domain or distribution</td>
+</tr>
+<tr>
+<td>Full fine-tuning</td>
+<td align="right">Yes</td>
+<td align="right">Yes</td>
+<td>Narrow task or behaviour</td>
+</tr>
+<tr>
+<td>LoRA or PEFT</td>
+<td align="right">Adapter weights change</td>
+<td align="right">Yes when adapter is loaded</td>
+<td>Efficient specialisation</td>
+</tr>
+<tr>
+<td>Preference tuning</td>
+<td align="right">Yes</td>
+<td align="right">Yes</td>
+<td>Response ranking and policy shaping</td>
+</tr>
+<tr>
+<td>Prompting</td>
+<td align="right">No</td>
+<td align="right">No</td>
+<td>Temporary instruction</td>
+</tr>
+<tr>
+<td>In-context examples</td>
+<td align="right">No</td>
+<td align="right">No</td>
+<td>Temporary task pattern</td>
+</tr>
+<tr>
+<td>RAG</td>
+<td align="right">No model-weight change</td>
+<td align="right">Documents remain external</td>
+<td>Fresh or private grounding</td>
+</tr>
+<tr>
+<td>Tool use</td>
+<td align="right">No model-weight change</td>
+<td align="right">Tool result is runtime context</td>
+<td>External action or computation</td>
+</tr>
+</tbody></table>
+<h1>A decision tree</h1>
+<p>Ask these questions in order.</p>
+<h2>1. Is the problem missing information or missing behaviour?</h2>
+<p>If the information changes frequently or lives in a private database, retrieval may be better than trying to bake it into weights.</p>
+<p>If the model understands the domain but responds in the wrong format, SFT or prompting may be enough.</p>
+<h2>2. Must the change persist across requests?</h2>
+<p>If no, use prompting, examples, retrieval, or tools.</p>
+<p>If yes, consider continued pretraining, fine-tuning, or an adapter.</p>
+<h2>3. Do you have high-quality training data?</h2>
+<p>Fine-tuning magnifies the data specification. A small clean dataset can be more valuable than a large inconsistent one.</p>
+<h2>4. Must the base remain reusable?</h2>
+<p>Adapters allow one base to support several specialised behaviours.</p>
+<h2>5. How will regressions be measured?</h2>
+<p>Every weight update can improve a target behaviour while damaging other capabilities.</p>
+<h1>A lifecycle example</h1>
+<p>Suppose an organisation wants a support assistant.</p>
+<p>A sensible path might be:</p>
+<pre><code class="language-text">1. Start with a broadly pretrained base model.
+2. Choose an instruction-tuned checkpoint if general chat behaviour is useful.
+3. Use retrieval for current product documentation.
+4. Add a tool for account-specific actions.
+5. Fine-tune or train an adapter for stable response format and escalation policy.
+6. Use preference data to improve response quality where demonstrations are insufficient.
+7. Evaluate factuality, access control, tool safety, latency, and regressions.
+</code></pre>
+<p>Trying to solve every requirement through fine-tuning would make current documentation hard to update.</p>
+<p>Trying to solve every requirement through prompting could produce inconsistent behaviour.</p>
+<p>A layered design assigns each problem to the mechanism best suited for it.</p>
+<h1>Catastrophic forgetting</h1>
+<p>Fine-tuning on a narrow distribution can reduce performance elsewhere.</p>
+<p>The model may over-specialise, lose multilingual ability, become stylistically repetitive, or forget rare behaviours.</p>
+<p>Mitigations can include:</p>
+<ul>
+<li>mixing general and domain data;</li>
+<li>smaller learning rates;</li>
+<li>fewer update steps;</li>
+<li>regularisation;</li>
+<li>adapters;</li>
+<li>replay data;</li>
+<li>broad regression testing.</li>
+</ul>
+<p>No mitigation removes the need to evaluate.</p>
+<h1>Data governance travels through the lifecycle</h1>
+<p>At every stage, ask:</p>
+<ul>
+<li>Is the data licensed or authorised?</li>
+<li>Does it contain personal or confidential information?</li>
+<li>Can deletion or correction requests be honoured?</li>
+<li>Could memorisation expose sensitive examples?</li>
+<li>Are annotations consistent and appropriately reviewed?</li>
+<li>Are downstream users told what the model was trained or adapted on?</li>
+</ul>
+<p>A model-development diagram without data provenance is incomplete.</p>
+<h1>Common lifecycle mistakes</h1>
+<h2>Mistake 1: calling every pretrained model a foundation model</h2>
+<p>A narrowly pretrained model may not be intended for broad downstream adaptation.</p>
+<h2>Mistake 2: calling prompting fine-tuning</h2>
+<p>Prompting changes context, not weights.</p>
+<h2>Mistake 3: calling RAG training</h2>
+<p>Ordinary RAG retrieves external information at runtime.</p>
+<h2>Mistake 4: assuming a base model is already a chat assistant</h2>
+<p>Assistant behaviour usually requires post-training, templates, or orchestration.</p>
+<h2>Mistake 5: saying LoRA is a new loss function</h2>
+<p>LoRA is a parameterisation of the update. SFT or preference loss still defines the objective.</p>
+<h2>Mistake 6: treating continued pretraining as guaranteed factual updating</h2>
+<p>The model learns statistical patterns. It does not become a perfectly editable database.</p>
+<h2>Mistake 7: using fine-tuning for rapidly changing facts</h2>
+<p>Retrieval is often easier to refresh, inspect, and cite.</p>
+<h2>Mistake 8: assuming runtime tools are safe because the model requested them</h2>
+<p>The application must validate permissions, arguments, and consequences.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What is pretraining?</h2>
+<p>Broad capability learning from large datasets using a scalable objective.</p>
+<h2>2. What is a base model?</h2>
+<p>A checkpoint produced by pretraining before narrower adaptation.</p>
+<h2>3. What makes a model a foundation model?</h2>
+<p>Broad training and intended reuse across many downstream tasks or applications.</p>
+<h2>4. Does foundation model specify encoder-only or decoder-only?</h2>
+<p>No. Architecture is a separate axis.</p>
+<h2>5. What is continued pretraining?</h2>
+<p>Further training with a pretraining-style objective, often on new, recent, or domain-specific data.</p>
+<h2>6. What is instruction tuning?</h2>
+<p>Supervised fine-tuning on diverse instruction–response examples.</p>
+<h2>7. Does LoRA change the objective?</h2>
+<p>No. It changes where trainable updates are represented.</p>
+<h2>8. Do prompts permanently change model weights?</h2>
+<p>No.</p>
+<h2>9. When is retrieval attractive?</h2>
+<p>When information is current, private, inspectable, citeable, or frequently updated.</p>
+<h2>10. Why is regression testing necessary after fine-tuning?</h2>
+<p>Specialisation can damage capabilities outside the target dataset.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Pretraining creates broad capability.</p>
+<p>A base checkpoint is the resulting starting point.</p>
+<p>A foundation model is broadly reusable across downstream systems.</p>
+<p>Continued pretraining and fine-tuning change weights. Prompting, retrieval, and tools change runtime context or available actions.</p>
+<p>In our story:</p>
+<blockquote>
+<p><strong>Pretraining builds the general-purpose workshop. Fine-tuning retrains part of the crew for a specialised job. Adapters are removable instruction notebooks. Prompts are today’s work order. Retrieval opens the current manual. Tools let the crew operate machines outside the workshop.</strong></p>
+</blockquote>
+<h1>Coming next: open book, closed book, or tool belt?</h1>
+<p>The next chapter examines runtime grounding in detail: parametric memory, prompts, embeddings, retrieval, reranking, context assembly, citations, tools, and the new failure modes introduced by external information.</p>
+<h1>Further reading</h1>
+<ul>
+<li><a href="https://arxiv.org/abs/2108.07258">On the Opportunities and Risks of Foundation Models</a></li>
+<li><a href="https://arxiv.org/abs/1910.10683">Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer</a></li>
+<li><a href="https://arxiv.org/abs/2005.14165">Language Models are Few-Shot Learners</a></li>
+<li><a href="https://arxiv.org/abs/2005.11401">Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</a></li>
+</ul>

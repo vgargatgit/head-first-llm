@@ -1,0 +1,559 @@
+<h1>The question this chapter answers</h1>
+<p>Chapter 8 completed one simplified Transformer block.</p>
+<p>For the three-token sequence, its output was:</p>
+<div class="math-display">\[X^{(1)}
+\approx
+\begin{bmatrix}
+0.029725 & -0.600171 & 1.603583 & -1.033137\\
+-1.331984 & 1.481456 & -0.174505 & 0.025033\\
+0.006373 & -0.143686 & 1.477529 & -1.340215
+\end{bmatrix}\]</div>
+<p>The rows still belong to THE, CAT, and SAT.</p>
+<p>The shape is still:</p>
+<div class="math-display">\[3\times4\]</div>
+<p>But a real LLM usually contains many Transformer blocks.</p>
+<p>What happens when the output of one block becomes the input to the next block, dozens of times?</p>
+<div class="big-idea">
+
+<p><strong>A Transformer stack repeatedly updates one residual stream. Each layer receives contextual token states from the previous layer, applies its own learned attention and MLP transformations, and writes new information back into the same model-width pathway.</strong></p>
+</div>
+
+<h1>One block is one refinement step</h1>
+<p>Let the initial representation entering the stack be:</p>
+<div class="math-display">\[X^{(0)}\]</div>
+<p>The first block produces:</p>
+<div class="math-display">\[X^{(1)}
+=
+\operatorname{Block}_1(X^{(0)})\]</div>
+<p>The second block receives that result:</p>
+<div class="math-display">\[X^{(2)}
+=
+\operatorname{Block}_2(X^{(1)})\]</div>
+<p>After (L) blocks:</p>
+<div class="math-display">\[X^{(L)}
+=
+\operatorname{Block}_L(X^{(L-1)})\]</div>
+<p>The complete stack is:</p>
+<div class="math-display">\[X^{(0)}
+\rightarrow
+X^{(1)}
+\rightarrow
+X^{(2)}
+\rightarrow
+\cdots
+\rightarrow
+X^{(L)}\]</div>
+<p>Every block preserves the outer shape:</p>
+<div class="math-display">\[X^{(\ell)}
+\in
+\mathbb{R}^{n\times d_{\text{model}}}\]</div>
+<p>That shape compatibility is what makes deep stacking possible.</p>
+<h1>What is the residual stream?</h1>
+<p>The term <strong>residual stream</strong> is a useful name for the evolving matrix of token representations that flows through the model.</p>
+<p>At layer (\ell), the stream is:</p>
+<div class="math-display">\[X^{(\ell)}\]</div>
+<p>Each attention or MLP sublayer calculates an update and adds it to the representation already flowing through the network.</p>
+<p>Conceptually:</p>
+<pre><code class="language-text">current residual stream
+        |
+        +---- attention update
+        |
+updated residual stream
+        |
+        +---- MLP update
+        |
+next block&#39;s residual stream
+</code></pre>
+<p>The residual stream is not a separate copy of the hidden states stored somewhere else.</p>
+<p>It is the hidden-state pathway itself, viewed as a document that every layer reads and amends.</p>
+<div class="translation">
+
+<h2>The evolving case file</h2>
+<p>Imagine every token carries a case file.</p>
+<p>A block does not throw the file away and start again. Attention adds notes gathered from other visible positions. The MLP reorganises and develops the information already in the file.</p>
+<p>The amended file then moves to the next floor of the building.</p>
+</div>
+
+<h1>Modern pre-norm stack notation</h1>
+<p>Many modern decoder-only LLMs use a pre-normalisation arrangement.</p>
+<p>A simplified block (\ell) can be written:</p>
+<div class="math-display">\[R^{(\ell)}
+=
+X^{(\ell-1)}
++
+\operatorname{MHA}_{\ell}
+\left(
+\operatorname{Norm}_{\ell,1}
+\left(X^{(\ell-1)}\right)
+\right)\]</div>
+<p>Then:</p>
+<div class="math-display">\[X^{(\ell)}
+=
+R^{(\ell)}
++
+\operatorname{MLP}_{\ell}
+\left(
+\operatorname{Norm}_{\ell,2}
+\left(R^{(\ell)}\right)
+\right)\]</div>
+<p>The two additions write into the residual stream.</p>
+<p>The exact architecture may use:</p>
+<ul>
+<li>LayerNorm or RMSNorm;</li>
+<li>biases or no biases;</li>
+<li>ordinary multi-head attention, grouped-query attention, or multi-query attention;</li>
+<li>GELU, SiLU, or a gated MLP;</li>
+<li>other ordering and scaling choices.</li>
+</ul>
+<p>The stack principle remains the same: each block consumes one model-width matrix and produces another.</p>
+<h1>Every layer owns different parameters</h1>
+<p>Block 1 has its own learned projections:</p>
+<div class="math-display">\[W_{1}^{Q},
+W_{1}^{K},
+W_{1}^{V},
+W_{1}^{O}\]</div>
+<p>Block 2 has another set:</p>
+<div class="math-display">\[W_{2}^{Q},
+W_{2}^{K},
+W_{2}^{V},
+W_{2}^{O}\]</div>
+<p>Similarly, each block owns its own MLP and normalisation parameters.</p>
+<p>In general:</p>
+<div class="math-display">\[W_{1}^{Q}\neq W_{2}^{Q}\neq\cdots\neq W_{L}^{Q}\]</div>
+<p>The blocks share the same architectural pattern, but they do not normally share the same weights.</p>
+<div class="warning">
+
+<h2>Repeated structure does not mean repeated parameters</h2>
+<p>A 32-layer Transformer does not usually run one block 32 times with one shared parameter set.</p>
+<p>It normally contains 32 separately learned blocks with compatible input and output shapes.</p>
+</div>
+
+<h1>Later layers do not see raw token embeddings</h1>
+<p>At the first layer:</p>
+<div class="math-display">\[Q^{(1)}=X^{(0)}W_{1}^{Q}\]</div>
+<p>At the second layer:</p>
+<div class="math-display">\[Q^{(2)}=X^{(1)}W_{2}^{Q}\]</div>
+<p>At layer (\ell):</p>
+<div class="math-display">\[Q^{(\ell)}=X^{(\ell-1)}W_{\ell}^{Q}\]</div>
+<p>The same applies to Keys and Values:</p>
+<div class="math-display">\[K^{(\ell)}=X^{(\ell-1)}W_{\ell}^{K}\]</div>
+<div class="math-display">\[V^{(\ell)}=X^{(\ell-1)}W_{\ell}^{V}\]</div>
+<p>Therefore, later attention operates on representations that already contain information gathered and transformed by earlier layers.</p>
+<p>A later-layer Key for CAT is not created directly from CAT&#39;s original embedding. It is created from CAT&#39;s current contextual state.</p>
+<h1>Following SAT through depth</h1>
+<p>We begin with SAT&#39;s input to the first block:</p>
+<div class="math-display">\[x_{\text{sat}}^{(0)}
+=
+\begin{bmatrix}
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>Chapter 8 calculated the first block&#39;s output:</p>
+<div class="math-display">\[x_{\text{sat}}^{(1)}
+\approx
+\begin{bmatrix}
+0.006373 & -0.143686 & 1.477529 & -1.340215
+\end{bmatrix}\]</div>
+<p>The coordinates changed substantially, but the width remained four.</p>
+<p>We will now follow a <strong>toy continuation</strong> through two more blocks.</p>
+<p>The next updates are illustrative. They show residual arithmetic and depth; they are not claimed to come from the Chapter 6–8 parameter matrices, because later blocks would own new learned weights.</p>
+<h1>Block 2: attention adds another update</h1>
+<p>Suppose Block 2&#39;s attention sublayer produces this update for SAT:</p>
+<div class="math-display">\[\Delta_{\text{attn}}^{(2)}
+=
+\begin{bmatrix}
+0.08 & -0.03 & 0.12 & 0.05
+\end{bmatrix}\]</div>
+<p>The residual addition gives:</p>
+<div class="math-display">\[\begin{aligned}
+r_{\text{sat}}^{(2)}
+&=
+x_{\text{sat}}^{(1)}
++
+\Delta_{\text{attn}}^{(2)}\\
+&=
+\begin{bmatrix}
+0.006373 & -0.143686 & 1.477529 & -1.340215
+\end{bmatrix}
++
+\begin{bmatrix}
+0.08 & -0.03 & 0.12 & 0.05
+\end{bmatrix}\\
+&=
+\begin{bmatrix}
+0.086373 & -0.173686 & 1.597529 & -1.290215
+\end{bmatrix}
+\end{aligned}\]</div>
+<p>The attention update can contain information retrieved from all positions visible to SAT under the causal mask.</p>
+<h1>Block 2: the MLP adds a private update</h1>
+<p>Suppose Block 2&#39;s MLP produces:</p>
+<div class="math-display">\[\Delta_{\text{mlp}}^{(2)}
+=
+\begin{bmatrix}
+-0.04 & 0.11 & -0.07 & 0.02
+\end{bmatrix}\]</div>
+<p>Then:</p>
+<div class="math-display">\[\begin{aligned}
+x_{\text{sat}}^{(2)}
+&=
+r_{\text{sat}}^{(2)}
++
+\Delta_{\text{mlp}}^{(2)}\\
+&=
+\begin{bmatrix}
+0.086373 & -0.173686 & 1.597529 & -1.290215
+\end{bmatrix}
++
+\begin{bmatrix}
+-0.04 & 0.11 & -0.07 & 0.02
+\end{bmatrix}\\
+&=
+\begin{bmatrix}
+0.046373 & -0.063686 & 1.527529 & -1.270215
+\end{bmatrix}
+\end{aligned}\]</div>
+<p>This becomes SAT&#39;s input to Block 3.</p>
+<h1>Block 3: repeat with new learned parameters</h1>
+<p>Suppose Block 3&#39;s attention update is:</p>
+<div class="math-display">\[\Delta_{\text{attn}}^{(3)}
+=
+\begin{bmatrix}
+-0.02 & 0.06 & 0.09 & -0.04
+\end{bmatrix}\]</div>
+<p>The attention residual becomes:</p>
+<div class="math-display">\[\begin{aligned}
+r_{\text{sat}}^{(3)}
+&=
+x_{\text{sat}}^{(2)}
++
+\Delta_{\text{attn}}^{(3)}\\
+&=
+\begin{bmatrix}
+0.026373 & -0.003686 & 1.617529 & -1.310215
+\end{bmatrix}
+\end{aligned}\]</div>
+<p>Suppose the Block 3 MLP update is:</p>
+<div class="math-display">\[\Delta_{\text{mlp}}^{(3)}
+=
+\begin{bmatrix}
+0.05 & -0.02 & -0.10 & 0.08
+\end{bmatrix}\]</div>
+<p>Then:</p>
+<div class="math-display">\[\begin{aligned}
+x_{\text{sat}}^{(3)}
+&=
+r_{\text{sat}}^{(3)}
++
+\Delta_{\text{mlp}}^{(3)}\\
+&=
+\begin{bmatrix}
+0.076373 & -0.023686 & 1.517529 & -1.230215
+\end{bmatrix}
+\end{aligned}\]</div>
+<h1>SAT&#39;s evolving case file</h1>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>SAT representation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Stack input (x_{\text{sat}}^{(0)})</td>
+<td>([0.140000,-0.220000,0.670000,-0.310000])</td>
+</tr>
+<tr>
+<td>After Block 1 (x_{\text{sat}}^{(1)})</td>
+<td>([0.006373,-0.143686,1.477529,-1.340215])</td>
+</tr>
+<tr>
+<td>After Block 2 (x_{\text{sat}}^{(2)})</td>
+<td>([0.046373,-0.063686,1.527529,-1.270215])</td>
+</tr>
+<tr>
+<td>After Block 3 (x_{\text{sat}}^{(3)})</td>
+<td>([0.076373,-0.023686,1.517529,-1.230215])</td>
+</tr>
+</tbody></table>
+<p>The coordinates are not independent human-readable counters.</p>
+<p>The table simply demonstrates that the token&#39;s vector is repeatedly amended while preserving its model width.</p>
+<h1>What repeated contextualisation buys the model</h1>
+<p>In the first block, a position can retrieve information from earlier positions.</p>
+<p>The resulting state is then processed by later blocks.</p>
+<p>That allows later layers to operate on relationships already constructed by earlier layers.</p>
+<p>For example, a later Query can be built from a state that already reflects:</p>
+<ul>
+<li>token identity;</li>
+<li>position;</li>
+<li>nearby syntax;</li>
+<li>retrieved context;</li>
+<li>non-linear MLP transformations.</li>
+</ul>
+<p>The architecture does not assign one fixed purpose to each depth.</p>
+<p>Still, repeated transformation gives the model opportunities to construct progressively more useful representations.</p>
+<div class="warning">
+
+<h2>Do not turn depth into a rigid story</h2>
+<p>It is tempting to say:</p>
+<ul>
+<li>early layers do spelling;</li>
+<li>middle layers do grammar;</li>
+<li>late layers do reasoning.</li>
+</ul>
+<p>Real models can show depth-related tendencies, but the architecture does not guarantee a clean one-job-per-layer pipeline.</p>
+<p>Representations and computations are distributed and model-specific.</p>
+</div>
+
+<h1>Causal masking is required in every attention layer</h1>
+<p>A decoder-only model must prevent position (i) from using a future position (j&gt;i).</p>
+<p>That rule applies in every block:</p>
+<div class="math-display">\[M_{ij}
+=
+\begin{cases}
+0, & j\le i\\
+-\infty, & j>i
+\end{cases}\]</div>
+<p>At layer (\ell):</p>
+<div class="math-display">\[A^{(\ell)}
+=
+\operatorname{softmax}
+\left(
+\frac{Q^{(\ell)}(K^{(\ell)})^T}{\sqrt{d_k}}
++M
+\right)\]</div>
+<p>If only the first layer were masked, a later layer could read a future representation and leak forbidden information backward.</p>
+<p>The causal constraint must be preserved throughout the stack.</p>
+<h1>Can information move more than one step per layer?</h1>
+<p>Causal self-attention is not limited to immediate neighbours.</p>
+<p>SAT can attend directly to THE in one layer because THE is an earlier visible position.</p>
+<p>Depth is therefore not required merely to move information one token at a time.</p>
+<p>Depth is useful because it lets the model repeatedly:</p>
+<ul>
+<li>retrieve different combinations;</li>
+<li>transform the retrieved information;</li>
+<li>form new Queries, Keys, and Values from the updated states;</li>
+<li>refine the residual stream.</li>
+</ul>
+<p>This is richer than a simple message passed one position per layer.</p>
+<h1>The final normalisation</h1>
+<p>Many decoder-only architectures apply one final normalisation after the last block.</p>
+<p>Let the final block output for SAT in our toy three-block stack be:</p>
+<div class="math-display">\[x_{\text{sat}}^{(3)}
+=
+\begin{bmatrix}
+0.076373 & -0.023686 & 1.517529 & -1.230215
+\end{bmatrix}\]</div>
+<p>For a simple LayerNorm illustration with:</p>
+<div class="math-display">\[\gamma=1,\qquad\beta=0\]</div>
+<p>its mean is:</p>
+<div class="math-display">\[\mu
+=
+\frac{0.076373-0.023686+1.517529-1.230215}{4}
+\approx0.085000\]</div>
+<p>Its variance is approximately:</p>
+<div class="math-display">\[\sigma^2\approx0.948454\]</div>
+<p>Using:</p>
+<div class="math-display">\[\epsilon=10^{-5}\]</div>
+<p>we get:</p>
+<div class="math-display">\[\sqrt{\sigma^2+\epsilon}
+\approx0.973891\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\boxed{
+\widetilde{h}_{\text{sat}}
+\approx
+\begin{bmatrix}
+-0.008859 & -0.111600 & 1.470933 & -1.350474
+\end{bmatrix}
+}\]</div>
+<p>This final hidden state will become the input to the vocabulary projection in Chapter 11.</p>
+<h1>The final hidden state is still not a token</h1>
+<p>Even after the complete stack and final normalisation:</p>
+<div class="math-display">\[\widetilde{h}_{\text{sat}}
+\in
+\mathbb{R}^{1\times d_{\text{model}}}\]</div>
+<p>It is still a hidden vector.</p>
+<p>It is not:</p>
+<ul>
+<li>a vocabulary probability distribution;</li>
+<li>a token ID;</li>
+<li>a word;</li>
+<li>the final generated sentence.</li>
+</ul>
+<p>The model still needs to project this vector into vocabulary space.</p>
+<h1>Training computes all positions together</h1>
+<p>During training, the model can process a complete sequence in parallel while preserving causality with the mask.</p>
+<p>For a sequence of length (n), the final stack produces:</p>
+<div class="math-display">\[X^{(L)}
+\in
+\mathbb{R}^{n\times d_{\text{model}}}\]</div>
+<p>Each row can be projected into vocabulary logits.</p>
+<p>Conceptually:</p>
+<ul>
+<li>row 1 predicts token 2;</li>
+<li>row 2 predicts token 3;</li>
+<li>row 3 predicts token 4;</li>
+<li>and so on.</li>
+</ul>
+<p>The future target tokens are present in the training batch, but the causal mask prevents an earlier row from using their hidden representations.</p>
+<h1>Generation processes one new position at a time</h1>
+<p>During autoregressive generation, the model repeatedly appends one selected token.</p>
+<p>At decoding step (t):</p>
+<ol>
+<li>the newest token receives an embedding and position information;</li>
+<li>it passes through every Transformer layer;</li>
+<li>the final hidden state produces next-token logits;</li>
+<li>one token is selected;</li>
+<li>the selected token becomes position (t+1).</li>
+</ol>
+<p>Without caching, the model could recompute the complete prefix at every step.</p>
+<p>A KV cache avoids much of that repeated attention work.</p>
+<h1>One KV cache per layer</h1>
+<p>Chapter 5 introduced cached Keys and Values for one attention layer.</p>
+<p>A deep model needs cached state for every layer:</p>
+<div class="math-display">\[\left\{
+K_{\ell}^{\text{past}},
+V_{\ell}^{\text{past}}
+\right\}_{\ell=1}^{L}\]</div>
+<p>For a common tensor layout:</p>
+<div class="math-display">\[K_{\ell}^{\text{past}}
+\in
+\mathbb{R}^{B\times H_{\text{KV}}\times T\times d_{\text{head}}}\]</div>
+<p>and:</p>
+<div class="math-display">\[V_{\ell}^{\text{past}}
+\in
+\mathbb{R}^{B\times H_{\text{KV}}\times T\times d_{\text{head}}}\]</div>
+<p>where:</p>
+<ul>
+<li>(B) is batch size;</li>
+<li>(H_{\text{KV}}) is the number of Key/Value heads;</li>
+<li>(T) is cached sequence length;</li>
+<li>(d_{\text{head}}) is the head width.</li>
+</ul>
+<p>The approximate number of stored scalar values is:</p>
+<div class="math-display">\[2LBTH_{\text{KV}}d_{\text{head}}\]</div>
+<p>The factor 2 represents Keys and Values.</p>
+<h1>A small KV-cache memory estimate</h1>
+<p>Suppose an illustrative model has:</p>
+<div class="math-display">\[L=32\]</div>
+<div class="math-display">\[B=1\]</div>
+<div class="math-display">\[T=4096\]</div>
+<div class="math-display">\[H_{\text{KV}}=8\]</div>
+<div class="math-display">\[d_{\text{head}}=128\]</div>
+<p>and stores each scalar using 2 bytes.</p>
+<p>The approximate cache size is:</p>
+<div class="math-display">\[2\cdot32\cdot1\cdot4096\cdot8\cdot128\cdot2\]</div>
+<p>bytes, which is:</p>
+<div class="math-display">\[536{,}870{,}912\text{ bytes}\]</div>
+<p>or approximately:</p>
+<div class="math-display">\[0.5\text{ GiB}\]</div>
+<p>This estimate excludes allocator overhead and other runtime tensors.</p>
+<p>It shows why KV-cache memory grows linearly with sequence length and number of layers.</p>
+<div class="translation">
+
+<h2>Why grouped-query attention can reduce cache size</h2>
+<p>If many Query heads share a smaller number of Key/Value heads, then:</p>
+<div class="math-display">\[H_{\text{KV}}<H_{Q}\]</div>
+<p>Fewer Key and Value vectors must be cached per layer and position.</p>
+<p>That is one important practical motivation for grouped-query and multi-query attention.</p>
+</div>
+
+<h1>What the KV cache does not store</h1>
+<p>The cache normally stores past Keys and Values.</p>
+<p>It does not need to store old attention matrices because the newest Query produces a new attention row.</p>
+<p>It also does not simply store the final hidden states instead of layer-specific Keys and Values.</p>
+<p>Each layer&#39;s newest Query must compare against Keys created in that same layer&#39;s learned space.</p>
+<p>Therefore, each layer maintains its own cached projections.</p>
+<h1>Why model depth costs memory and computation</h1>
+<p>More layers mean more parameter sets:</p>
+<ul>
+<li>more attention projections;</li>
+<li>more output projections;</li>
+<li>more MLP weights;</li>
+<li>more normalisation parameters.</li>
+</ul>
+<p>During training, depth also increases the activations needed for backpropagation unless memory-saving techniques recompute or offload them.</p>
+<p>During generation, depth means every new token must pass through every layer, and the KV cache contains entries for every layer.</p>
+<p>Depth can increase representational capacity, but it is not free.</p>
+<h1>Common stack-level mistakes</h1>
+<h2>Mistake 1: assuming all blocks share parameters</h2>
+<p>Blocks normally have distinct learned weights even though their structures look similar.</p>
+<h2>Mistake 2: saying every layer rereads the original embeddings</h2>
+<p>Layer (\ell) receives the output of layer (\ell-1), not a fresh copy of the raw token embedding.</p>
+<h2>Mistake 3: masking only the first layer</h2>
+<p>Causality must be enforced in every self-attention layer.</p>
+<h2>Mistake 4: calling the residual stream a separate module</h2>
+<p>The residual stream is the evolving hidden-state pathway, not an extra neural-network component.</p>
+<h2>Mistake 5: believing depth moves information only one token at a time</h2>
+<p>A causal Query can directly attend to any earlier visible Key in one layer.</p>
+<h2>Mistake 6: storing attention weights in the KV cache</h2>
+<p>The cache stores layer-specific Keys and Values. New attention weights are calculated for each new Query.</p>
+<h2>Mistake 7: treating the final hidden state as a probability distribution</h2>
+<p>It must still be projected into vocabulary logits and normalised over vocabulary entries.</p>
+<h2>Mistake 8: assigning one guaranteed human-readable role to every layer</h2>
+<p>Layer specialisation is learned, distributed, and model-dependent.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What becomes the input to Block 2?</h2>
+<p>The complete output matrix from Block 1:</p>
+<div class="math-display">\[X^{(1)}\]</div>
+<h2>2. Do different blocks normally share the same (W^Q)?</h2>
+<p>No. Each block normally owns its own learned Query projection and other parameters.</p>
+<h2>3. Why can blocks be stacked easily?</h2>
+<p>Every block preserves the outer shape:</p>
+<div class="math-display">\[n\times d_{\text{model}}\]</div>
+<h2>4. What is the residual stream?</h2>
+<p>The evolving matrix of token representations that receives residual updates as it passes through the model.</p>
+<h2>5. Must the causal mask be applied at every layer?</h2>
+<p>Yes. Otherwise later layers could access future information.</p>
+<h2>6. What does a later layer use to create its Queries?</h2>
+<p>The contextual hidden states produced by the previous layer.</p>
+<h2>7. What does the KV cache store for each layer?</h2>
+<p>Past Key and Value vectors in that layer&#39;s learned attention spaces.</p>
+<h2>8. Why does KV-cache memory grow with context length?</h2>
+<p>Every additional cached position adds Key and Value vectors in every layer.</p>
+<h2>9. Does the final hidden state directly identify a vocabulary token?</h2>
+<p>No. It must pass through the language-model output projection.</p>
+<h2>10. What is SAT&#39;s final normalised state in our toy stack?</h2>
+<div class="math-display">\[\widetilde{h}_{\text{sat}}
+\approx
+\begin{bmatrix}
+-0.008859 & -0.111600 & 1.470933 & -1.350474
+\end{bmatrix}\]</div>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>A deep decoder repeatedly applies compatible Transformer blocks:</p>
+<div class="math-display">\[X^{(\ell)}
+=
+\operatorname{Block}_{\ell}
+\left(X^{(\ell-1)}\right)\]</div>
+<p>Each block:</p>
+<ul>
+<li>creates new Queries, Keys, and Values from contextual states;</li>
+<li>applies causal attention;</li>
+<li>transforms each position with an MLP;</li>
+<li>writes residual updates into the stream;</li>
+<li>preserves the model width.</li>
+</ul>
+<p>During generation, every layer also maintains its own Key and Value cache.</p>
+<p>In our story:</p>
+<blockquote>
+<p><strong>Every block is another floor of the investigation. The token&#39;s case file travels upward, collecting new evidence and private analysis without losing the work already written into it.</strong></p>
+</blockquote>
+<h1>Coming next: the final audition</h1>
+<p>After the last block and final normalisation, SAT has:</p>
+<div class="math-display">\[\widetilde{h}_{\text{sat}}
+\approx
+\begin{bmatrix}
+-0.008859 & -0.111600 & 1.470933 & -1.350474
+\end{bmatrix}\]</div>
+<p>Chapter 11 projects this four-coordinate hidden state into a tiny five-token vocabulary.</p>
+<p>We will calculate:</p>
+<ul>
+<li>one logit per token;</li>
+<li>softmax probabilities;</li>
+<li>greedy decoding;</li>
+<li>temperature;</li>
+<li>top-(k) and top-(p) sampling;</li>
+<li>the repeated autoregressive generation loop.</li>
+</ul>

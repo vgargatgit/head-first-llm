@@ -1,0 +1,456 @@
+<h1>The question this chapter answers</h1>
+<p>Chapter 12 created one correct target for every valid prediction row.</p>
+<p>For example:</p>
+<pre><code class="language-text">prefix:  &lt;BOS&gt; The cat sat
+answer:  on
+</code></pre>
+<p>The model returns a probability distribution over the entire vocabulary, not one isolated answer.</p>
+<p>How do we score that distribution?</p>
+<div class="big-idea">
+
+<p><strong>Cross-entropy rewards probability assigned to the correct token. It measures not only whether the answer ranked first, but how strongly the model supported it.</strong></p>
+</div>
+
+<h1>Cold open: the scorekeeper ignores the excuses</h1>
+<p>Suppose two models both rank <code>on</code> first.</p>
+<p>Model A assigns:</p>
+<div class="math-display">\[p(\mathtt{on})=0.55\]</div>
+<p>Model B assigns:</p>
+<div class="math-display">\[p(\mathtt{on})=0.95\]</div>
+<p>Top-1 accuracy calls both predictions correct.</p>
+<p>Cross-entropy gives Model B a better score because it assigned more probability to the observed target.</p>
+<p>For correct target (y):</p>
+<div class="math-display">\[\mathcal{L}=-\log p_y\]</div>
+<h1>Negative log-likelihood for one target</h1>
+<p>Using natural logarithms:</p>
+<table>
+<thead>
+<tr>
+<th align="right">Correct-target probability</th>
+<th align="right">Loss</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">1.00</td>
+<td align="right">0.000000</td>
+</tr>
+<tr>
+<td align="right">0.80</td>
+<td align="right">0.223144</td>
+</tr>
+<tr>
+<td align="right">0.50</td>
+<td align="right">0.693147</td>
+</tr>
+<tr>
+<td align="right">0.25</td>
+<td align="right">1.386294</td>
+</tr>
+<tr>
+<td align="right">0.10</td>
+<td align="right">2.302585</td>
+</tr>
+<tr>
+<td align="right">0.01</td>
+<td align="right">4.605170</td>
+</tr>
+</tbody></table>
+<p>The pattern is deliberate:</p>
+<ul>
+<li>high correct-token probability gives low loss;</li>
+<li>low correct-token probability gives high loss;</li>
+<li>probability 1 gives zero loss;</li>
+<li>probability approaching zero produces a very large penalty.</li>
+</ul>
+<h1>Why use a logarithm?</h1>
+<p>If the model assigns correct-token probabilities:</p>
+<div class="math-display">\[p_1,p_2,\ldots,p_T\]</div>
+<p>then the autoregressive likelihood of the observed sequence contains their product:</p>
+<div class="math-display">\[\prod_{i=1}^{T}p_i\]</div>
+<p>Taking the negative logarithm converts that product into a sum:</p>
+<div class="math-display">\[-\log\left(\prod_{i=1}^{T}p_i\right)
+=
+-\sum_{i=1}^{T}\log p_i\]</div>
+<p>Sums are easier to accumulate, average, and differentiate than long products of small numbers.</p>
+<p>The logarithm also penalises confident mistakes strongly and makes minimising loss equivalent to maximising the observed data likelihood.</p>
+<h1>Return to Chapter 11&#39;s distribution</h1>
+<p>Chapter 11 produced this distribution after the prefix:</p>
+<blockquote>
+<p>The cat sat</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th align="right">Probability</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>on</code></td>
+<td align="right">0.238931</td>
+</tr>
+<tr>
+<td><code>quietly</code></td>
+<td align="right">0.052348</td>
+</tr>
+<tr>
+<td><code>.</code></td>
+<td align="right">0.350118</td>
+</tr>
+<tr>
+<td><code>the</code></td>
+<td align="right">0.053029</td>
+</tr>
+<tr>
+<td><code>mat</code></td>
+<td align="right">0.305575</td>
+</tr>
+</tbody></table>
+<p>The training text says the correct next token is:</p>
+<div class="math-display">\[y=\mathtt{on}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\begin{aligned}
+\mathcal{L}_{\mathrm{sat}}
+&=-\log p(\mathtt{on})\\
+&=-\log(0.238931)\\
+&\approx1.431580
+\end{aligned}\]</div>
+<p>The period had the highest model probability, but the target is <code>on</code>.</p>
+<p>The loss uses the probability assigned to the target—not the probability assigned to the model&#39;s favourite candidate.</p>
+<div class="warning">
+
+<h2>The loss uses the target, not the argmax</h2>
+<p>Training does not choose one token first and then mark that discrete selection right or wrong.</p>
+<p>The full distribution remains differentiable. The target ID identifies which probability appears inside the negative logarithm.</p>
+</div>
+
+<h1>From one-hot targets to cross-entropy</h1>
+<p>For vocabulary size (V), define the target vector:</p>
+<div class="math-display">\[y_j=
+\begin{cases}
+1, & j=\mathrm{correct\ token}\\
+0, & \mathrm{otherwise}
+\end{cases}\]</div>
+<p>Categorical cross-entropy is:</p>
+<div class="math-display">\[\mathcal{L}
+=
+-\sum_{j=1}^{V}y_j\log p_j\]</div>
+<p>Only the correct class has (y_j=1), so:</p>
+<div class="math-display">\[\mathcal{L}=-\log p_y\]</div>
+<p>For one-hot next-token targets, categorical cross-entropy and negative log-likelihood are two views of the same per-position objective.</p>
+<h1>Cross-entropy starts from logits in software</h1>
+<p>The model directly produces logits:</p>
+<div class="math-display">\[z_1,z_2,\ldots,z_V\]</div>
+<p>Softmax gives:</p>
+<div class="math-display">\[p_j
+=
+\frac{e^{z_j}}{\sum_{r=1}^{V}e^{z_r}}\]</div>
+<p>Substitution gives:</p>
+<div class="math-display">\[\begin{aligned}
+\mathcal{L}
+&=-\log\left(
+\frac{e^{z_y}}{\sum_r e^{z_r}}
+\right)\\
+&=-z_y+\log\left(\sum_r e^{z_r}\right)
+\end{aligned}\]</div>
+<p>Libraries commonly combine log-softmax and negative log-likelihood into one numerically stable operation.</p>
+<h1>Stable log-sum-exp</h1>
+<p>Large logits can overflow when exponentiated.</p>
+<p>Let:</p>
+<div class="math-display">\[m=\max_j z_j\]</div>
+<p>Then:</p>
+<div class="math-display">\[\log\left(\sum_j e^{z_j}\right)
+=
+m+
+\log\left(\sum_j e^{z_j-m}\right)\]</div>
+<p>Subtracting the largest logit keeps all exponentials at or below 1 without changing the final probabilities or loss.</p>
+<h1>Score every valid position</h1>
+<p>Chapter 12 introduced this separate eight-position illustration:</p>
+<table>
+<thead>
+<tr>
+<th align="right">Position</th>
+<th>Correct target</th>
+<th align="right">Correct-target probability</th>
+<th align="right">Per-position loss</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">0</td>
+<td><code>The</code></td>
+<td align="right">0.50</td>
+<td align="right">0.693147</td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td><code>cat</code></td>
+<td align="right">0.25</td>
+<td align="right">1.386294</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td><code>sat</code></td>
+<td align="right">0.10</td>
+<td align="right">2.302585</td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td><code>on</code></td>
+<td align="right">0.40</td>
+<td align="right">0.916291</td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td><code>the</code></td>
+<td align="right">0.20</td>
+<td align="right">1.609438</td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td><code>mat</code></td>
+<td align="right">0.60</td>
+<td align="right">0.510826</td>
+</tr>
+<tr>
+<td align="right">6</td>
+<td><code>.</code></td>
+<td align="right">0.80</td>
+<td align="right">0.223144</td>
+</tr>
+<tr>
+<td align="right">7</td>
+<td><code>&lt;EOS&gt;</code></td>
+<td align="right">0.50</td>
+<td align="right">0.693147</td>
+</tr>
+</tbody></table>
+<p>The total negative log-likelihood is:</p>
+<div class="math-display">\[\begin{aligned}
+\mathcal{L}_{\mathrm{sum}}
+&=
+0.693147+1.386294+2.302585+0.916291\\
+&\quad+1.609438+0.510826+0.223144+0.693147\\
+&\approx8.334872
+\end{aligned}\]</div>
+<h1>Mean token loss</h1>
+<p>With eight valid targets:</p>
+<div class="math-display">\[\begin{aligned}
+\mathcal{L}_{\mathrm{mean}}
+&=
+\frac{8.334872}{8}\\
+&\approx1.041859
+\end{aligned}\]</div>
+<p>The focused Chapter 11 example and this full-sequence table are deliberately different forward-pass illustrations. The focused example preserves Chapter 11&#39;s exact probability; the table makes the reduction across positions easy to inspect.</p>
+<h1>Masked cross-entropy</h1>
+<p>Let:</p>
+<div class="math-display">\[m_{b,i}\in\{0,1\}\]</div>
+<p>mark whether target (i) in batch item (b) is valid.</p>
+<p>The masked mean is:</p>
+<div class="math-display">\[\mathcal{L}_{\mathrm{batch}}
+=
+\frac{
+\sum_{b,i}m_{b,i}\mathcal{L}_{b,i}
+}{
+\sum_{b,i}m_{b,i}
+}\]</div>
+<p>The denominator counts valid targets, not padded tensor slots.</p>
+<h1>Reduction choices affect scale</h1>
+<p>A loss function may return:</p>
+<ul>
+<li>one value per position;</li>
+<li>the sum of valid losses;</li>
+<li>the mean of valid losses.</li>
+</ul>
+<p>These are often called <code>none</code>, <code>sum</code>, and <code>mean</code> reductions.</p>
+<p>Doubling batch size doubles a summed loss but need not double a properly averaged loss. Learning-rate choices and metric comparisons must account for the reduction convention.</p>
+<h1>Perplexity</h1>
+<p>For mean cross-entropy measured in natural-log units:</p>
+<div class="math-display">\[\operatorname{PPL}
+=e^{\mathcal{L}_{\mathrm{mean}}}\]</div>
+<p>For the eight-position example:</p>
+<div class="math-display">\[\begin{aligned}
+\operatorname{PPL}
+&=e^{1.041859}\\
+&\approx2.834481
+\end{aligned}\]</div>
+<p>Lower perplexity means the model assigned more probability to the observed targets.</p>
+<p>A useful intuition is an <strong>equivalent uniform branching factor</strong>. A perplexity near 2.83 has the same average negative log-likelihood as repeatedly finding the answer among about 2.83 equally likely options.</p>
+<p>That does not mean the model literally considered exactly 2.83 tokens at every position.</p>
+<h1>Perplexity is not accuracy</h1>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th align="right">Correct-token probability</th>
+<th>Top-1 result</th>
+<th align="right">Loss</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A</td>
+<td align="right">0.35</td>
+<td>Correct</td>
+<td align="right">1.049822</td>
+</tr>
+<tr>
+<td>B</td>
+<td align="right">0.90</td>
+<td>Correct</td>
+<td align="right">0.105361</td>
+</tr>
+</tbody></table>
+<p>Accuracy treats the two as equal.</p>
+<p>Cross-entropy distinguishes their confidence.</p>
+<p>A model can also put 0.40 on the correct token and 0.41 on an incorrect token. Top-1 accuracy is wrong, while loss still recognises the substantial target probability.</p>
+<h1>Compare perplexity carefully</h1>
+<p>Perplexity depends on the evaluation setup and tokenisation.</p>
+<p>The most direct comparisons use:</p>
+<ul>
+<li>the same tokenizer or equivalent unit;</li>
+<li>the same evaluation text;</li>
+<li>the same boundary and mask rules;</li>
+<li>the same log base and reduction convention.</li>
+</ul>
+<p>A lower token-level perplexity under a different tokenizer does not automatically prove better language modelling.</p>
+<h1>Bits per token</h1>
+<p>Natural-log loss is measured in nats.</p>
+<p>The equivalent number of bits per token is:</p>
+<div class="math-display">\[\operatorname{bits/token}
+=
+\frac{\mathcal{L}_{\mathrm{mean}}}{\log 2}\]</div>
+<p>For the eight-position example:</p>
+<div class="math-display">\[\operatorname{bits/token}
+\approx1.503085\]</div>
+<h1>Label smoothing changes the target</h1>
+<p>The basic target is one-hot.</p>
+<p>Some objectives assign most, but not all, target mass to the correct class. For smoothing amount (arepsilon), one possible rule is:</p>
+<div class="math-display">\[y_y=1-\varepsilon\]</div>
+<p>with the remaining mass distributed over other classes.</p>
+<p>Label smoothing changes the objective and gradient. It is not part of the basic calculation in this chapter, and not every LLM pretraining recipe uses it.</p>
+<h1>The gradient signal begins at the logits</h1>
+<p>For softmax probabilities (p_j) and one-hot target (y_j):</p>
+<div class="math-display">\[\frac{\partial\mathcal{L}}{\partial z_j}
+=p_j-y_j\]</div>
+<p>For the correct token:</p>
+<div class="math-display">\[\frac{\partial\mathcal{L}}{\partial z_y}
+=p_y-1\]</div>
+<p>This is negative whenever (p_y&lt;1), so gradient descent tends to raise the correct token&#39;s logit.</p>
+<p>For an incorrect token:</p>
+<div class="math-display">\[\frac{\partial\mathcal{L}}{\partial z_j}
+=p_j\]</div>
+<p>Gradient descent tends to lower incorrectly supported logits in proportion to their probabilities.</p>
+<h1>Exact logit gradient for Chapter 11</h1>
+<p>Chapter 11 produced:</p>
+<div class="math-display">\[p
+\approx
+\begin{bmatrix}
+0.238931 & 0.052348 & 0.350118 & 0.053029 & 0.305575
+\end{bmatrix}\]</div>
+<p>The target <code>on</code> is the first vocabulary entry:</p>
+<div class="math-display">\[y=
+\begin{bmatrix}
+1 & 0 & 0 & 0 & 0
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\boxed{
+\frac{\partial\mathcal{L}}{\partial z}
+=p-y
+\approx
+\begin{bmatrix}
+-0.761069 & 0.052348 & 0.350118 & 0.053029 & 0.305575
+\end{bmatrix}
+}\]</div>
+<p>The negative component for <code>on</code> requests upward pressure on its logit.</p>
+<p>The largest positive incorrect component belongs to the period because the model assigned the period the most incorrect probability.</p>
+<div class="translation">
+
+<h2>Read the gradient as a correction request</h2>
+<ul>
+<li><code>on</code>: raise this score;</li>
+<li><code>.</code>: lower this score strongly;</li>
+<li><code>mat</code>: lower this score;</li>
+<li>low-probability alternatives: make smaller corrections.</li>
+</ul>
+<p>The gradient does not manually edit logits. It flows to the parameters that produced them.</p>
+</div>
+
+<h1>Loss is not a complete quality measure</h1>
+<p>Low next-token cross-entropy does not by itself guarantee:</p>
+<ul>
+<li>factual accuracy;</li>
+<li>harmlessness;</li>
+<li>instruction following;</li>
+<li>calibrated uncertainty;</li>
+<li>long-horizon coherence;</li>
+<li>usefulness for a specific task.</li>
+</ul>
+<p>Those properties depend on data, architecture, optimisation, post-training, decoding, and evaluation.</p>
+<h1>Common loss mistakes</h1>
+<h2>Mistake 1: using the highest probability instead of the target probability</h2>
+<p>The loss always scores the observed target.</p>
+<h2>Mistake 2: averaging over padding</h2>
+<p>Only valid positions should normally enter the numerator and denominator.</p>
+<h2>Mistake 3: taking argmax before calculating loss</h2>
+<p>Argmax discards the differentiable distribution.</p>
+<h2>Mistake 4: manually applying softmax before a logits-based combined loss</h2>
+<p>Many libraries expect raw logits and perform stable log-softmax internally.</p>
+<h2>Mistake 5: treating perplexity as accuracy</h2>
+<p>Perplexity measures predictive likelihood, not only top-1 correctness.</p>
+<h2>Mistake 6: comparing incompatible tokenizers without qualification</h2>
+<p>Different token units can make raw perplexities misleading.</p>
+<h2>Mistake 7: forgetting the reduction convention</h2>
+<p>Summed and averaged losses have different scales.</p>
+<h2>Mistake 8: saying loss directly changes weights</h2>
+<p>Backpropagation calculates gradients; an optimiser applies updates.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What is the per-token negative log-likelihood?</h2>
+<div class="math-display">\[-\log p_y\]</div>
+<h2>2. What happens as (p_y\rightarrow1)?</h2>
+<p>The loss approaches zero.</p>
+<h2>3. What happens as (p_y\rightarrow0)?</h2>
+<p>The loss grows without bound.</p>
+<h2>4. What is the mean loss in the eight-position example?</h2>
+<p>Approximately 1.041859 nats per valid token.</p>
+<h2>5. What is its perplexity?</h2>
+<p>Approximately 2.834481.</p>
+<h2>6. Why use a one-hot target in the basic formulation?</h2>
+<p>Exactly one vocabulary token is the observed next token at that position.</p>
+<h2>7. What is the logit gradient for softmax cross-entropy?</h2>
+<div class="math-display">\[p-y\]</div>
+<h2>8. Why is the correct token&#39;s logit gradient normally negative?</h2>
+<p>Its component is (p_y-1).</p>
+<h2>9. Does low perplexity guarantee factual correctness?</h2>
+<p>No.</p>
+<h2>10. Why mask padding positions?</h2>
+<p>They are tensor fillers rather than genuine language targets.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>For target (y):</p>
+<div class="math-display">\[\mathcal{L}=-\log p_y\]</div>
+<p>Across (N) valid positions:</p>
+<div class="math-display">\[\mathcal{L}_{\mathrm{mean}}
+=
+\frac{1}{N}
+\sum_{i=1}^{N}-\log p_{i,y_i}\]</div>
+<p>Perplexity is:</p>
+<div class="math-display">\[\operatorname{PPL}=e^{\mathcal{L}_{\mathrm{mean}}}\]</div>
+<p>The derivative at the logits is:</p>
+<div class="math-display">\[\frac{\partial\mathcal{L}}{\partial z}=p-y\]</div>
+<p>In our story:</p>
+<blockquote>
+<p><strong>The Scorekeeper looks at how much support the model gave the real next token. Confident support earns a small penalty; confident rejection earns a large one.</strong></p>
+</blockquote>
+<h1>Coming next: the blame travels backward</h1>
+<p>We now have a scalar loss and an exact correction signal at the vocabulary logits.</p>
+<p>The next chapter follows that signal through:</p>
+<ul>
+<li>the vocabulary projection;</li>
+<li>the final hidden state;</li>
+<li>residual paths;</li>
+<li>MLPs and attention;</li>
+<li>shared parameters;</li>
+<li>a gradient-based update.</li>
+</ul>

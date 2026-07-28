@@ -1,0 +1,678 @@
+<!-- chapter-05-art:hero:start -->
+<p><img src="../assets/chapter-05/01_chapter_hero_information_courier.webp" alt="SAT brings the Chapter 4 attention report to the Information Courier, while THE, CAT, and SAT wait beside their separate Value packages."></p>
+<!-- chapter-05-art:hero:end -->
+
+<h1>The question this chapter answers</h1>
+<p>Chapter 4 produced the attention-weight matrix:</p>
+<div class="math-display">\[A
+=
+\operatorname{softmax}
+\left(
+\frac{QK^T}{\sqrt{d_k}}+M
+\right)\]</div>
+<p>For our three-token example:</p>
+<div class="math-display">\[A\approx
+\begin{bmatrix}
+1.000000 & 0 & 0\\
+0.472931 & 0.527069 & 0\\
+0.300981 & 0.389986 & 0.309033
+\end{bmatrix}\]</div>
+<p>Those weights tell every Query how strongly it matched each allowed Key.</p>
+<p>But a match score is not the information that should flow into the output.</p>
+<p>What does each matched token actually contribute?</p>
+<p>That is the job of the <strong>Value projection</strong>:</p>
+<div class="math-display">\[W^V\]</div>
+<p>and the resulting Value vectors:</p>
+<div class="math-display">\[v_t=x_tW^V\]</div>
+<div class="big-idea">
+
+<p><strong>Queries and Keys decide where to look. Values provide the information that comes back.</strong></p>
+</div>
+
+<h1>Cold open: the match report reaches the courier</h1>
+<p>The matching desk gives SAT this distribution:</p>
+<table>
+<thead>
+<tr>
+<th>Source position</th>
+<th align="right">SAT&#39;s attention weight</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>THE</td>
+<td align="right">0.300981</td>
+</tr>
+<tr>
+<td>CAT</td>
+<td align="right">0.389986</td>
+</tr>
+<tr>
+<td>SAT</td>
+<td align="right">0.309033</td>
+</tr>
+</tbody></table>
+<p>The report says how much each position should matter.</p>
+<p>It does not contain the payload from those positions.</p>
+<p>The Information Courier visits each allowed token, collects its Value vector, scales that vector by the assigned attention weight, and combines the pieces.</p>
+<p>For SAT:</p>
+<div class="math-display">\[z_{\text{sat}}
+=
+0.300981v_{\text{The}}
++
+0.389986v_{\text{cat}}
++
+0.309033v_{\text{sat}}\]</div>
+<p>The result (z_{\text{sat}}) is the output of this attention head for SAT.</p>
+<!-- chapter-05-art:value-projection:start -->
+<p><img src="../assets/chapter-05/02_value_projection_pipeline.webp" alt="A hidden-state card passes through the shared Value projection and becomes a two-coordinate Value package, while Query, Key, and Value are shown as different projections of the same state."></p>
+<!-- chapter-05-art:value-projection:end -->
+
+<h1>What a Value is</h1>
+<p>For token position (t):</p>
+<div class="math-display">\[v_t=x_tW^V\]</div>
+<p>The ingredients are:</p>
+<ul>
+<li>(x_t): the token&#39;s current hidden state;</li>
+<li>(W^V): the learned Value projection for this head;</li>
+<li>(v_t): the token&#39;s Value vector.</li>
+</ul>
+<p>The Value projection is applied independently to every token position, just like the Query and Key projections.</p>
+<p>For the full sequence:</p>
+<div class="math-display">\[V=XW^V\]</div>
+<p>In the story:</p>
+<table>
+<thead>
+<tr>
+<th>Story role</th>
+<th>Transformer operation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Token&#39;s current situation</td>
+<td>Hidden state (x_t)</td>
+</tr>
+<tr>
+<td>Information Courier&#39;s packing rule</td>
+<td>Value projection (W^V)</td>
+</tr>
+<tr>
+<td>Information package</td>
+<td>Value vector (v_t)</td>
+</tr>
+<tr>
+<td>Match strengths</td>
+<td>Attention weights (a_{ij})</td>
+</tr>
+<tr>
+<td>Combined delivery</td>
+<td>Head output (z_i)</td>
+</tr>
+</tbody></table>
+<div class="warning">
+
+<h2>Value does not mean importance</h2>
+<p>The word “Value” does not mean a score saying how valuable a token is.</p>
+<p>Importance is represented by the attention weight.</p>
+<p>A Value is the vector payload that will be multiplied by that weight.</p>
+</div>
+
+<h1>Query, Key, and Value are three views of one state</h1>
+<p>The same hidden state can be projected three different ways:</p>
+<div class="math-display">\[q_t=x_tW^Q\]</div>
+<div class="math-display">\[k_t=x_tW^K\]</div>
+<div class="math-display">\[v_t=x_tW^V\]</div>
+<p>The three projections have different jobs:</p>
+<table>
+<thead>
+<tr>
+<th>Representation</th>
+<th>Job</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Query (q_t)</td>
+<td>Express what position (t) is seeking</td>
+</tr>
+<tr>
+<td>Key (k_t)</td>
+<td>Express when position (t) should match a search</td>
+</tr>
+<tr>
+<td>Value (v_t)</td>
+<td>Express what position (t) can contribute after matching</td>
+</tr>
+</tbody></table>
+<p>Usually:</p>
+<div class="math-display">\[W^Q\neq W^K\neq W^V\]</div>
+<p>and therefore:</p>
+<div class="math-display">\[q_t,\;k_t,\;v_t\]</div>
+<p>are generally different even though they begin with the same (x_t).</p>
+<h1>The Value projection for our example</h1>
+<p>We continue with the hidden-state matrix used throughout the book:</p>
+<div class="math-display">\[X=
+\begin{bmatrix}
+0.21 & -0.37 & 0.58 & -0.11\\
+-0.42 & 0.73 & -0.15 & 0.36\\
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>The rows belong to THE, CAT, and SAT.</p>
+<p>For this attention head, suppose the learned Value projection is:</p>
+<div class="math-display">\[W^V=
+\begin{bmatrix}
+0.6 & -0.2\\
+0.1 & 0.5\\
+-0.4 & 0.3\\
+0.7 & 0.2
+\end{bmatrix}\]</div>
+<p>Its shape is:</p>
+<div class="math-display">\[W^V\in\mathbb{R}^{4\times2}\]</div>
+<p>We use two Value coordinates in this small example:</p>
+<div class="math-display">\[d_v=2\]</div>
+<h1>Exact Value calculation for SAT</h1>
+<!-- chapter-05-art:exact-value:start -->
+<p><img src="../assets/chapter-05/03_exact_value_calculation.webp" alt="SAT's four hidden-state coordinates are multiplied by the Value projection matrix to produce the Value vector negative 0.423 and 0.001."></p>
+<!-- chapter-05-art:exact-value:end -->
+
+
+<p>SAT&#39;s current hidden state is:</p>
+<div class="math-display">\[x_{\text{sat}}
+=
+\begin{bmatrix}
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>Its Value is:</p>
+<div class="math-display">\[v_{\text{sat}}=x_{\text{sat}}W^V\]</div>
+<p>Substituting the numbers:</p>
+<div class="math-display">\[v_{\text{sat}}
+=
+\begin{bmatrix}
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}
+\begin{bmatrix}
+0.6 & -0.2\\
+0.1 & 0.5\\
+-0.4 & 0.3\\
+0.7 & 0.2
+\end{bmatrix}\]</div>
+<h2>First Value coordinate</h2>
+<div class="math-display">\[\begin{aligned}
+v_1
+&=
+0.14(0.6)
++
+(-0.22)(0.1)
++
+0.67(-0.4)
++
+(-0.31)(0.7)\\
+&=
+0.084-0.022-0.268-0.217\\
+&=-0.423
+\end{aligned}\]</div>
+<h2>Second Value coordinate</h2>
+<div class="math-display">\[\begin{aligned}
+v_2
+&=
+0.14(-0.2)
++
+(-0.22)(0.5)
++
+0.67(0.3)
++
+(-0.31)(0.2)\\
+&=
+-0.028-0.110+0.201-0.062\\
+&=0.001
+\end{aligned}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\boxed{
+v_{\text{sat}}
+=
+\begin{bmatrix}
+-0.423 & 0.001
+\end{bmatrix}
+}\]</div>
+<h1>One Value projection, many tokens</h1>
+<!-- chapter-05-art:shared-projection:start -->
+<p><img src="../assets/chapter-05/04_shared_value_projection.webp" alt="THE, CAT, and SAT use the same Value projection but leave the packing station with different Value packages that form the matrix V."></p>
+<!-- chapter-05-art:shared-projection:end -->
+
+
+<p>The same (W^V) is applied to every row of (X):</p>
+<div class="math-display">\[V=XW^V\]</div>
+<p>The result is:</p>
+<div class="math-display">\[V=
+\begin{bmatrix}
+-0.220 & -0.075\\
+0.133 & 0.476\\
+-0.423 & 0.001
+\end{bmatrix}\]</div>
+<p>So:</p>
+<div class="math-display">\[v_{\text{The}}
+=
+\begin{bmatrix}
+-0.220 & -0.075
+\end{bmatrix}\]</div>
+<div class="math-display">\[v_{\text{cat}}
+=
+\begin{bmatrix}
+0.133 & 0.476
+\end{bmatrix}\]</div>
+<div class="math-display">\[v_{\text{sat}}
+=
+\begin{bmatrix}
+-0.423 & 0.001
+\end{bmatrix}\]</div>
+<p>The Value matrix has shape:</p>
+<div class="math-display">\[V\in\mathbb{R}^{3\times2}\]</div>
+<p>That means:</p>
+<ul>
+<li>three token positions;</li>
+<li>one two-dimensional Value per position.</li>
+</ul>
+<div class="big-idea">
+
+<p><strong>The same Value projection is shared across positions in one head. Different hidden states produce different payloads.</strong></p>
+</div>
+
+<h1>Follow the Value shapes</h1>
+<p>For one token:</p>
+<div class="math-display">\[x_t\in\mathbb{R}^{1\times d_{\text{model}}}\]</div>
+<p>The Value projection has shape:</p>
+<div class="math-display">\[W^V\in\mathbb{R}^{d_{\text{model}}\times d_v}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[v_t\in\mathbb{R}^{1\times d_v}\]</div>
+<p>For (n) tokens:</p>
+<div class="math-display">\[X\in\mathbb{R}^{n\times d_{\text{model}}}\]</div>
+<div class="math-display">\[V=XW^V\in\mathbb{R}^{n\times d_v}\]</div>
+<p>The Value width (d_v) does not have to equal (d_k) for the weighted sum to be valid.</p>
+<p>Queries and Keys need the same width because they take dot products:</p>
+<div class="math-display">\[q_i\cdot k_j\]</div>
+<p>Values are not dotted with Queries. They are multiplied by scalar weights and added.</p>
+<p>In many standard implementations, each head uses:</p>
+<div class="math-display">\[d_k=d_v=\frac{d_{\text{model}}}{h}\]</div>
+<p>but equality is a design choice, not a mathematical requirement of the attention formula.</p>
+<h1>From weights to a retrieved result</h1>
+<p>For Query position (i), the output of one attention head is:</p>
+<div class="math-display">\[z_i=\sum_{j=1}^{n}a_{ij}v_j\]</div>
+<p>Here:</p>
+<ul>
+<li>(a_{ij}) is one scalar attention weight;</li>
+<li>(v_j) is one Value vector;</li>
+<li>(z_i) is one weighted combination of the available Values.</li>
+</ul>
+<p>Because the weights in a softmax row are non-negative and sum to 1, (z_i) is a weighted average of the allowed Value vectors.</p>
+<p>It is not usually an exact copy of one Value.</p>
+<h1>Exact attention output for THE</h1>
+<p>THE&#39;s attention row is:</p>
+<div class="math-display">\[\begin{bmatrix}
+1 & 0 & 0
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\begin{aligned}
+z_{\text{The}}
+&=
+1v_{\text{The}}+0v_{\text{cat}}+0v_{\text{sat}}\\
+&=v_{\text{The}}\\
+&=
+\begin{bmatrix}
+-0.220 & -0.075
+\end{bmatrix}
+\end{aligned}\]</div>
+<p>THE cannot see later positions, so the first head output is simply its own Value.</p>
+<h1>Exact attention output for CAT</h1>
+<p>CAT&#39;s attention row is:</p>
+<div class="math-display">\[\begin{bmatrix}
+0.472931 & 0.527069 & 0
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[z_{\text{cat}}
+=
+0.472931v_{\text{The}}
++
+0.527069v_{\text{cat}}\]</div>
+<p>For the first coordinate:</p>
+<div class="math-display">\[\begin{aligned}
+z_{\text{cat},1}
+&=
+0.472931(-0.220)
++
+0.527069(0.133)\\
+&\approx
+-0.104045+0.070100\\
+&\approx-0.033945
+\end{aligned}\]</div>
+<p>For the second coordinate:</p>
+<div class="math-display">\[\begin{aligned}
+z_{\text{cat},2}
+&=
+0.472931(-0.075)
++
+0.527069(0.476)\\
+&\approx
+-0.035470+0.250885\\
+&\approx0.215415
+\end{aligned}\]</div>
+<p>So:</p>
+<div class="math-display">\[\boxed{
+z_{\text{cat}}
+\approx
+\begin{bmatrix}
+-0.033945 & 0.215415
+\end{bmatrix}
+}\]</div>
+<p>CAT&#39;s output blends information from THE and CAT.</p>
+<h1>Exact attention output for SAT</h1>
+<!-- chapter-05-art:weighted-retrieval:start -->
+<p><img src="../assets/chapter-05/05_weighted_value_retrieval.webp" alt="SAT's three attention weights scale the Value packages from THE, CAT, and SAT, and the scaled vectors are added into the head output negative 0.145069 and 0.163369."></p>
+<!-- chapter-05-art:weighted-retrieval:end -->
+
+
+<p>SAT&#39;s attention row is:</p>
+<div class="math-display">\[\begin{bmatrix}
+0.300981 & 0.389986 & 0.309033
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[z_{\text{sat}}
+=
+0.300981v_{\text{The}}
++
+0.389986v_{\text{cat}}
++
+0.309033v_{\text{sat}}\]</div>
+<p>For the first coordinate:</p>
+<div class="math-display">\[\begin{aligned}
+z_{\text{sat},1}
+&=
+0.300981(-0.220)
++
+0.389986(0.133)
++
+0.309033(-0.423)\\
+&\approx
+-0.066216
++
+0.051868
+-
+0.130721\\
+&\approx-0.145069
+\end{aligned}\]</div>
+<p>For the second coordinate:</p>
+<div class="math-display">\[\begin{aligned}
+z_{\text{sat},2}
+&=
+0.300981(-0.075)
++
+0.389986(0.476)
++
+0.309033(0.001)\\
+&\approx
+-0.022574
++
+0.185633
++
+0.000309\\
+&\approx0.163369
+\end{aligned}\]</div>
+<p>So:</p>
+<div class="math-display">\[\boxed{
+z_{\text{sat}}
+\approx
+\begin{bmatrix}
+-0.145069 & 0.163369
+\end{bmatrix}
+}\]</div>
+<p>SAT&#39;s head output is a new vector assembled from all three visible positions.</p>
+<h1>All weighted sums in one matrix multiplication</h1>
+<!-- chapter-05-art:output-matrix:start -->
+<p><img src="../assets/chapter-05/06_attention_output_matrix.webp" alt="The three-by-three attention matrix multiplies the three-by-two Value matrix to produce one two-coordinate output row for each token position."></p>
+<!-- chapter-05-art:output-matrix:end -->
+
+
+<p>Stacking every output row gives the head-output matrix:</p>
+<div class="math-display">\[Z=
+\begin{bmatrix}
+z_{\text{The}}\\
+z_{\text{cat}}\\
+z_{\text{sat}}
+\end{bmatrix}\]</div>
+<p>All outputs can be calculated at once:</p>
+<div class="math-display">\[Z=AV\]</div>
+<p>Substituting our matrices:</p>
+<div class="math-display">\[Z
+=
+\begin{bmatrix}
+1.000000 & 0 & 0\\
+0.472931 & 0.527069 & 0\\
+0.300981 & 0.389986 & 0.309033
+\end{bmatrix}
+\begin{bmatrix}
+-0.220 & -0.075\\
+0.133 & 0.476\\
+-0.423 & 0.001
+\end{bmatrix}\]</div>
+<p>The result is:</p>
+<div class="math-display">\[\boxed{
+Z\approx
+\begin{bmatrix}
+-0.220000 & -0.075000\\
+-0.033945 & 0.215415\\
+-0.145069 & 0.163369
+\end{bmatrix}
+}\]</div>
+<h1>Follow the weighted-sum shapes</h1>
+<p>The attention matrix has shape:</p>
+<div class="math-display">\[A\in\mathbb{R}^{n\times n}\]</div>
+<p>The Value matrix has shape:</p>
+<div class="math-display">\[V\in\mathbb{R}^{n\times d_v}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[(n\times n)(n\times d_v)=(n\times d_v)\]</div>
+<p>So:</p>
+<div class="math-display">\[Z\in\mathbb{R}^{n\times d_v}\]</div>
+<p>For our example:</p>
+<div class="math-display">\[(3\times3)(3\times2)=(3\times2)\]</div>
+<p>The output contains one (d_v)-dimensional result for every Query position.</p>
+<div class="translation">
+
+<h2>Read the multiplication by rows</h2>
+<p>Row (i) of (A) contains Query (i)&#39;s retrieval weights.</p>
+<p>Multiplying that row by (V) produces row (i) of (Z), the retrieved result for that Query.</p>
+</div>
+
+<h1>The complete formula for one attention head</h1>
+<p>We now have every major piece of scaled dot-product attention:</p>
+<div class="math-display">\[Q=XW^Q\]</div>
+<div class="math-display">\[K=XW^K\]</div>
+<div class="math-display">\[V=XW^V\]</div>
+<div class="math-display">\[A
+=
+\operatorname{softmax}
+\left(
+\frac{QK^T}{\sqrt{d_k}}+M
+\right)\]</div>
+<div class="math-display">\[Z=AV\]</div>
+<p>Combining the final two steps:</p>
+<div class="math-display">\[\boxed{
+\operatorname{Attention}(Q,K,V)
+=
+\operatorname{softmax}
+\left(
+\frac{QK^T}{\sqrt{d_k}}+M
+\right)V
+}\]</div>
+<p>And substituting the projections from (X):</p>
+<div class="math-display">\[\boxed{
+Z
+=
+\operatorname{softmax}
+\left(
+\frac{(XW^Q)(XW^K)^T}{\sqrt{d_k}}+M
+\right)
+(XW^V)
+}\]</div>
+<p>This is the core computation performed by one causal self-attention head.</p>
+<h1>Why separate matching from payload?</h1>
+<p>Suppose a token is highly relevant to a search.</p>
+<p>The features that make it easy to recognise need not be the same features that should be transferred into the output.</p>
+<p>A simple database analogy helps:</p>
+<ul>
+<li>a Key is like an index used to find a record;</li>
+<li>a Value is like the record content returned after the match.</li>
+</ul>
+<p>The analogy is incomplete because Transformer Keys and Values are learned vectors rather than literal database fields. But it captures the separation of responsibilities.</p>
+<p>The model can learn:</p>
+<ul>
+<li>one representation that is effective for matching;</li>
+<li>another representation that is effective for communication.</li>
+</ul>
+<h1>Attention is soft retrieval</h1>
+<p>A traditional lookup may return one record.</p>
+<p>Attention usually retrieves a blend:</p>
+<div class="math-display">\[z_i=\sum_j a_{ij}v_j\]</div>
+<p>If one weight is close to 1, attention behaves approximately like selecting one Value.</p>
+<p>For example:</p>
+<div class="math-display">\[\begin{bmatrix}
+0.01 & 0.98 & 0.01
+\end{bmatrix}V
+\approx v_2\]</div>
+<p>If several weights are substantial, the output combines several Value vectors.</p>
+<p>That allows a token position to gather multiple kinds of contextual evidence in one head.</p>
+<div class="warning">
+
+<h2>Do not read Value coordinates literally</h2>
+<p>A Value coordinate does not arrive with a label such as “subject information” or “past tense.”</p>
+<p>Its meaning is distributed, learned, layer-dependent, and useful because later network operations know how to process it.</p>
+</div>
+
+<h1>Attention output is not yet the final token state</h1>
+<p>The matrix (Z) is the output of <strong>one attention head</strong>.</p>
+<p>A real Transformer block normally performs additional work:</p>
+<ol>
+<li>several heads calculate their own outputs;</li>
+<li>the head outputs are concatenated;</li>
+<li>an output projection (W^O) mixes them;</li>
+<li>a residual connection combines the attention result with the block input;</li>
+<li>normalisation and an MLP process the representation further.</li>
+</ol>
+<p>Exact ordering depends on the architecture. For example, pre-normalisation and post-normalisation blocks place layer normalisation differently.</p>
+<p>So it would be inaccurate to say:</p>
+<blockquote>
+<p>(Z) is the final contextual embedding produced by the entire Transformer.</p>
+</blockquote>
+<p>A better statement is:</p>
+<blockquote>
+<p>(Z) is the contextual result produced by one attention head before the remaining block operations.</p>
+</blockquote>
+<h1>What changes across attention heads?</h1>
+<p>In ordinary multi-head attention, head (r) has its own projections:</p>
+<div class="math-display">\[W_r^Q,\quad W_r^K,\quad W_r^V\]</div>
+<p>It therefore produces its own:</p>
+<div class="math-display">\[Q_r,\quad K_r,\quad V_r,\quad A_r,\quad Z_r\]</div>
+<p>The output of each head is:</p>
+<div class="math-display">\[Z_r
+=
+\operatorname{softmax}
+\left(
+\frac{Q_rK_r^T}{\sqrt{d_k}}+M
+\right)V_r\]</div>
+<p>Different heads can learn different matching spaces and different payload spaces.</p>
+<p>One head may distribute its attention differently from another, and even identical weights would mix different information if the heads use different Value projections.</p>
+<h1>Packed implementation versus conceptual heads</h1>
+<p>Implementations commonly compute all Query, Key, and Value projections with large matrix multiplications:</p>
+<div class="math-display">\[Q_{\text{big}}=XW_{\text{big}}^Q\]</div>
+<div class="math-display">\[K_{\text{big}}=XW_{\text{big}}^K\]</div>
+<div class="math-display">\[V_{\text{big}}=XW_{\text{big}}^V\]</div>
+<p>The results are reshaped into head dimensions, often something like:</p>
+<div class="math-display">\[(\text{batch},\;\text{heads},\;\text{tokens},\;\text{head width})\]</div>
+<p>This packed computation does not erase the conceptual distinction between heads. Separate slices of the larger matrices still contain separate learned projection parameters.</p>
+<h1>Values during autoregressive generation</h1>
+<p>During token-by-token generation, the model repeatedly attends to previous positions.</p>
+<p>Past Keys and Values can be cached because their hidden states at the current layer do not change when a new token is appended.</p>
+<p>For the newest token, the model computes:</p>
+<ul>
+<li>a new Query;</li>
+<li>a new Key;</li>
+<li>a new Value.</li>
+</ul>
+<p>It then compares the new Query with the cached Keys and combines the cached Values plus the new Value.</p>
+<p>This is the basic reason a <strong>KV cache</strong> can accelerate autoregressive decoding.</p>
+<p>The cache stores Keys and Values, not attention weights, because the newest Query creates a new set of weights at every generation step.</p>
+<h1>Common mistakes at the delivery desk</h1>
+<h2>Mistake 1: treating Values as attention weights</h2>
+<p>Values are vectors. Attention weights are scalars.</p>
+<p>The operation is:</p>
+<div class="math-display">\[a_{ij}v_j\]</div>
+<p>not a comparison between two weights.</p>
+<h2>Mistake 2: multiplying in the wrong order</h2>
+<p>The correct full-sequence operation is:</p>
+<div class="math-display">\[AV\]</div>
+<p>with shapes:</p>
+<div class="math-display">\[(n\times n)(n\times d_v)=(n\times d_v)\]</div>
+<h2>Mistake 3: using Keys as the payload</h2>
+<p>Keys decide matching. Values carry the information mixed into the output.</p>
+<h2>Mistake 4: assuming attention copies one token</h2>
+<p>Softmax produces a distribution. Unless it is extremely sharp, the result is a blend of several Values.</p>
+<h2>Mistake 5: assuming (Z) has width (d_{\text{model}})</h2>
+<p>One head produces width (d_v). Multiple heads and the output projection restore or transform the combined representation into the model&#39;s working width.</p>
+<h2>Mistake 6: forgetting that the mask affects retrieval</h2>
+<p>A masked position receives zero attention weight, so its Value contributes nothing to that Query&#39;s output even though the Value vector may have been computed.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. What does a Value represent?</h2>
+<p>A learned payload representation of one token position for one attention head.</p>
+<h2>2. Which vectors are compared to create attention scores?</h2>
+<p>Queries and Keys.</p>
+<h2>3. Which vectors are combined after softmax?</h2>
+<p>Values.</p>
+<h2>4. What does (a_{ij}) mean?</h2>
+<p>It is the scalar weight controlling how much Value (v_j) contributes to output (z_i).</p>
+<h2>5. What is the output for one Query position?</h2>
+<div class="math-display">\[z_i=\sum_j a_{ij}v_j\]</div>
+<h2>6. What is the matrix form for all positions?</h2>
+<div class="math-display">\[Z=AV\]</div>
+<h2>7. What is the shape of (Z)?</h2>
+<p>For (n) positions and Value width (d_v):</p>
+<div class="math-display">\[Z\in\mathbb{R}^{n\times d_v}\]</div>
+<h2>8. Why are Keys and Values separate?</h2>
+<p>The features useful for deciding relevance need not be the same features that should be transferred after a match.</p>
+<h2>9. Why can past Values be cached during generation?</h2>
+<p>Their layer inputs and projections do not change merely because a later token is appended.</p>
+<h2>10. Is one head&#39;s output the final Transformer output?</h2>
+<p>No. Multi-head combination, output projection, residual processing, normalisation, and the MLP still remain.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Every token creates a Value:</p>
+<div class="math-display">\[v_t=x_tW^V\]</div>
+<p>For the whole sequence:</p>
+<div class="math-display">\[V=XW^V\]</div>
+<p>The attention weights from Chapter 4 mix those Values:</p>
+<div class="math-display">\[Z=AV\]</div>
+<p>For one Query position:</p>
+<div class="math-display">\[z_i=\sum_j a_{ij}v_j\]</div>
+<p>The complete one-head operation is:</p>
+<div class="math-display">\[\boxed{
+Z
+=
+\operatorname{softmax}
+\left(
+\frac{QK^T}{\sqrt{d_k}}+M
+\right)V
+}\]</div>
+<p>In the dating-service story:</p>
+<blockquote>
+<p><strong>The Question Coach creates the search. The Profile Writer creates searchable descriptions. The matching desk assigns weights. The Information Courier delivers a weighted blend of the matched information.</strong></p>
+</blockquote>
+<p>We have now completed one full attention head from input state to retrieved output.</p>
+<!-- chapter-05-art:handoff:start -->
+<p><img src="../assets/chapter-05/07_key_vs_value_and_handoff.webp" alt="A correction panel distinguishes Key profiles used for matching from Value packages used as payload, then sends the completed one-head report toward the multi-head specialist wing."></p>
+<!-- chapter-05-art:handoff:end -->
+
+<h1>Coming next: many heads, one result</h1>
+<p>One head provides one learned view of relevance and one learned kind of payload.</p>
+<p>Real Transformers usually run several heads in parallel:</p>
+<div class="math-display">\[Z_1,\;Z_2,\;\ldots,\;Z_h\]</div>
+<p>Their outputs are concatenated and mixed through an output projection:</p>
+<div class="math-display">\[\operatorname{Concat}(Z_1,\ldots,Z_h)W^O\]</div>
+<p>The next chapter can follow how multiple heads cooperate without losing the token dimension.</p>

@@ -1,0 +1,524 @@
+<h1>The question this chapter answers</h1>
+<p>The previous chapters began with a matrix of token states:</p>
+<div class="math-display">\[X=
+\begin{bmatrix}
+x_1\\
+x_2\\
+\vdots\\
+x_n
+\end{bmatrix}\]</div>
+<p>Each row belonged to one token position.</p>
+<p>But a token embedding by itself identifies <strong>what token it is</strong>, not <strong>where that token occurs</strong>.</p>
+<p>Without some representation of order, how can a Transformer distinguish:</p>
+<blockquote>
+<p>The cat chased the dog</p>
+</blockquote>
+<p>from:</p>
+<blockquote>
+<p>The dog chased the cat</p>
+</blockquote>
+<div class="big-idea">
+
+<p><strong>Attention can compare token representations, but the model must also receive information about order. Positional mechanisms make the same token behave differently when it appears at different locations.</strong></p>
+</div>
+
+<h1>A deliberate rewind</h1>
+<p>Chapter 8 completed one Transformer block. This chapter steps backward to expose an assumption already built into our running matrix.</p>
+<p>Before the first block, a decoder-only Transformer begins with token IDs and creates token embeddings:</p>
+<div class="math-display">\[E=
+\begin{bmatrix}
+e_1\\
+e_2\\
+\vdots\\
+e_n
+\end{bmatrix}\]</div>
+<p>It must then make position available somehow.</p>
+<p>Common approaches include:</p>
+<ul>
+<li>learned absolute positional embeddings;</li>
+<li>fixed sinusoidal position encodings;</li>
+<li>relative-position biases;</li>
+<li>rotary position embeddings, usually called <strong>RoPE</strong>.</li>
+</ul>
+<p>The mechanism is architecture-specific, but the requirement is universal: the model needs information that distinguishes one ordering from another.</p>
+<h1>Token embeddings alone do not know order</h1>
+<p>Suppose an unmasked self-attention layer receives:</p>
+<div class="math-display">\[E=
+\begin{bmatrix}
+e_{\text{The}}\\
+e_{\text{cat}}\\
+e_{\text{sat}}
+\end{bmatrix}\]</div>
+<p>If we reorder the rows:</p>
+<div class="math-display">\[E'=
+\begin{bmatrix}
+e_{\text{sat}}\\
+e_{\text{cat}}\\
+e_{\text{The}}
+\end{bmatrix}\]</div>
+<p>then ordinary self-attention without positional information produces the correspondingly reordered outputs. It is permutation-equivariant: the mechanism processes relationships among rows, but it has not been told which row is first, second, or third.</p>
+<p>A causal mask does introduce an ordering constraint because earlier rows are allowed to see fewer positions than later rows. However, that visibility rule is not a rich representation of absolute position or relative distance.</p>
+<div class="warning">
+
+<h2>Causal order and positional representation are different</h2>
+<p>The causal mask answers:</p>
+<blockquote>
+<p>Which positions may this Query use?</p>
+</blockquote>
+<p>A positional mechanism helps answer:</p>
+<blockquote>
+<p>Where is this token, and how far is it from another position?</p>
+</blockquote>
+<p>A decoder-only model normally needs both.</p>
+</div>
+
+<h1>Approach 1: learned absolute positional embeddings</h1>
+<p>One direct solution is to learn one vector for each supported position.</p>
+<p>For position (t):</p>
+<div class="math-display">\[p_t\in\mathbb{R}^{d_{\text{model}}}\]</div>
+<p>The initial representation is:</p>
+<div class="math-display">\[x_t^{(0)}=e_t+p_t\]</div>
+<p>For the whole sequence:</p>
+<div class="math-display">\[X^{(0)}=E+P\]</div>
+<p>where:</p>
+<div class="math-display">\[P=
+\begin{bmatrix}
+p_1\\
+p_2\\
+\vdots\\
+p_n
+\end{bmatrix}\]</div>
+<p>The token embedding contributes identity. The positional embedding contributes location.</p>
+<h1>Recovering our running input matrix</h1>
+<p>The first eight chapters used:</p>
+<div class="math-display">\[X^{(0)}=
+\begin{bmatrix}
+0.21 & -0.37 & 0.58 & -0.11\\
+-0.42 & 0.73 & -0.15 & 0.36\\
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>The rows belong to THE, CAT, and SAT.</p>
+<p>Imagine that this matrix was produced by adding:</p>
+<div class="math-display">\[E=
+\begin{bmatrix}
+0.25 & -0.30 & 0.50 & -0.05\\
+-0.35 & 0.60 & -0.10 & 0.28\\
+0.10 & -0.15 & 0.62 & -0.26
+\end{bmatrix}\]</div>
+<p>and:</p>
+<div class="math-display">\[P=
+\begin{bmatrix}
+-0.04 & -0.07 & 0.08 & -0.06\\
+-0.07 & 0.13 & -0.05 & 0.08\\
+0.04 & -0.07 & 0.05 & -0.05
+\end{bmatrix}\]</div>
+<p>Then:</p>
+<div class="math-display">\[X^{(0)}=E+P\]</div>
+<p>For CAT at position 2:</p>
+<div class="math-display">\[\begin{aligned}
+x_{\text{cat}}^{(0)}
+&=e_{\text{cat}}+p_2\\
+&=
+\begin{bmatrix}
+-0.35 & 0.60 & -0.10 & 0.28
+\end{bmatrix}
++
+\begin{bmatrix}
+-0.07 & 0.13 & -0.05 & 0.08
+\end{bmatrix}\\
+&=
+\begin{bmatrix}
+-0.42 & 0.73 & -0.15 & 0.36
+\end{bmatrix}
+\end{aligned}\]</div>
+<p>That is exactly the CAT row used in the earlier calculations.</p>
+<h1>The same token at a different position</h1>
+<p>The token embedding for CAT remains:</p>
+<div class="math-display">\[e_{\text{cat}}=
+\begin{bmatrix}
+-0.35 & 0.60 & -0.10 & 0.28
+\end{bmatrix}\]</div>
+<p>Suppose position 5 has:</p>
+<div class="math-display">\[p_5=
+\begin{bmatrix}
+0.09 & 0.02 & -0.11 & 0.06
+\end{bmatrix}\]</div>
+<p>Then CAT at position 5 begins with:</p>
+<div class="math-display">\[\begin{aligned}
+x_{\text{cat at }5}^{(0)}
+&=e_{\text{cat}}+p_5\\
+&=
+\begin{bmatrix}
+-0.26 & 0.62 & -0.21 & 0.34
+\end{bmatrix}
+\end{aligned}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[x_{\text{cat at }2}^{(0)}
+\neq
+x_{\text{cat at }5}^{(0)}\]</div>
+<p>The token identity is the same. Its initial state differs because its address differs.</p>
+<h1>Follow the additive shapes</h1>
+<p>For (n) positions:</p>
+<div class="math-display">\[E\in\mathbb{R}^{n\times d_{\text{model}}}\]</div>
+<div class="math-display">\[P\in\mathbb{R}^{n\times d_{\text{model}}}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[X^{(0)}=E+P
+\in\mathbb{R}^{n\times d_{\text{model}}}\]</div>
+<p>The operation preserves both sequence length and model width.</p>
+<h1>Strengths and limits of learned absolute positions</h1>
+<p>Learned absolute embeddings are simple:</p>
+<ul>
+<li>look up one token vector;</li>
+<li>look up one positional vector;</li>
+<li>add them.</li>
+</ul>
+<p>They are also naturally tied to the represented position table.</p>
+<p>If vectors were learned only for:</p>
+<div class="math-display">\[1,2,\ldots,N\]</div>
+<p>there is no automatically learned vector for position (N+1).</p>
+<p>Architectures can extend or interpolate such systems, but the basic learned table does not provide unlimited positions by itself.</p>
+<h1>Approach 2: sinusoidal position encodings</h1>
+<p>The original Transformer used fixed sine and cosine functions.</p>
+<p>For position (p) and feature-pair index (i):</p>
+<div class="math-display">\[\operatorname{PE}(p,2i)
+=
+\sin\left(
+\frac{p}{10000^{2i/d_{\text{model}}}}
+\right)\]</div>
+<div class="math-display">\[\operatorname{PE}(p,2i+1)
+=
+\cos\left(
+\frac{p}{10000^{2i/d_{\text{model}}}}
+\right)\]</div>
+<p>Different coordinate pairs use different frequencies.</p>
+<p>Some coordinates change quickly with position. Others change slowly.</p>
+<p>The encoding is added to the token embedding:</p>
+<div class="math-display">\[x_t^{(0)}=e_t+\operatorname{PE}(t)\]</div>
+<div class="translation">
+
+<h2>Frequency intuition</h2>
+<p>Think of several clock hands turning at different speeds.</p>
+<p>Fast hands help distinguish nearby positions. Slow hands retain structure over longer ranges. Together they form a distributed positional signature.</p>
+</div>
+
+<h1>Absolute position is not the whole story</h1>
+<p>A Query at position (i) compares with a Key at position (j):</p>
+<div class="math-display">\[q_i\cdot k_j\]</div>
+<p>Many useful relationships depend on their separation:</p>
+<div class="math-display">\[i-j\]</div>
+<p>Examples include:</p>
+<ul>
+<li>the immediately preceding token;</li>
+<li>a token five places earlier;</li>
+<li>the start of a nearby phrase;</li>
+<li>a repeated pattern at a particular distance.</li>
+</ul>
+<p>This motivates methods that place relative position directly into Query–Key compatibility.</p>
+<h1>Approach 3: rotary position embeddings</h1>
+<p>RoPE does not normally add a position vector to the hidden state.</p>
+<p>Instead, it rotates pairs of Query and Key coordinates by position-dependent angles.</p>
+<p>Begin with:</p>
+<div class="math-display">\[q_t=x_tW^Q\]</div>
+<p>and:</p>
+<div class="math-display">\[k_t=x_tW^K\]</div>
+<p>RoPE creates:</p>
+<div class="math-display">\[\widetilde{q}_t=R_tq_t\]</div>
+<div class="math-display">\[\widetilde{k}_t=R_tk_t\]</div>
+<p>Attention then uses:</p>
+<div class="math-display">\[\widetilde{q}_i\cdot\widetilde{k}_j\]</div>
+<h1>A two-dimensional rotation</h1>
+<p>For one coordinate pair, rotation by angle (\phi) uses:</p>
+<div class="math-display">\[R(\phi)=
+\begin{bmatrix}
+\cos\phi & -\sin\phi\\
+\sin\phi & \cos\phi
+\end{bmatrix}\]</div>
+<p>At position (m), a frequency parameter θ gives angle:</p>
+<div class="math-display">\[m\theta\]</div>
+<p>For a two-coordinate Query:</p>
+<div class="math-display">\[q=
+\begin{bmatrix}
+q_1\\q_2
+\end{bmatrix}\]</div>
+<p>its rotated form is:</p>
+<div class="math-display">\[\widetilde{q}_m=R(m\theta)q\]</div>
+<p>A Key at position (n) is rotated using:</p>
+<div class="math-display">\[\widetilde{k}_n=R(n\theta)k\]</div>
+<h1>Exact RoPE calculation</h1>
+<p>Use:</p>
+<div class="math-display">\[q=
+\begin{bmatrix}
+0.8\\0.6
+\end{bmatrix}\]</div>
+<p>and:</p>
+<div class="math-display">\[k=
+\begin{bmatrix}
+0.5\\-0.4
+\end{bmatrix}\]</div>
+<p>Let:</p>
+<div class="math-display">\[\theta=30^\circ\]</div>
+<p>Place the Query at position:</p>
+<div class="math-display">\[m=1\]</div>
+<p>and the Key at position:</p>
+<div class="math-display">\[n=3\]</div>
+<p>The Query rotates by (30^\circ):</p>
+<div class="math-display">\[\widetilde{q}_1
+=
+R(30^\circ)q
+\approx
+\begin{bmatrix}
+0.392820\\0.919615
+\end{bmatrix}\]</div>
+<p>The Key rotates by (90^\circ):</p>
+<div class="math-display">\[\widetilde{k}_3
+=
+R(90^\circ)k
+=
+\begin{bmatrix}
+0.4\\0.5
+\end{bmatrix}\]</div>
+<p>Their dot product is:</p>
+<div class="math-display">\[\begin{aligned}
+\widetilde{q}_1\cdot\widetilde{k}_3
+&=0.392820(0.4)+0.919615(0.5)\\
+&\approx0.157128+0.459808\\
+&\approx0.616936
+\end{aligned}\]</div>
+<h1>Shift both positions together</h1>
+<p>Move both vectors one position later:</p>
+<div class="math-display">\[m=2,\qquad n=4\]</div>
+<p>The separation remains:</p>
+<div class="math-display">\[n-m=2\]</div>
+<p>The rotated vectors are approximately:</p>
+<div class="math-display">\[\widetilde{q}_2
+=
+\begin{bmatrix}
+-0.119615\\0.992820
+\end{bmatrix}\]</div>
+<p>and:</p>
+<div class="math-display">\[\widetilde{k}_4
+=
+\begin{bmatrix}
+0.096410\\0.633013
+\end{bmatrix}\]</div>
+<p>Their dot product is again:</p>
+<div class="math-display">\[\widetilde{q}_2\cdot\widetilde{k}_4
+\approx0.616936\]</div>
+<p>The absolute positions changed, but the relative separation did not.</p>
+<h1>Change the relative separation</h1>
+<p>Return the Query to position 1 and place the Key at position 2:</p>
+<div class="math-display">\[n-m=1\]</div>
+<p>The dot product becomes:</p>
+<div class="math-display">\[\widetilde{q}_1\cdot\widetilde{k}_2
+\approx0.448564\]</div>
+<p>Changing the relative distance changed the compatibility.</p>
+<div class="big-idea">
+
+<p><strong>RoPE injects position into Query–Key geometry. A shared shift preserves relative separation, while changing the separation changes the rotated dot product.</strong></p>
+</div>
+
+<h1>Why relative distance appears</h1>
+<p>Rotation matrices satisfy:</p>
+<div class="math-display">\[R(a)^T R(b)=R(b-a)\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\begin{aligned}
+\widetilde{q}_m^T\widetilde{k}_n
+&=(R(m\theta)q)^T(R(n\theta)k)\\
+&=q^TR(m\theta)^TR(n\theta)k\\
+&=q^TR((n-m)\theta)k
+\end{aligned}\]</div>
+<p>The score depends on:</p>
+<div class="math-display">\[n-m\]</div>
+<p>rather than requiring attention to reconstruct relative distance only from two separately added absolute vectors.</p>
+<h1>Real RoPE uses many coordinate pairs</h1>
+<p>A real head contains many coordinates.</p>
+<p>RoPE divides them into pairs:</p>
+<div class="math-display">\[(q_1,q_2),
+(q_3,q_4),
+\ldots\]</div>
+<p>Each pair rotates at a different frequency.</p>
+<p>Fast-changing pairs are sensitive to short positional differences. Slow-changing pairs vary over longer ranges.</p>
+<h1>Why Values are normally not rotated</h1>
+<p>In the standard RoPE formulation:</p>
+<ul>
+<li>Queries are rotated;</li>
+<li>Keys are rotated;</li>
+<li>Values are not rotated.</li>
+</ul>
+<p>RoPE alters matching geometry:</p>
+<div class="math-display">\[\widetilde{Q}\widetilde{K}^T\]</div>
+<p>Values remain the payload mixed after attention weights are known:</p>
+<div class="math-display">\[Z=AV\]</div>
+<div class="warning">
+
+<h2>Position affects retrieval without becoming the payload</h2>
+<p>Rotating Queries and Keys changes which positions match strongly.</p>
+<p>Values do not need the same rotation because they are not used in the compatibility dot product.</p>
+</div>
+
+<h1>RoPE and causal masking solve different problems</h1>
+<p>RoPE answers:</p>
+<blockquote>
+<p>How should position and relative distance influence Query–Key compatibility?</p>
+</blockquote>
+<p>The causal mask answers:</p>
+<blockquote>
+<p>Which Key positions is this Query allowed to use?</p>
+</blockquote>
+<p>Both operate in the same head:</p>
+<div class="math-display">\[A=
+\operatorname{softmax}
+\left(
+\frac{\widetilde{Q}\widetilde{K}^T}{\sqrt{d_k}}+M
+\right)\]</div>
+<p>A future position can have a valid rotated Key and still be blocked by the mask.</p>
+<h1>Relative-position bias: another design</h1>
+<p>Some architectures add a positional bias directly to each attention logit:</p>
+<div class="math-display">\[L_{ij}
+=
+\frac{q_i\cdot k_j}{\sqrt{d_k}}
++b(i,j)\]</div>
+<p>The bias can depend on exact or bucketed distance.</p>
+<p>This differs from RoPE:</p>
+<ul>
+<li>RoPE changes Queries and Keys before their dot product;</li>
+<li>relative-position bias adds a term after the dot product.</li>
+</ul>
+<h1>Position methods compared</h1>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Where position enters</th>
+<th align="right">Learned?</th>
+<th>Main intuition</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Learned absolute embedding</td>
+<td>Added to token embedding</td>
+<td align="right">Yes</td>
+<td>Each position owns a vector</td>
+</tr>
+<tr>
+<td>Sinusoidal encoding</td>
+<td>Added to token embedding</td>
+<td align="right">No</td>
+<td>Multiple fixed positional frequencies</td>
+</tr>
+<tr>
+<td>RoPE</td>
+<td>Rotates Query and Key pairs</td>
+<td align="right">Usually formula-based</td>
+<td>Relative distance affects dot products</td>
+</tr>
+<tr>
+<td>Relative-position bias</td>
+<td>Added to attention logits</td>
+<td align="right">Often</td>
+<td>Distance directly adjusts compatibility</td>
+</tr>
+</tbody></table>
+<p>Always inspect the target model rather than assuming one universal design.</p>
+<h1>Position and context length</h1>
+<p>A model&#39;s usable context length depends on more than one formula.</p>
+<p>Relevant factors include:</p>
+<ul>
+<li>the positional mechanism;</li>
+<li>sequence lengths used during training;</li>
+<li>attention implementation;</li>
+<li>available memory;</li>
+<li>scaling or interpolation methods;</li>
+<li>empirical long-context evaluation.</li>
+</ul>
+<div class="warning">
+
+<h2>Extrapolation is not automatic competence</h2>
+<p>RoPE can mathematically rotate a Query beyond the training range.</p>
+<p>That does not prove the model learned to reason reliably there. Long-context behaviour must be trained and evaluated.</p>
+</div>
+
+<h1>Positional information becomes contextual</h1>
+<p>Position enters early, but it does not remain a separate label attached to the token.</p>
+<p>After the first block, the hidden state has been transformed by:</p>
+<ul>
+<li>positional effects on attention;</li>
+<li>retrieved Values;</li>
+<li>output projection;</li>
+<li>residual updates;</li>
+<li>MLP processing.</li>
+</ul>
+<p>Later layers build new Queries, Keys, and Values from these already contextual states.</p>
+<h1>Common positional mistakes</h1>
+<h2>Mistake 1: saying attention automatically knows order</h2>
+<p>Unmasked self-attention is permutation-equivariant unless position is supplied.</p>
+<h2>Mistake 2: treating causal masking as a complete positional representation</h2>
+<p>The mask supplies a visibility order, but it does not provide rich location and distance features.</p>
+<h2>Mistake 3: treating position as one ordinary scalar coordinate</h2>
+<p>Production mechanisms distribute positional information across many coordinates or scores.</p>
+<h2>Mistake 4: saying RoPE rotates token IDs</h2>
+<p>RoPE normally rotates Query and Key coordinate pairs after projection.</p>
+<h2>Mistake 5: rotating Values in the standard explanation</h2>
+<p>Standard RoPE modifies matching, while Values remain the payload.</p>
+<h2>Mistake 6: claiming one coordinate stores the position number</h2>
+<p>Position is represented across vector coordinates and frequencies.</p>
+<h2>Mistake 7: claiming any computable position is reliable</h2>
+<p>Generalisation beyond trained context lengths is an empirical property.</p>
+<h1>Checkpoint</h1>
+<div class="exercise">
+
+<h2>1. Why are token embeddings alone insufficient?</h2>
+<p>They represent token identity but do not inherently distinguish location or ordering.</p>
+<h2>2. What is the additive absolute-position formula?</h2>
+<div class="math-display">\[x_t^{(0)}=e_t+p_t\]</div>
+<h2>3. Does adding a positional embedding change model width?</h2>
+<p>No. Equal-width vectors are added element by element.</p>
+<h2>4. What does RoPE normally transform?</h2>
+<p>Pairs of Query and Key coordinates.</p>
+<h2>5. Why is relative position visible in the rotated dot product?</h2>
+<p>Because:</p>
+<div class="math-display">\[R(m\theta)^TR(n\theta)=R((n-m)\theta)\]</div>
+<h2>6. Are Values normally rotated in standard RoPE?</h2>
+<p>No. Values are mixed after Query–Key compatibility creates attention weights.</p>
+<h2>7. Does RoPE remove the need for causal masking?</h2>
+<p>No. Position representation and visibility constraints are separate.</p>
+<h2>8. Does an extendable position formula guarantee reliable long-context reasoning?</h2>
+<p>No. Reliability depends on training, architecture, scaling methods, and evaluation.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>A token embedding answers:</p>
+<blockquote>
+<p>What token is this?</p>
+</blockquote>
+<p>A positional mechanism helps answer:</p>
+<blockquote>
+<p>Where is it, and how far is it from another position?</p>
+</blockquote>
+<p>With additive positional embeddings:</p>
+<div class="math-display">\[X^{(0)}=E+P\]</div>
+<p>With RoPE:</p>
+<div class="math-display">\[\widetilde{Q}=R(Q)\]</div>
+<div class="math-display">\[\widetilde{K}=R(K)\]</div>
+<p>and attention uses:</p>
+<div class="math-display">\[A=
+\operatorname{softmax}
+\left(
+\frac{\widetilde{Q}\widetilde{K}^T}{\sqrt{d_k}}+M
+\right)\]</div>
+<p>In our story:</p>
+<blockquote>
+<p><strong>The token embedding gives each character an identity. The positional mechanism gives each character an address. Attention can then reason about both who is present and where everyone stands.</strong></p>
+</blockquote>
+<h1>Coming next: the residual stream climbs the stack</h1>
+<p>One Transformer block produces another matrix with the same outer shape:</p>
+<div class="math-display">\[X^{(1)}\in\mathbb{R}^{n\times d_{\text{model}}}\]</div>
+<p>That matrix enters another block, and then another:</p>
+<div class="math-display">\[X^{(0)}
+\rightarrow
+X^{(1)}
+\rightarrow
+\cdots
+\rightarrow
+X^{(L)}\]</div>
+<p>Chapter 10 follows token representations through depth and shows why every layer owns its own attention, MLP, normalisation, and KV-cache state.</p>

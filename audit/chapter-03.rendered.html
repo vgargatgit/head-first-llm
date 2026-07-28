@@ -1,0 +1,559 @@
+<p><img src="../assets/chapter-03/01_chapter_hero_profile_writer.png" alt="Chapter 3 — Meet the Profile Writer"></p>
+<h1>The question this chapter answers</h1>
+<p>In Chapter 2, <code>SAT</code> visited the Question Coach and created a Query:</p>
+<div class="math-display">\[q_{\text{sat}} = x_{\text{sat}}W^Q\]</div>
+<p>That Query expresses what <code>SAT</code> is looking for inside one attention head.</p>
+<p>But a search request is useful only if the possible matches have searchable descriptions.</p>
+<p>How does every token turn its current hidden state into a representation that a Query can match against?</p>
+<p>That is the job of the <strong>Key projection</strong>:</p>
+<div class="math-display">\[W^K\]</div>
+<p>In our dating-service story, it is the <strong>Profile Writer</strong>.</p>
+<div class="big-idea">
+
+<p><strong>A Query represents what a token is seeking. A Key represents how a token should appear to searches inside the same attention head.</strong></p>
+</div>
+
+<h1>Cold open: SAT visits the Profile Writer</h1>
+<p><code>SAT</code> enters the Profile Writing Office carrying the same current hidden state it brought to the Question Coach:</p>
+<div class="math-display">\[x_{\text{sat}}
+=
+\begin{bmatrix}
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>The Profile Writer says:</p>
+<blockquote>
+<p>“I will not decide who should match you. I will turn your current state into a profile that Queries can search.”</p>
+</blockquote>
+<p>The completed profile is SAT&#39;s <strong>Key</strong>:</p>
+<div class="math-display">\[k_{\text{sat}}\]</div>
+<p>The Key is not a biography written in English. It is a vector in the learned Key space of one attention head.</p>
+<p>In the story:</p>
+<ul>
+<li><code>SAT</code> is the client;</li>
+<li>(x_{\text{sat}}) is its current situation;</li>
+<li>(W^K) is the Profile Writer;</li>
+<li>(k_{\text{sat}}) is the searchable profile.</li>
+</ul>
+<h1>What the Profile Writer actually does</h1>
+<p>For any token position (t):</p>
+<div class="math-display">\[k_t = x_tW^K\]</div>
+<p>Read that from left to right:</p>
+<pre><code class="language-text">token&#39;s current hidden state
+            ×
+the head&#39;s learned Profile Writer
+            =
+the token&#39;s searchable Key
+</code></pre>
+<p><img src="../assets/chapter-03/02_profile_writer_pipeline.png" alt="The Profile Writer transforms a hidden state into a Key"></p>
+<p>The Profile Writer <strong>does</strong>:</p>
+<ul>
+<li>read one token&#39;s current hidden state;</li>
+<li>apply a learned linear transformation;</li>
+<li>produce a Key vector for one attention head.</li>
+</ul>
+<p>It does <strong>not yet</strong>:</p>
+<ul>
+<li>inspect a Query;</li>
+<li>compare two tokens;</li>
+<li>calculate a compatibility score;</li>
+<li>assign attention weights;</li>
+<li>provide the information that will eventually be retrieved.</li>
+</ul>
+<p>Those are later stages of attention.</p>
+<div class="warning">
+
+<h2>Analogy warning</h2>
+<p>Calling a Key a “profile” does not mean it stores a human-readable list of attributes. It is a learned vector whose purpose is to participate in Query–Key comparisons.</p>
+</div>
+
+<h1>Remove the costumes</h1>
+<table>
+<thead>
+<tr>
+<th>Dating-service story</th>
+<th>Transformer operation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Token&#39;s current situation</td>
+<td>Hidden state (x_t)</td>
+</tr>
+<tr>
+<td>Profile Writer</td>
+<td>Key projection (W^K)</td>
+</tr>
+<tr>
+<td>Profile-writing session</td>
+<td>Matrix multiplication</td>
+</tr>
+<tr>
+<td>Searchable profile card</td>
+<td>Key vector (k_t)</td>
+</tr>
+<tr>
+<td>“When should a search match me?”</td>
+<td>A position in the head&#39;s learned Key space</td>
+</tr>
+</tbody></table>
+<p>The compact operation is:</p>
+<div class="math-display">\[k_t=x_tW^K\]</div>
+<h1>The exact SAT calculation</h1>
+<p>We use the same four-dimensional SAT state:</p>
+<div class="math-display">\[x_{\text{sat}}
+=
+\begin{bmatrix}
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>For this attention head, suppose the learned Key projection is:</p>
+<div class="math-display">\[W^K
+=
+\begin{bmatrix}
+0.2 & 0.7\\
+-0.6 & 0.1\\
+0.5 & -0.3\\
+0.4 & 0.8
+\end{bmatrix}\]</div>
+<p>The matrix shape is:</p>
+<div class="math-display">\[W^K\in\mathbb{R}^{4\times2}\]</div>
+<p>The Key calculation is:</p>
+<div class="math-display">\[k_{\text{sat}}
+=
+x_{\text{sat}}W^K\]</div>
+<p>or, with the values substituted:</p>
+<div class="math-display">\[k_{\text{sat}}
+=
+\begin{bmatrix}
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}
+\begin{bmatrix}
+0.2 & 0.7\\
+-0.6 & 0.1\\
+0.5 & -0.3\\
+0.4 & 0.8
+\end{bmatrix}\]</div>
+<p><img src="../assets/chapter-03/03_exact_key_calculation.png" alt="Exact calculation of SAT's Key"></p>
+<h2>First Key coordinate</h2>
+<p>The first output coordinate uses the first column of (W^K):</p>
+<div class="math-display">\[\begin{aligned}
+k_1
+&=
+0.14(0.2)
++
+(-0.22)(-0.6)
++
+0.67(0.5)
++
+(-0.31)(0.4)\\
+&=
+0.028
++
+0.132
++
+0.335
+-
+0.124\\
+&=
+0.371
+\end{aligned}\]</div>
+<h2>Second Key coordinate</h2>
+<p>The second output coordinate uses the second column of (W^K):</p>
+<div class="math-display">\[\begin{aligned}
+k_2
+&=
+0.14(0.7)
++
+(-0.22)(0.1)
++
+0.67(-0.3)
++
+(-0.31)(0.8)\\
+&=
+0.098
+-
+0.022
+-
+0.201
+-
+0.248\\
+&=
+-0.373
+\end{aligned}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[\boxed{
+k_{\text{sat}}
+=
+\begin{bmatrix}
+0.371 & -0.373
+\end{bmatrix}
+}\]</div>
+<h1>Follow the shapes</h1>
+<p>The current token state has shape:</p>
+<div class="math-display">\[x_{\text{sat}}\in\mathbb{R}^{1\times4}\]</div>
+<p>The Key projection has shape:</p>
+<div class="math-display">\[W^K\in\mathbb{R}^{4\times2}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[(1\times4)(4\times2)=(1\times2)\]</div>
+<p>The inner dimensions match and disappear from the output shape. SAT receives one Key with two coordinates:</p>
+<div class="math-display">\[k_{\text{sat}}\in\mathbb{R}^{1\times2}\]</div>
+<p>The Key and Query for a head must have the same width because they will eventually be compared using a dot product:</p>
+<div class="math-display">\[q_i\cdot k_j\]</div>
+<p>In our example:</p>
+<div class="math-display">\[d_k=2\]</div>
+<p>so both Query vectors and Key vectors contain two coordinates.</p>
+<div class="translation">
+
+<h2>Shape intuition</h2>
+<p>The hidden state lives in the shared model space of width (d_{\text{model}}).</p>
+<p>The Profile Writer projects it into this head&#39;s Key space of width (d_k).</p>
+<p>The Question Coach projects hidden states into the matching Query space, also of width (d_k).</p>
+</div>
+
+<h1>One Profile Writer, many tokens</h1>
+<p>Within one attention head, the same (W^K) is applied independently to every token position.</p>
+<p>Our sequence matrix is:</p>
+<div class="math-display">\[X=
+\begin{bmatrix}
+0.21 & -0.37 & 0.58 & -0.11\\
+-0.42 & 0.73 & -0.15 & 0.36\\
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>The rows correspond to:</p>
+<div class="math-display">\[X=
+\begin{bmatrix}
+x_{\text{The}}\\
+x_{\text{cat}}\\
+x_{\text{sat}}
+\end{bmatrix}\]</div>
+<p>Instead of multiplying each row separately, we can transform the entire sequence:</p>
+<div class="math-display">\[K=XW^K\]</div>
+<p><img src="../assets/chapter-03/04_shared_profile_writer.png" alt="The same Profile Writer creates a different Key for every token"></p>
+<p>Carrying out the multiplication gives:</p>
+<div class="math-display">\[K=
+\begin{bmatrix}
+0.510 & -0.152\\
+-0.453 & 0.112\\
+0.371 & -0.373
+\end{bmatrix}\]</div>
+<p>The rows are:</p>
+<div class="math-display">\[k_{\text{The}}
+=
+\begin{bmatrix}
+0.510 & -0.152
+\end{bmatrix}\]</div>
+<div class="math-display">\[k_{\text{cat}}
+=
+\begin{bmatrix}
+-0.453 & 0.112
+\end{bmatrix}\]</div>
+<div class="math-display">\[k_{\text{sat}}
+=
+\begin{bmatrix}
+0.371 & -0.373
+\end{bmatrix}\]</div>
+<p>The complete Key matrix has shape:</p>
+<div class="math-display">\[K\in\mathbb{R}^{3\times2}\]</div>
+<p>That means:</p>
+<ul>
+<li>three token positions;</li>
+<li>one two-dimensional Key per token.</li>
+</ul>
+<div class="big-idea">
+
+<p><strong>The Profile Writer is shared across token positions within the head. The profiles differ because the token states differ.</strong></p>
+</div>
+
+<h1>Why call (K) a matrix?</h1>
+<p>For one token, we use a lowercase Key vector:</p>
+<div class="math-display">\[k_t\]</div>
+<p>For the full sequence, we stack all Key vectors as rows:</p>
+<div class="math-display">\[K=
+\begin{bmatrix}
+k_1\\
+k_2\\
+\vdots\\
+k_n
+\end{bmatrix}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[K\in\mathbb{R}^{n\times d_k}\]</div>
+<p>Keep the three related symbols separate:</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>(W^K)</td>
+<td>Learned Key projection</td>
+</tr>
+<tr>
+<td>(k_t)</td>
+<td>Key vector for one token position</td>
+</tr>
+<tr>
+<td>(K)</td>
+<td>Matrix containing all token Keys</td>
+</tr>
+</tbody></table>
+<h1>Query and Key: same input, different jobs</h1>
+<p>Both transformations begin with the same current hidden state:</p>
+<div class="math-display">\[x_t\]</div>
+<p>But they use different learned matrices:</p>
+<div class="math-display">\[q_t=x_tW^Q\]</div>
+<div class="math-display">\[k_t=x_tW^K\]</div>
+<p><img src="../assets/chapter-03/05_query_vs_key_comparison.png" alt="Query and Key begin with the same state but serve different roles"></p>
+<p>The roles are deliberately asymmetric:</p>
+<table>
+<thead>
+<tr>
+<th>Representation</th>
+<th>Operational question</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Query (q_t)</td>
+<td>“What information is this position looking for?”</td>
+</tr>
+<tr>
+<td>Key (k_t)</td>
+<td>“When should this position match a search?”</td>
+</tr>
+</tbody></table>
+<p>The two projections are usually different:</p>
+<div class="math-display">\[W^Q\neq W^K\]</div>
+<p>Therefore, even for the same token state:</p>
+<div class="math-display">\[q_t\neq k_t\]</div>
+<p>in general.</p>
+<p>For SAT in our running example:</p>
+<div class="math-display">\[q_{\text{sat}}
+=
+\begin{bmatrix}
+-0.364 & 0.060
+\end{bmatrix}\]</div>
+<p>while:</p>
+<div class="math-display">\[k_{\text{sat}}
+=
+\begin{bmatrix}
+0.371 & -0.373
+\end{bmatrix}\]</div>
+<p>Same hidden state. Different transformations. Different roles.</p>
+<h1>Why not use the hidden state directly?</h1>
+<p>Why create a Key instead of comparing hidden states directly?</p>
+<p>For example, why not calculate:</p>
+<div class="math-display">\[x_i\cdot x_j\]</div>
+<p>The hidden state is a general-purpose representation. It supports many parts of the network:</p>
+<ul>
+<li>attention;</li>
+<li>MLP computation;</li>
+<li>residual updates;</li>
+<li>later Transformer layers;</li>
+<li>final prediction.</li>
+</ul>
+<p>An attention head needs specialised views of that shared state.</p>
+<p>The Query projection can learn combinations useful for searching:</p>
+<blockquote>
+<p>“What should this position seek?”</p>
+</blockquote>
+<p>The Key projection can learn combinations useful for being matched:</p>
+<blockquote>
+<p>“Under what search conditions should this position appear relevant?”</p>
+</blockquote>
+<p>This gives the model more flexibility than forcing one representation to perform both roles.</p>
+<h1>Keys do not contain the retrieved information</h1>
+<p>This distinction is crucial.</p>
+<p>A Key helps determine <strong>whether</strong> a token is relevant.</p>
+<p>It is not necessarily the information that should be transferred if the token is relevant.</p>
+<p>That later payload is the <strong>Value</strong>:</p>
+<div class="math-display">\[v_t=x_tW^V\]</div>
+<p>Using the dating-service analogy:</p>
+<ul>
+<li><strong>Query:</strong> what the client seeks;</li>
+<li><strong>Key:</strong> the searchable profile;</li>
+<li><strong>Value:</strong> the information package provided after a match matters.</li>
+</ul>
+<div class="warning">
+
+<h2>Do not merge Key and Value in your mental model</h2>
+<p>The model compares Queries with Keys.</p>
+<p>It does not compare Queries with Values.</p>
+<p>Values are mixed only after the Query–Key comparisons have produced attention weights.</p>
+</div>
+
+<h1>A first preview of matching</h1>
+<p>SAT&#39;s Query from Chapter 2 is:</p>
+<div class="math-display">\[q_{\text{sat}}
+=
+\begin{bmatrix}
+-0.364 & 0.060
+\end{bmatrix}\]</div>
+<p>The available Keys are:</p>
+<div class="math-display">\[K=
+\begin{bmatrix}
+0.510 & -0.152\\
+-0.453 & 0.112\\
+0.371 & -0.373
+\end{bmatrix}\]</div>
+<p>SAT can compare its Query with every Key:</p>
+<div class="math-display">\[q_{\text{sat}}\cdot k_{\text{The}}\]</div>
+<div class="math-display">\[q_{\text{sat}}\cdot k_{\text{cat}}\]</div>
+<div class="math-display">\[q_{\text{sat}}\cdot k_{\text{sat}}\]</div>
+<p>The raw results are:</p>
+<div class="math-display">\[\begin{aligned}
+q_{\text{sat}}\cdot k_{\text{The}} &= -0.19476\\
+q_{\text{sat}}\cdot k_{\text{cat}} &= 0.171612\\
+q_{\text{sat}}\cdot k_{\text{sat}} &= -0.157424
+\end{aligned}\]</div>
+<p>These are <strong>raw compatibility scores</strong>, not probabilities.</p>
+<p>They have not yet been:</p>
+<ul>
+<li>scaled by (\sqrt{d_k});</li>
+<li>masked;</li>
+<li>passed through softmax.</li>
+</ul>
+<p>We will do all three steps in the next chapter.</p>
+<h1>From one Query to all Keys</h1>
+<p>For one Query row (q_i), comparing against all Keys can be written:</p>
+<div class="math-display">\[q_iK^T\]</div>
+<p>The transpose changes the Key matrix shape:</p>
+<div class="math-display">\[K\in\mathbb{R}^{n\times d_k}\]</div>
+<p>into:</p>
+<div class="math-display">\[K^T\in\mathbb{R}^{d_k\times n}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[(1\times d_k)(d_k\times n)=(1\times n)\]</div>
+<p>One Query produces one score for every Key position.</p>
+<p>For the entire sequence, all comparisons can be computed at once:</p>
+<div class="math-display">\[QK^T\]</div>
+<p>The shapes are:</p>
+<div class="math-display">\[(n\times d_k)(d_k\times n)=(n\times n)\]</div>
+<p>So the score matrix has:</p>
+<ul>
+<li>one row per querying token;</li>
+<li>one column per candidate Key.</li>
+</ul>
+<p>This is the computational heart of self-attention.</p>
+<h1>Different heads have different Profile Writers</h1>
+<p>In ordinary multi-head attention, every head conceptually has its own Key projection:</p>
+<div class="math-display">\[W_1^K,\;
+W_2^K,\;
+\ldots,\;
+W_h^K\]</div>
+<p>The same token state can therefore produce different Keys:</p>
+<div class="math-display">\[k_t^{(1)}=x_tW_1^K\]</div>
+<div class="math-display">\[k_t^{(2)}=x_tW_2^K\]</div>
+<p>Each head learns its own matching space.</p>
+<p>A token might be easy to match under one head&#39;s learned criteria and less relevant under another&#39;s.</p>
+<p>The head roles are not manually assigned. Any apparent specialisation emerges during training and may not have a simple human description.</p>
+<h1>How implementations compute all Keys efficiently</h1>
+<p>A software implementation often stores the per-head projections side by side:</p>
+<div class="math-display">\[W_{\text{big}}^K=
+\left[
+W_1^K\mid W_2^K\mid\cdots\mid W_h^K
+\right]\]</div>
+<p>Then it performs one large matrix multiplication:</p>
+<div class="math-display">\[K_{\text{big}}=XW_{\text{big}}^K\]</div>
+<p>The result is reshaped into:</p>
+<div class="math-display">\[(\text{tokens},\;\text{heads},\;d_k)\]</div>
+<p>This is an implementation convenience.</p>
+<p>It does <strong>not</strong> mean that ordinary multi-head attention uses the same Key transformation for every head. Each head owns a different block of output columns.</p>
+<div class="translation">
+
+<h2>Standard and modern variants</h2>
+<p>In standard multi-head attention, each head has its own Query, Key, and Value projections.</p>
+<p>Some modern architectures use <strong>multi-query attention</strong> or <strong>grouped-query attention</strong>, where several Query heads share Key and Value representations. We will revisit those variants after the standard mechanism is fully clear.</p>
+</div>
+
+<h1>What causal masking does to Keys</h1>
+<p>In a causal decoder, Keys can be computed for all positions in the current sequence tensor.</p>
+<p>The causal rule is enforced during score processing:</p>
+<ul>
+<li>a Query may compare with its own position and earlier Keys;</li>
+<li>scores pointing to future positions are masked before softmax.</li>
+</ul>
+<p>So the future Key vectors do not need to be “bad profiles.” Their scores are simply made unavailable to an earlier Query.</p>
+<p>For the position <code>sat</code> in:</p>
+<blockquote>
+<p>The cat sat on the mat</p>
+</blockquote>
+<p>the allowed Keys are:</p>
+<blockquote>
+<p>The, cat, sat</p>
+</blockquote>
+<p>The Keys for:</p>
+<blockquote>
+<p>on, the, mat</p>
+</blockquote>
+<p>are future positions and are masked for that Query.</p>
+<h1>Reality check: a Key is contextual</h1>
+<p>A Key is created from the current hidden state:</p>
+<div class="math-display">\[k_t=x_tW^K\]</div>
+<p>If the hidden state already contains contextual information from earlier layers, the Key is contextual too.</p>
+<p>The Key for <code>bank</code> in:</p>
+<blockquote>
+<p>deposited money at the bank</p>
+</blockquote>
+<p>can differ from the Key for <code>bank</code> in:</p>
+<blockquote>
+<p>sat beside the river bank</p>
+</blockquote>
+<p>even though the token identity is the same.</p>
+<p>This is why it is better to say:</p>
+<blockquote>
+<p>a Key represents one token occurrence at one layer</p>
+</blockquote>
+<p>rather than:</p>
+<blockquote>
+<p>a Key represents a word in the dictionary.</p>
+</blockquote>
+<h1>Brain check</h1>
+<div class="exercise">
+
+<h2>1. What does a Key represent?</h2>
+<p>A learned searchable representation of one token position inside one attention head.</p>
+<h2>2. Does the Profile Writer compare tokens?</h2>
+<p>No. It transforms each hidden state independently. Cross-token comparison begins with Query–Key dot products.</p>
+<h2>3. Why must Queries and Keys have the same width?</h2>
+<p>Because the model compares them using dot products. A Query and Key need the same number of coordinates.</p>
+<h2>4. Does (K) contain one row for each head?</h2>
+<p>No. For one head, (K) contains one row per token position. Multiple heads have separate Key matrices or separate slices of a packed tensor.</p>
+<h2>5. Is a Key the information that will be copied into the output?</h2>
+<p>Not necessarily. That payload role belongs to the Value.</p>
+<h2>6. Why do THE, CAT, and SAT receive different Keys when the same (W^K) is used?</h2>
+<p>Because they enter the projection with different hidden-state vectors.</p>
+<h2>7. What is the shape of (K) for three tokens and (d_k=2)?</h2>
+<div class="math-display">\[K\in\mathbb{R}^{3\times2}\]</div>
+<h2>8. What is the shape of (QK^T) for three tokens?</h2>
+<div class="math-display">\[QK^T\in\mathbb{R}^{3\times3}\]</div>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Every token begins with a current hidden state:</p>
+<div class="math-display">\[x_t\]</div>
+<p>The Profile Writer transforms it:</p>
+<div class="math-display">\[k_t=x_tW^K\]</div>
+<p>For the whole sequence:</p>
+<div class="math-display">\[K=XW^K\]</div>
+<p>The resulting Key tells the attention head how that token should participate in matching.</p>
+<p>In the dating-service story:</p>
+<blockquote>
+<p><strong>The Question Coach helps a token express what it seeks. The Profile Writer helps every token create a profile that those searches can match.</strong></p>
+</blockquote>
+<p><img src="../assets/chapter-03/06_handoff_to_scoring.png" alt="Queries are now ready to meet the available Keys"></p>
+<h1>Coming next: Query meets Key</h1>
+<p>We now have:</p>
+<ul>
+<li>a Query for every token;</li>
+<li>a Key for every token.</li>
+</ul>
+<p>The next step is to calculate compatibility:</p>
+<div class="math-display">\[\text{score}_{ij}=q_i\cdot k_j\]</div>
+<p>For the complete sequence:</p>
+<div class="math-display">\[S=QK^T\]</div>
+<p>Then we will answer three questions:</p>
+<ol>
+<li>Why divide the scores by (\sqrt{d_k})?</li>
+<li>How does causal masking remove forbidden future positions?</li>
+<li>How does softmax turn raw scores into attention weights?</li>
+</ol>
+<p>That is the job of Chapter 4:</p>
+<h1><strong>Compatibility Scores — When Queries Meet Keys</strong></h1>

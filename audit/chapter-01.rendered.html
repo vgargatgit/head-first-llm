@@ -1,0 +1,363 @@
+<p><img src="../assets/chapter-01/01_chapter_cover_token_enters_dating_world.png" alt="Chapter 1 — A Token Enters the Dating World"></p>
+<h1>The question this chapter answers</h1>
+<p>An LLM begins an attention layer with <strong>one vector for every token</strong>.</p>
+<p>But what does that vector represent? And what exactly is attention supposed to improve?</p>
+<div class="big-idea">
+
+<p><strong>Every token enters attention carrying its current state. It leaves with a richer state that reflects how it fits among the visible tokens.</strong></p>
+</div>
+
+<h1>Opening scene: six tokens enter the agency</h1>
+<p>Our sentence is:</p>
+<blockquote>
+<p><strong>The cat sat on the mat.</strong></p>
+</blockquote>
+<p>Imagine each token as a character entering the <strong>Attention Dating Service</strong>. Every character carries a card filled with numbers.</p>
+<p>Those numbers are the token’s <strong>current hidden state</strong>.</p>
+<p>The card does not contain:</p>
+<ul>
+<li>a sentence written in English;</li>
+<li>a fixed dictionary definition;</li>
+<li>the meaning of the whole sequence.</li>
+</ul>
+<p>It contains the numerical representation associated with that particular token position <strong>at this point in the model</strong>.</p>
+<p><code>SAT</code> looks around and wonders:</p>
+<blockquote>
+<p>“I know who I currently am, but I do not yet understand how I fit into this group.”</p>
+</blockquote>
+<p>That is the problem attention is designed to address.</p>
+<h1>One vector per token</h1>
+<p>For a token at position <span class="math-inline">\(t\)</span>, call its current hidden-state vector:</p>
+<div class="math-display">\[x_t\]</div>
+<p>To keep later calculations manageable, our technical running example will use only three tokens:</p>
+<blockquote>
+<p><strong>The cat sat</strong></p>
+</blockquote>
+<p>and a model width of four:</p>
+<div class="math-display">\[d_{\text{model}} = 4\]</div>
+<p>Suppose the current states are:</p>
+<div class="math-display">\[x_{\text{The}} =
+\begin{bmatrix}
+0.21 & -0.37 & 0.58 & -0.11
+\end{bmatrix}\]</div>
+<div class="math-display">\[x_{\text{cat}} =
+\begin{bmatrix}
+-0.42 & 0.73 & -0.15 & 0.36
+\end{bmatrix}\]</div>
+<div class="math-display">\[x_{\text{sat}} =
+\begin{bmatrix}
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>Stacking the three row vectors gives the sequence matrix:</p>
+<div class="math-display">\[X =
+\begin{bmatrix}
+0.21 & -0.37 & 0.58 & -0.11 \\
+-0.42 & 0.73 & -0.15 & 0.36 \\
+0.14 & -0.22 & 0.67 & -0.31
+\end{bmatrix}\]</div>
+<p>Its shape is:</p>
+<div class="math-display">\[X \in \mathbb{R}^{3 \times 4}\]</div>
+<p>That means:</p>
+<ul>
+<li>three token positions;</li>
+<li>four numbers per token.</li>
+</ul>
+<p><img src="../assets/chapter-01/02_one_vector_per_token.png" alt="One vector per token, matrix shape, and causal visibility"></p>
+<div class="translation">
+
+<h2>Remove the costumes</h2>
+<table>
+<thead>
+<tr>
+<th>Illustration</th>
+<th>Transformer concept</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Token character</td>
+<td>One token position</td>
+</tr>
+<tr>
+<td>Card carried by the token</td>
+<td>Hidden-state vector <span class="math-inline">\(x_t\)</span></td>
+</tr>
+<tr>
+<td>All tokens standing in sequence</td>
+<td>Matrix <span class="math-inline">\(X\)</span></td>
+</tr>
+<tr>
+<td>Four values on each card</td>
+<td><span class="math-inline">\(d_{\text{model}}=4\)</span></td>
+</tr>
+<tr>
+<td>A richer card after attention</td>
+<td>Updated contextual hidden state</td>
+</tr>
+</tbody></table>
+</div>
+
+<h1>The framework knows the row; the model receives the vector</h1>
+<p>The tensor keeps the token positions ordered:</p>
+<ul>
+<li>row 1 belongs to <code>The</code>;</li>
+<li>row 2 belongs to <code>cat</code>;</li>
+<li>row 3 belongs to <code>sat</code>.</li>
+</ul>
+<p>That bookkeeping ensures the output row remains aligned with the input row.</p>
+<p>But the learned operations work on the <strong>contents of the row vector</strong>. They do not automatically receive a special feature saying:</p>
+<blockquote>
+<p>“You are row 1.”</p>
+</blockquote>
+<p>We will return to this distinction when we study positional encoding. For now, the important point is simply:</p>
+<blockquote>
+<p>One row is the model’s current representation of one token occurrence.</p>
+</blockquote>
+<h1>Do the four coordinates have human meanings?</h1>
+<p>It is tempting to imagine:</p>
+<ul>
+<li>coordinate 1 means “noun”;</li>
+<li>coordinate 2 means “animal”;</li>
+<li>coordinate 3 means “verb”;</li>
+<li>coordinate 4 means “location.”</li>
+</ul>
+<p>Do not take the toy dimensions that literally.</p>
+<p>In a real LLM:</p>
+<ul>
+<li>hidden states may contain thousands of coordinates;</li>
+<li>information is usually distributed across many coordinates;</li>
+<li>one coordinate can participate in several computations;</li>
+<li>useful features can be represented by directions or combinations, not isolated numbers.</li>
+</ul>
+<p>The four-dimensional vectors are small teaching models. They let us perform the exact calculations by hand without pretending that each coordinate has a neat dictionary label.</p>
+<div class="warning">
+
+<h2>Analogy warning</h2>
+<p>A hidden-state vector is not a little database row containing named fields such as <code>role=verb</code>. It is a learned numerical representation whose useful meaning emerges through later operations.</p>
+</div>
+
+<h1>Is the vector still just an embedding?</h1>
+<p>Not necessarily.</p>
+<p>At the entrance to the first Transformer layer, a token state begins from something approximately like:</p>
+<div class="math-display">\[\text{token information} + \text{position information}\]</div>
+<p>But after several Transformer layers, the vector has already received updates from previous attention and MLP sublayers.</p>
+<p>So the most accurate wording is:</p>
+<blockquote>
+<p>A token enters an attention block carrying its <strong>current hidden state</strong>.</p>
+</blockquote>
+<p>The initial token embedding is only the beginning of that state’s journey.</p>
+<p><img src="../assets/chapter-01/03_evolving_hidden_state_passport.png" alt="The same token carries an increasingly contextual hidden state through the model"></p>
+<p>The passport metaphor is useful:</p>
+<h2>At the model entrance</h2>
+<p><code>SAT</code> mostly carries:</p>
+<ul>
+<li>its token identity;</li>
+<li>its position;</li>
+<li>the initial representation supplied to the model.</li>
+</ul>
+<h2>After several layers</h2>
+<p>Its state may contain signals useful for recognising:</p>
+<ul>
+<li>that this occurrence behaves like an action;</li>
+<li>that <code>cat</code> is strongly related to it;</li>
+<li>that it participates in a particular sentence structure;</li>
+<li>what information it should help predict next.</li>
+</ul>
+<p>These descriptions are human interpretations. Internally, the model still carries a vector.</p>
+<h1>What does “contextual” mean?</h1>
+<p>Consider the token <code>bank</code>.</p>
+<p>In:</p>
+<blockquote>
+<p>He deposited the cheque at the <strong>bank</strong>.</p>
+</blockquote>
+<p>the hidden state for <code>bank</code> should become useful for computations involving a financial institution.</p>
+<p>In:</p>
+<blockquote>
+<p>She rested beside the river <strong>bank</strong>.</p>
+</blockquote>
+<p>the same token identity should develop a state useful for computations involving the side of a river.</p>
+<p>The token spelling is unchanged. What changed is the surrounding context.</p>
+<p>Attention helps move from:</p>
+<blockquote>
+<p>generic <code>BANK</code></p>
+</blockquote>
+<p>toward:</p>
+<blockquote>
+<p>this occurrence of <code>BANK</code> in this sentence.</p>
+</blockquote>
+<p>The state does not need to become a verbal definition. It only needs to encode distinctions that help later layers and the final next-token prediction.</p>
+<h1>Before attention</h1>
+<p>Before the current attention operation, each token carries its own current state.</p>
+<p>In the dating-service story:</p>
+<ul>
+<li><code>CAT</code> says, “This is who I currently am.”</li>
+<li><code>SAT</code> says, “This is who I currently am.”</li>
+<li>every other visible token does the same.</li>
+</ul>
+<p>At this stage, <code>SAT</code> has not yet received the contextual update produced by this attention sublayer.</p>
+<h1>After attention</h1>
+<p>At a high level, attention produces an update for every token:</p>
+<div class="math-display">\[\text{updated token state}
+=
+\text{current token state}
++
+\text{contextual update}\]</div>
+<p>For <code>SAT</code>:</p>
+<div class="math-display">\[x'_{\text{sat}}
+=
+x_{\text{sat}}
++
+\Delta x_{\text{sat}}^{\text{attention}}\]</div>
+<p>The same pattern applies to all positions:</p>
+<div class="math-display">\[X_{\text{updated}}
+=
+X
++
+\Delta X_{\text{attention}}\]</div>
+<p>The number of token positions does not change. The model still has one row per token.</p>
+<p>What changes is the quality of those rows as representations of the tokens <strong>in context</strong>.</p>
+<p><img src="../assets/chapter-01/04_before_and_after_attention.png" alt="Before and after the attention matchmaking session"></p>
+<p>In human language, we might interpret the change as:</p>
+<ul>
+<li><code>CAT</code>: “I seem connected to an action.”</li>
+<li><code>SAT</code>: “I seem to be an action associated with <code>CAT</code>.”</li>
+</ul>
+<p>But the model does not literally store those sentences. It stores new vectors that make such relationships available to later computation.</p>
+<div class="big-idea">
+
+<p><strong>Attention does not turn SAT into CAT. SAT keeps its identity and receives information that helps it understand its relationship with CAT.</strong></p>
+</div>
+
+<h1>Does a token learn only from its immediate neighbourhood?</h1>
+<p>No. “Neighbourhood” is useful intuition, but it can be misleading if interpreted as only adjacent words.</p>
+<p>An attention operation can gather information from any token position that the architecture allows it to see.</p>
+<h2>Encoder-style self-attention</h2>
+<p>In the original Transformer encoder, each source token can inspect every source token.</p>
+<h2>Causal decoder self-attention</h2>
+<p>In a GPT-style LLM, a token can inspect:</p>
+<div class="math-display">\[\text{itself and earlier token positions}\]</div>
+<p>but not future positions.</p>
+<p>For:</p>
+<blockquote>
+<p>The cat sat on the mat</p>
+</blockquote>
+<p>when computing the state at <code>sat</code>, the visible prefix is:</p>
+<blockquote>
+<p>The cat sat</p>
+</blockquote>
+<p>The future tokens:</p>
+<blockquote>
+<p>on the mat</p>
+</blockquote>
+<p>are masked at that position.</p>
+<p>When computing the state at the final <code>mat</code>, however, the complete prefix is visible.</p>
+<p>So a better definition of neighbourhood is:</p>
+<blockquote>
+<p>The set of token positions this attention operation is permitted to inspect.</p>
+</blockquote>
+<p>That set may extend far across the context window.</p>
+<h1>What does each token ultimately gain?</h1>
+<p>Each token receives a new state that better answers:</p>
+<blockquote>
+<p>“Given the visible tokens in this sequence, where do I fit?”</p>
+</blockquote>
+<p>For <code>sat</code>, the contextual update may make information available corresponding to:</p>
+<ul>
+<li>its relationship with <code>cat</code>;</li>
+<li>its likely role in the sequence;</li>
+<li>patterns in the tokens before it;</li>
+<li>information accumulated by earlier layers;</li>
+<li>features that help predict what comes next.</li>
+</ul>
+<p>The token does not leave the service with one “soulmate.”</p>
+<p>It leaves with a blended report about several relevant relationships.</p>
+<p>We have not yet explained how that blend is calculated. That requires Query, Key, Value, scores, and softmax—the cast introduced in the next chapters.</p>
+<h1>The technical picture</h1>
+<p>For a sequence of <span class="math-inline">\(n\)</span> tokens:</p>
+<div class="math-display">\[X =
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+\vdots \\
+x_n
+\end{bmatrix}\]</div>
+<p>where:</p>
+<div class="math-display">\[x_t \in \mathbb{R}^{d_{\text{model}}}\]</div>
+<p>Therefore:</p>
+<div class="math-display">\[X \in \mathbb{R}^{n \times d_{\text{model}}}\]</div>
+<p>For the running example:</p>
+<div class="math-display">\[n=3
+\qquad\text{and}\qquad
+d_{\text{model}}=4\]</div>
+<p>so:</p>
+<div class="math-display">\[X \in \mathbb{R}^{3 \times 4}\]</div>
+<p>After the outputs from all attention heads are combined, attention produces a model-width update:</p>
+<div class="math-display">\[\Delta X_{\text{attention}}
+\in
+\mathbb{R}^{3 \times 4}\]</div>
+<p>The residual addition is:</p>
+<div class="math-display">\[X_{\text{updated}}
+=
+X
++
+\Delta X_{\text{attention}}\]</div>
+<p>This is our first glimpse of the <strong>residual stream</strong>:</p>
+<blockquote>
+<p>Keep the current state and add a newly computed update.</p>
+</blockquote>
+<h1>Why keep the old state?</h1>
+<p>Suppose attention completely replaced <code>sat</code> with information retrieved from <code>cat</code>.</p>
+<p>The model could lose useful information already stored in the <code>sat</code> vector.</p>
+<p>Residual addition instead says:</p>
+<blockquote>
+<p>Retain what you already know, then add what you learned.</p>
+</blockquote>
+<p>In the dating-service analogy:</p>
+<blockquote>
+<p><code>SAT</code> does not leave as <code>CAT</code>. It remains <code>SAT</code>, but now carries a richer understanding of how it relates to <code>CAT</code>.</p>
+</blockquote>
+<p>We will study residual connections in detail after completing the attention calculation.</p>
+<h1>Brain check</h1>
+<div class="exercise">
+
+<h2>1. Does attention collapse the sentence into one vector?</h2>
+<p>No. Standard self-attention produces one updated vector for every token position.</p>
+<h2>2. Is the state entering every attention layer just the original embedding?</h2>
+<p>No. In later layers, it already contains information accumulated from previous attention and MLP sublayers.</p>
+<h2>3. What does attention give a token?</h2>
+<p>A contextual update derived from the visible token states.</p>
+<h2>4. In a causal LLM, can <code>sat</code> in “The cat sat on the mat” use <code>mat</code> while computing the state at <code>sat</code>?</h2>
+<p>No. <code>mat</code> is a future token relative to that position.</p>
+<h2>5. Does the updated <code>sat</code> vector literally contain the sentence “CAT is my subject”?</h2>
+<p>No. That is a human interpretation of information the numerical state may make usable.</p>
+</div>
+
+<h1>Chapter takeaway</h1>
+<p>Before attention, the model has:</p>
+<div class="math-display">\[\boxed{\text{one current hidden-state vector per token}}\]</div>
+<p>Attention’s job is to help each token answer:</p>
+<blockquote>
+<p>“Given the visible token states, what information should update me?”</p>
+</blockquote>
+<p>The result is:</p>
+<div class="math-display">\[\boxed{
+\text{existing token state}
++
+\text{contextual update}
+=
+\text{richer token state}
+}\]</div>
+<p>Or, in the dating-world story:</p>
+<blockquote>
+<p><strong>Every token enters knowing who it currently is. It leaves knowing more about where it fits.</strong></p>
+</blockquote>
+<h1>Coming next: Meet the Question Coach</h1>
+<p><code>SAT</code> has entered the matchmaking service carrying its current state.</p>
+<p>But it cannot simply request:</p>
+<blockquote>
+<p>“Tell me everything.”</p>
+</blockquote>
+<p>It needs a learned way to express what kind of information it is looking for.</p>
+<p>That is the job of the <strong>Question Coach</strong>:</p>
+<div class="math-display">\[W^Q\]</div>
+<p>In the next chapter, we will first meet the Question Coach as a character and then perform the exact calculation:</p>
+<div class="math-display">\[q_{\text{sat}} = x_{\text{sat}} W^Q\]</div>

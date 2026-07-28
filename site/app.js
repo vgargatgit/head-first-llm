@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260728.11';
+  const BUILD_VERSION = '20260728.12';
   const chapters = {
     1: {
       title: 'A Token Enters the Dating World',
@@ -166,17 +166,35 @@
     const displayMath = [];
     const inlineMath = [];
 
-    let protectedMarkdown = markdown.replace(/\$\$([\s\S]*?)\$\$/g, (_match, tex) => {
+    const stashDisplayMath = tex => {
       const token = `LLMIODISPLAYMATH${displayMath.length}TOKEN`;
       displayMath.push({ token, tex: tex.trim() });
       return `\n\n${token}\n\n`;
-    });
+    };
 
-    protectedMarkdown = protectedMarkdown.replace(/(^|[^\\])\$([^\n$]+?)\$/g, (_match, prefix, tex) => {
+    const stashInlineMath = tex => {
       const token = `LLMIOINLINEMATH${inlineMath.length}TOKEN`;
       inlineMath.push({ token, tex: tex.trim() });
-      return `${prefix}${token}`;
-    });
+      return token;
+    };
+
+    // Protect MathJax's explicit delimiters before Markdown consumes the
+    // backslashes as ordinary Markdown escapes.
+    let protectedMarkdown = markdown.replace(/\\\[([\s\S]*?)\\\]/g, (_match, tex) =>
+      stashDisplayMath(tex)
+    );
+
+    protectedMarkdown = protectedMarkdown.replace(/\$\$([\s\S]*?)\$\$/g, (_match, tex) =>
+      stashDisplayMath(tex)
+    );
+
+    protectedMarkdown = protectedMarkdown.replace(/\\\(([\s\S]*?)\\\)/g, (_match, tex) =>
+      stashInlineMath(tex)
+    );
+
+    protectedMarkdown = protectedMarkdown.replace(/(^|[^\\])\$([^\n$]+?)\$/g, (_match, prefix, tex) =>
+      `${prefix}${stashInlineMath(tex)}`
+    );
 
     return { markdown: protectedMarkdown, displayMath, inlineMath };
   }
@@ -268,7 +286,7 @@
 
       const link = document.createElement('a');
       link.href = `#${heading.id}`;
-      link.textContent = heading.textContent;
+      link.innerHTML = heading.innerHTML;
       link.className = heading.tagName === 'H2' ? 'level-1' : 'level-2';
       links.push(link);
     });
@@ -331,7 +349,7 @@
     try {
       if (window.MathJax?.startup?.promise) await window.MathJax.startup.promise;
       if (window.MathJax?.typesetPromise) {
-        await window.MathJax.typesetPromise([article]);
+        await window.MathJax.typesetPromise([article, toc]);
       } else {
         console.warn('The equation renderer did not load; showing raw equation delimiters.');
       }

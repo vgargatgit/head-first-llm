@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260728.9';
+  const BUILD_VERSION = '20260728.11';
   const chapters = {
     1: {
       title: 'A Token Enters the Dating World',

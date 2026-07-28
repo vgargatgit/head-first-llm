@@ -1,0 +1,33 @@
+name: Refresh chapter reader build version
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/refresh-site-build-version.py
+      - .github/workflows/refresh-site-build-version.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: ${{ !contains(github.event.head_commit.message, '[site refresh applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Refresh site build version
+        run: python scripts/refresh-site-build-version.py
+
+      - name: Commit refreshed reader and remove one-time files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm scripts/refresh-site-build-version.py .github/workflows/refresh-site-build-version.yml
+          git add site/app.js site/chapter.html
+          git commit -m "site: refresh chapter reader for residual pattern [site refresh applied]"
+          git push origin HEAD:main

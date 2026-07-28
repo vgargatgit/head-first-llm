@@ -1,0 +1,41 @@
+name: Audit all chapter manuscripts
+
+on:
+  push:
+    branches:
+      - audit/all-chapters-review
+    paths-ignore:
+      - 'audit/**'
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out review branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install the reader's Markdown parser
+        run: npm install --no-save marked@15
+
+      - name: Run structural manuscript audit
+        run: python3 tools/book_audit.py
+
+      - name: Run rendered-Markdown audit
+        run: node tools/render_audit.mjs
+
+      - name: Commit generated audit material
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audit
+          git diff --cached --quiet && exit 0
+          git commit -m "Generate full manuscript audit"
+          git push origin HEAD:audit/all-chapters-review

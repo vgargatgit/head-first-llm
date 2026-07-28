@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="LLMs from the Inside Out — a visual guide to Transformers, training, distributed systems, and post-training.">
+  <meta name="description" content="LLMs from the Inside Out — a visual guide to Transformers, training, architecture families, retrieval, multimodality, efficient inference, and evaluation.">
   <title>LLMs from the Inside Out</title>
-  <link rel="stylesheet" href="site.css?v=20260728.7">
-  <link rel="stylesheet" href="auth.css?v=20260728.7">
-  <script src="auth.js?v=20260728.7"></script>
+  <link rel="stylesheet" href="site.css?v=20260728.8">
+  <link rel="stylesheet" href="auth.css?v=20260728.8">
+  <script src="auth.js?v=20260728.8"></script>
 </head>
 <body class="home-page">
   <header class="site-header">
@@ -22,8 +22,8 @@
     <section class="hero-card">
       <p class="eyebrow">THE BOOK WORKSPACE</p>
       <h1>Learn LLMs from the inside out,<br>one visual and calculation at a time.</h1>
-      <p class="hero-copy">Follow THE, CAT, and SAT from embeddings and attention through generation, training at scale, and post-training into assistant behaviour.</p>
-      <a class="primary-button" href="chapter.html?chapter=1&amp;v=20260728.7">Start with Chapter 1</a>
+      <p class="hero-copy">Follow THE, CAT, and SAT from embeddings and attention through generation, training, architecture families, retrieval, multimodality, efficient serving, and evaluation.</p>
+      <a class="primary-button" href="chapter.html?chapter=1&amp;v=20260728.8">Start with Chapter 1</a>
     </section>
 
     <section aria-labelledby="chapters-title">
@@ -33,23 +33,30 @@
       </div>
 
       <div class="chapter-grid">
-        <a class="chapter-card" href="chapter.html?chapter=1&amp;v=20260728.7"><span class="chapter-number">01</span><div><h3>A Token Enters the Dating World</h3><p>Hidden states, context, and why a token needs attention.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=2&amp;v=20260728.7"><span class="chapter-number">02</span><div><h3>Meet the Question Coach</h3><p>How a token converts its current state into a Query.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=3&amp;v=20260728.7"><span class="chapter-number">03</span><div><h3>Meet the Profile Writer</h3><p>How every token creates a searchable Key.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=4&amp;v=20260728.7"><span class="chapter-number">04</span><div><h3>When Queries Meet Keys</h3><p>Dot products, scaling, causal masking, and row-wise softmax.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=5&amp;v=20260728.7"><span class="chapter-number">05</span><div><h3>Meet the Information Courier</h3><p>How Values and attention weights create one head's output.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=6&amp;v=20260728.7"><span class="chapter-number">06</span><div><h3>Many Specialists at Work</h3><p>How multiple attention heads learn different matching and retrieval systems.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=7&amp;v=20260728.7"><span class="chapter-number">07</span><div><h3>The Team Lead Combines the Reports</h3><p>Output projection, residual connections, LayerNorm, and pre-norm variants.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=8&amp;v=20260728.7"><span class="chapter-number">08</span><div><h3>The Private Thinking Room</h3><p>How the position-wise MLP completes one Transformer block.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=9&amp;v=20260728.7"><span class="chapter-number">09</span><div><h3>Every Token Needs an Address</h3><p>Absolute positions, sinusoidal encodings, and RoPE geometry.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=10&amp;v=20260728.7"><span class="chapter-number">10</span><div><h3>The Residual Stream Climbs the Stack</h3><p>How deep blocks refine hidden states and maintain per-layer KV caches.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=11&amp;v=20260728.7"><span class="chapter-number">11</span><div><h3>The Final Audition</h3><p>Vocabulary logits, softmax, temperature, sampling, and next-token generation.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=12&amp;v=20260728.7"><span class="chapter-number">12</span><div><h3>The Answer Key Moves One Step Ahead</h3><p>Shifted labels, teacher forcing, masks, padding, and packed sequences.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=13&amp;v=20260728.7"><span class="chapter-number">13</span><div><h3>Meet the Scorekeeper</h3><p>Negative log-likelihood, cross-entropy, masked means, and perplexity.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=14&amp;v=20260728.7"><span class="chapter-number">14</span><div><h3>The Blame Travels Backward</h3><p>Chain-rule gradients through the output head, blocks, attention, and optimiser updates.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=15&amp;v=20260728.7"><span class="chapter-number">15</span><div><h3>The Training Factory Never Sees the Whole Library</h3><p>Effective batches, data mixtures, schedules, validation, and resumable checkpoints.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=16&amp;v=20260728.7"><span class="chapter-number">16</span><div><h3>The Model Outgrows One Machine</h3><p>Data parallelism, state sharding, tensor parallelism, pipelines, and memory trade-offs.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
-        <a class="chapter-card" href="chapter.html?chapter=17&amp;v=20260728.7"><span class="chapter-number">17</span><div><h3>From Completion Machine to Helpful Assistant</h3><p>Supervised fine-tuning, preference optimisation, RLHF, DPO, and LoRA.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=1&amp;v=20260728.8"><span class="chapter-number">01</span><div><h3>A Token Enters the Dating World</h3><p>Hidden states, context, and why a token needs attention.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=2&amp;v=20260728.8"><span class="chapter-number">02</span><div><h3>Meet the Question Coach</h3><p>How a token converts its current state into a Query.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=3&amp;v=20260728.8"><span class="chapter-number">03</span><div><h3>Meet the Profile Writer</h3><p>How every token creates a searchable Key.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=4&amp;v=20260728.8"><span class="chapter-number">04</span><div><h3>When Queries Meet Keys</h3><p>Dot products, scaling, causal masking, and row-wise softmax.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=5&amp;v=20260728.8"><span class="chapter-number">05</span><div><h3>Meet the Information Courier</h3><p>How Values and attention weights create one head's output.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=6&amp;v=20260728.8"><span class="chapter-number">06</span><div><h3>Many Specialists at Work</h3><p>How multiple attention heads learn different matching and retrieval systems.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=7&amp;v=20260728.8"><span class="chapter-number">07</span><div><h3>The Team Lead Combines the Reports</h3><p>Output projection, residual connections, LayerNorm, and pre-norm variants.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=8&amp;v=20260728.8"><span class="chapter-number">08</span><div><h3>The Private Thinking Room</h3><p>How the position-wise MLP completes one Transformer block.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=9&amp;v=20260728.8"><span class="chapter-number">09</span><div><h3>Every Token Needs an Address</h3><p>Absolute positions, sinusoidal encodings, and RoPE geometry.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=10&amp;v=20260728.8"><span class="chapter-number">10</span><div><h3>The Residual Stream Climbs the Stack</h3><p>How deep blocks refine hidden states and maintain per-layer KV caches.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=11&amp;v=20260728.8"><span class="chapter-number">11</span><div><h3>The Final Audition</h3><p>Vocabulary logits, softmax, temperature, sampling, and next-token generation.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=12&amp;v=20260728.8"><span class="chapter-number">12</span><div><h3>The Answer Key Moves One Step Ahead</h3><p>Shifted labels, teacher forcing, masks, padding, and packed sequences.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=13&amp;v=20260728.8"><span class="chapter-number">13</span><div><h3>Meet the Scorekeeper</h3><p>Negative log-likelihood, cross-entropy, masked means, and perplexity.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=14&amp;v=20260728.8"><span class="chapter-number">14</span><div><h3>The Blame Travels Backward</h3><p>Chain-rule gradients through the output head, blocks, attention, and optimiser updates.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=15&amp;v=20260728.8"><span class="chapter-number">15</span><div><h3>The Training Factory Never Sees the Whole Library</h3><p>Effective batches, data mixtures, schedules, validation, and resumable checkpoints.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=16&amp;v=20260728.8"><span class="chapter-number">16</span><div><h3>The Model Outgrows One Machine</h3><p>Data parallelism, state sharding, tensor parallelism, pipelines, and memory trade-offs.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=17&amp;v=20260728.8"><span class="chapter-number">17</span><div><h3>From Completion Machine to Helpful Assistant</h3><p>Supervised fine-tuning, preference optimisation, RLHF, DPO, and LoRA.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=18&amp;v=20260728.8"><span class="chapter-number">18</span><div><h3>Three Transformer Families Move In</h3><p>Encoder-only, decoder-only, and encoder–decoder models compared by information flow and real-world use.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=19&amp;v=20260728.8"><span class="chapter-number">19</span><div><h3>The Decoder Borrows the Encoder’s Notes</h3><p>A full cross-attention calculation from decoder Query to encoder-side retrieval.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=20&amp;v=20260728.8"><span class="chapter-number">20</span><div><h3>From Pretraining to Specialisation</h3><p>Foundation models, base checkpoints, continued pretraining, tuning, adapters, and runtime conditioning.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=21&amp;v=20260728.8"><span class="chapter-number">21</span><div><h3>Open Book, Closed Book, or Tool Belt?</h3><p>Parametric memory, RAG, citations, external memory, and safe tool use.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=22&amp;v=20260728.8"><span class="chapter-number">22</span><div><h3>Pictures, Audio, and Other Modalities</h3><p>Vision and audio encoders, projectors, cross-attention, and multimodal alignment.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=23&amp;v=20260728.8"><span class="chapter-number">23</span><div><h3>Smaller, Faster, Cheaper</h3><p>Quantisation, distillation, MoE, batching, caching, and serving trade-offs.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
+        <a class="chapter-card" href="chapter.html?chapter=24&amp;v=20260728.8"><span class="chapter-number">24</span><div><h3>Trust, but Verify</h3><p>Evaluation, calibration, hallucination, bias, privacy, safety, and production monitoring.</p></div><span class="card-arrow" aria-hidden="true">→</span></a>
       </div>
     </section>
   </main>

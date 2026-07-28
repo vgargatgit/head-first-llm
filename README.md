@@ -37,8 +37,15 @@ The Pages site includes a browser-side preview login. This is suitable only as a
 15. [The Training Factory Never Sees the Whole Library](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=15)
 16. [The Model Outgrows One Machine](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=16)
 17. [From Completion Machine to Helpful Assistant](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=17)
+18. [Three Transformer Families Move In](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=18)
+19. [The Decoder Borrows the Encoder’s Notes](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=19)
+20. [From Pretraining to Specialisation](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=20)
+21. [Open Book, Closed Book, or Tool Belt?](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=21)
+22. [Pictures, Audio, and Other Modalities](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=22)
+23. [Smaller, Faster, Cheaper](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=23)
+24. [Trust, but Verify](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=24)
 
-Chapters 4–17 currently use equations, tables, text diagrams, and worked calculations without final illustration assets. Detailed production specifications are complete for the planned graphics.
+Chapters 8–24 currently use equations, tables, text diagrams, and worked calculations without final illustration assets. Detailed production specifications are complete for Chapters 8–17; the later arc is ready for visual planning.
 
 ## Repository layout
 
@@ -54,7 +61,7 @@ Chapters 4–17 currently use equations, tables, text diagrams, and worked calcu
 
 ## Current workspace status
 
-The complete Chapter 1–17 Markdown sources and the GitHub Pages reader are committed on `main`. The reader rewrites image paths for the illustrated chapters and renders Chapters 4–17 directly without graphics.
+The complete Chapter 1–24 Markdown sources and the GitHub Pages reader are committed on `main`.
 
 Chapters 1–8 build one Transformer block from hidden states, Query/Key/Value projections, causal attention, multiple heads, residual paths, normalisation, and the MLP.
 
@@ -67,6 +74,16 @@ Chapters 15–17 expand that one update into a complete model-development system
 - effective token batches, gradient accumulation, data mixtures, learning-rate schedules, validation, and resumable checkpoints;
 - data parallelism, model-state sharding, tensor parallelism, pipeline parallelism, activation checkpointing, and distributed communication;
 - chat templates, supervised fine-tuning, response-only loss, preference data, reward modelling, RLHF, DPO, LoRA, and post-training evaluation.
+
+Chapters 18–24 add the broader system map:
+
+- encoder-only, decoder-only, and encoder–decoder architecture families with public model examples;
+- a complete numerical encoder–decoder cross-attention calculation;
+- foundation models, pretraining, continued pretraining, fine-tuning, instruction tuning, adapters, prompting, and retrieval;
+- RAG, citations, external memory, tool orchestration, access controls, and prompt-injection risks;
+- multimodal encoders, projectors, cross-attention, visual tokens, audio features, and alignment objectives;
+- quantisation, distillation, sparsity, MoE, KV caches, continuous batching, speculative decoding, and serving trade-offs;
+- hallucination, calibration, contamination, bias, privacy, safety, release gates, and production monitoring.
 
 ## Visual development plans
 

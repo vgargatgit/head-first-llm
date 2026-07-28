@@ -1,0 +1,33 @@
+name: Apply residual pattern chapter integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/apply-pattern-01.py
+      - .github/workflows/apply-pattern-01.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: ${{ !contains(github.event.head_commit.message, '[pattern-01 applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply anchor-checked chapter edits
+        run: python scripts/apply-pattern-01.py
+
+      - name: Commit chapter edits and remove one-time files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm scripts/apply-pattern-01.py .github/workflows/apply-pattern-01.yml
+          git add src/chapter-01.md src/chapter-07.md src/chapter-08.md src/chapter-10.md src/chapter-14.md
+          git commit -m "docs: integrate residual connection design pattern [pattern-01 applied]"
+          git push origin HEAD:main

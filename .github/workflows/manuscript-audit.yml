@@ -34,6 +34,9 @@ jobs:
       - name: Scan for hidden control characters
         run: python3 tools/control_char_audit.py
 
+      - name: Resolve and verify image assets
+        run: python3 tools/asset_audit.py
+
       - name: Run rendered-Markdown audit
         run: node tools/render_audit.mjs
 

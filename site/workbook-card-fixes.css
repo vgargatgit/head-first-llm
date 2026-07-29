@@ -1,0 +1,32 @@
+.chapter-content .workbook-object-name.is-math {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.65rem;
+  padding: 2px 7px;
+  color: var(--purple-dark);
+  background: var(--purple-pale);
+  border-radius: 5px;
+  font-size: .9rem;
+  font-weight: 750;
+}
+
+.workbook-object-name.is-math mjx-container,
+.workbook-inline-math mjx-container {
+  display: inline-block !important;
+  margin: 0 !important;
+}
+
+.workbook-inline-math {
+  white-space: nowrap;
+}
+
+.workbook-card:not(.is-typeset) .workbook-object-name.is-math,
+.workbook-card:not(.is-typeset) .workbook-inline-math {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (max-width: 620px) {
+  .workbook-inline-math {
+    white-space: normal;
+  }
+}

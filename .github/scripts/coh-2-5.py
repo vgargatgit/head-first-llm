@@ -15,6 +15,14 @@ def replace_once(text: str, old: str, new: str, label: str) -> str:
     return text.replace(old, new, 1)
 
 
+def replace_tail_from_heading(text: str, heading: str, new_tail: str, label: str) -> str:
+    count = text.count(heading)
+    if count != 1:
+        raise SystemExit(f"{label}: expected one heading, found {count}")
+    prefix, _ = text.split(heading, 1)
+    return prefix + new_tail
+
+
 def display_equations(text: str) -> list[str]:
     return re.findall(r"\$\$[\s\S]*?\$\$", text)
 
@@ -30,19 +38,6 @@ before = {
 }
 after = dict(before)
 
-old_ch8 = """# Coming next: stack the blocks and predict a token
-
-We have completed one Transformer block, but an LLM normally contains many such blocks.
-
-The next stage of the book can follow:
-
-- how hidden states evolve through a stack of layers;
-- how the final position is converted into vocabulary logits;
-- how softmax creates next-token probabilities;
-- how greedy decoding, sampling, temperature, top-k, and top-p choose the next token.
-
-The reader now has all the machinery needed to connect attention mechanics to actual text generation.
-"""
 new_ch8 = """# Coming next: open the position box, then climb the stack
 
 We have completed the computation inside one simplified Transformer block. Throughout Chapters 1–8, however, the supplied $X$ was treated as already prepared for that block, with the target architecture's positional treatment accounted for.
@@ -58,31 +53,14 @@ Once that box is open, the book can follow the prepared hidden states through:
 
 > **First complete the block, then inspect how its input was prepared, then follow the residual stream through depth and prediction.**
 """
-after[8] = replace_once(after[8], old_ch8, new_ch8, "Chapter 8 final handoff")
+after[8] = replace_tail_from_heading(
+    after[8],
+    "# Coming next: stack the blocks and predict a token",
+    new_ch8,
+    "Chapter 8 final handoff",
+)
 
-old_ch9 = """# Coming next: the residual stream climbs the stack
-
-With the target architecture's positional treatment now explicit, the prepared token states can flow through the Transformer stack. One Transformer block produces another matrix with the same outer shape:
-
-$$
-X^{(1)}\in\mathbb{R}^{n\times d_{\text{model}}}
-$$
-
-That matrix enters another block, and then another:
-
-$$
-X^{(0)}
-\rightarrow
-X^{(1)}
-\rightarrow
-\cdots
-\rightarrow
-X^{(L)}
-$$
-
-Chapter 10 follows token representations through depth and shows why every layer owns its own attention, MLP, normalisation, and KV-cache state.
-"""
-new_ch9 = """# Coming next: carry the prepared state through depth
+new_ch9 = r"""# Coming next: carry the prepared state through depth
 
 Chapter 1 introduced the minimum scaffold, Chapters 2–8 showed what one block does with a prepared input, and this chapter made the architecture-specific positional treatment explicit. The stack now has a well-defined starting state: $X^{(0)}$ is the prepared hidden-state matrix entering the first block.
 
@@ -106,7 +84,12 @@ $$
 
 Chapter 10 can therefore begin directly with depth: it follows the residual stream through the stack and shows why every layer owns its own attention, MLP, normalisation, and KV-cache state.
 """
-after[9] = replace_once(after[9], old_ch9, new_ch9, "Chapter 9 stack handoff")
+after[9] = replace_tail_from_heading(
+    after[9],
+    "# Coming next: the residual stream climbs the stack",
+    new_ch9,
+    "Chapter 9 stack handoff",
+)
 
 old_ch10_open = """# The question this chapter answers
 

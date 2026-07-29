@@ -7,6 +7,7 @@ on:
       - 'site/**'
       - 'src/**'
       - 'assets/**'
+      - 'scripts/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -28,6 +29,9 @@ jobs:
 
       - name: Validate authentication script
         run: node --check site/auth.js
+
+      - name: Validate book structure and navigation
+        run: node scripts/check-book-consistency.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

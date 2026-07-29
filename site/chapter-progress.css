@@ -1,0 +1,278 @@
+.reader-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.reader-all-parts {
+  color: var(--purple-dark);
+  font-size: .9rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.reader-all-parts:hover { color: var(--purple); }
+
+.part-progress {
+  position: sticky;
+  top: 68px;
+  z-index: 16;
+  background: rgba(242, 236, 255, .96);
+  border-bottom: 1px solid rgba(101, 70, 168, .2);
+  box-shadow: 0 7px 20px rgba(42, 35, 57, .08);
+  backdrop-filter: blur(14px);
+}
+
+.part-progress[hidden] { display: none; }
+
+.part-progress-desktop,
+.part-progress-mobile {
+  width: min(1320px, 94vw);
+  margin: 0 auto;
+}
+
+.part-progress-mobile { display: none; }
+
+.reader-sidebar {
+  top: 184px;
+  max-height: calc(100vh - 210px);
+}
+
+.part-progress-top-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  padding: 9px 4px 7px;
+}
+
+.part-progress-all {
+  color: var(--purple-dark);
+  font-size: .82rem;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.part-progress-all:hover { color: var(--purple); }
+
+.part-progress-identity {
+  display: flex;
+  min-width: 0;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.part-progress-eyebrow {
+  color: var(--purple);
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.part-progress-title {
+  overflow: hidden;
+  color: var(--purple-dark);
+  font-family: "Comic Sans MS", "Segoe Print", ui-rounded, sans-serif;
+  font-size: 1rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.part-progress-count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.part-chapter-progress {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0;
+  padding: 0 4px 10px;
+  list-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(101,70,168,.4) transparent;
+}
+
+.part-chapter-progress li { flex: 0 0 auto; }
+
+.part-chapter-progress-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 11px;
+  color: #56456f;
+  background: rgba(255, 253, 248, .72);
+  border: 1px solid rgba(101,70,168,.18);
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.part-chapter-progress-link:hover {
+  color: var(--purple-dark);
+  background: white;
+  border-color: rgba(101,70,168,.5);
+}
+
+.part-chapter-progress-link.active {
+  color: white;
+  background: var(--purple);
+  border-color: var(--purple);
+  box-shadow: 0 5px 14px rgba(101,70,168,.23);
+}
+
+.chapter-footer-nav a.part-transition {
+  display: grid;
+  gap: 5px;
+  border-color: rgba(101,70,168,.34);
+  background: linear-gradient(135deg, var(--purple-pale), var(--paper));
+}
+
+.footer-nav-context {
+  color: var(--purple-dark);
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.chapter-footer-nav a.part-transition strong {
+  color: var(--purple);
+  line-height: 1.35;
+}
+
+.part-progress-mobile-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 9px 0 7px;
+}
+
+.part-chapter-select-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 0 0 8px;
+}
+
+.part-chapter-select-field label {
+  color: var(--purple-dark);
+  font-size: .75rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.part-chapter-select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 7px 34px 7px 10px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid rgba(101,70,168,.35);
+  border-radius: 10px;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 750;
+}
+
+.part-chapter-select:focus-visible {
+  outline: 3px solid var(--purple);
+  outline-offset: 2px;
+}
+
+.part-mobile-pager {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: stretch;
+  padding-bottom: 9px;
+}
+
+.part-mobile-pager-link,
+.part-mobile-pager-spacer,
+.part-mobile-current {
+  min-width: 0;
+  min-height: 38px;
+  border-radius: 10px;
+}
+
+.part-mobile-pager-link {
+  display: flex;
+  align-items: center;
+  padding: 7px 9px;
+  overflow: hidden;
+  color: var(--purple-dark);
+  background: rgba(255,253,248,.75);
+  border: 1px solid rgba(101,70,168,.22);
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+  text-overflow: ellipsis;
+}
+
+.part-mobile-pager-link.next {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.part-mobile-pager-link:hover { background: white; }
+
+.part-mobile-current {
+  display: grid;
+  place-items: center;
+  padding-inline: 9px;
+  color: white;
+  background: var(--purple);
+  font-size: .76rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .part-progress-desktop,
+  .part-progress-mobile { width: min(760px, 94vw); }
+
+  .part-progress-title { font-size: .94rem; }
+}
+
+@media (max-width: 720px) {
+  .reader-header { min-height: 60px; }
+  .reader-all-parts { display: none; }
+  .part-progress { top: 60px; }
+  .part-progress-desktop { display: none; }
+  .part-progress-mobile { display: block; }
+  .part-progress-identity { display: grid; gap: 1px; }
+  .part-progress-eyebrow { font-size: .63rem; }
+  .part-progress-title { font-size: .86rem; white-space: normal; }
+  .part-progress-count { display: none; }
+}
+
+@media (max-width: 440px) {
+  .part-progress-mobile { width: calc(100vw - 24px); }
+  .part-progress-mobile-top { grid-template-columns: auto minmax(0, 1fr); }
+  .part-chapter-select-field { grid-template-columns: 1fr; gap: 4px; }
+  .part-chapter-select-field label { white-space: normal; }
+  .part-mobile-pager-link { font-size: .67rem; }
+  .part-mobile-current { padding-inline: 7px; }
+}
+
+@media print {
+  .part-progress { display: none !important; }
+}

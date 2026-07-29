@@ -31,35 +31,10 @@ after = replace_once(
     "Chapter 9 opening matrix description",
 )
 
-old_opening = """# A deliberate rewind
-
-Chapter 8 completed one Transformer block. This chapter steps backward to expose an assumption already built into our running matrix.
-
-Before the first block, a decoder-only Transformer begins with token IDs and creates token embeddings:
-
-$$
-E=
-\begin{bmatrix}
-e_1\\
-e_2\\
-\vdots\\
-e_n
-\end{bmatrix}
-$$
-
-It must then make position available somehow.
-
-Common approaches include:
-
-- learned absolute positional embeddings;
-- fixed sinusoidal position encodings;
-- relative-position biases;
-- rotary position embeddings, usually called **RoPE**.
-
-The mechanism is architecture-specific, but the requirement is universal: the model needs information that distinguishes one ordering from another.
-"""
-
-new_opening = """# Open the position box
+after = replace_once(
+    after,
+    "# A deliberate rewind\n\nChapter 8 completed one Transformer block. This chapter steps backward to expose an assumption already built into our running matrix.\n\n",
+    """# Open the position box
 
 Chapter 1 gave us a minimum scaffold: token IDs become token embeddings, and the architecture makes position available before or inside attention. Chapters 1–8 then treated the supplied $X$ as the current hidden-state matrix already prepared for the block, rather than pausing to unpack the position mechanism.
 
@@ -77,31 +52,16 @@ We can also keep three ideas separate:
 - **causal visibility** controls which positions a Query may use;
 - a **positional mechanism** makes location or relative distance available to learned computation.
 
-Before the first block, a decoder-only Transformer begins with token IDs and creates token embeddings:
+""",
+    "Chapter 9 position-box opening",
+)
 
-$$
-E=
-\begin{bmatrix}
-e_1\\
-e_2\\
-\vdots\\
-e_n
-\end{bmatrix}
-$$
-
-It must then make position available somehow.
-
-Common approaches include:
-
-- learned absolute positional embeddings;
-- fixed sinusoidal position encodings;
-- relative-position biases;
-- rotary position embeddings, usually called **RoPE**.
-
-This list is a menu of architecture choices, not a universal pipeline in which every method is applied. A target model may use one approach or a documented combination. The shared requirement is that the computation can distinguish one ordering from another.
-"""
-
-after = replace_once(after, old_opening, new_opening, "Chapter 9 position-box opening")
+after = replace_once(
+    after,
+    "The mechanism is architecture-specific, but the requirement is universal: the model needs information that distinguishes one ordering from another.",
+    "This list is a menu of architecture choices, not a universal pipeline in which every method is applied. A target model may use one approach or a documented combination. The shared requirement is that the computation can distinguish one ordering from another.",
+    "Architecture-choice clarification",
+)
 
 after = replace_once(
     after,

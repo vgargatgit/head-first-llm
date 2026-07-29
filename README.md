@@ -76,12 +76,12 @@ Chapters 8–24 currently use equations, tables, text diagrams, and worked calcu
 ## Repository layout
 
 - `src/` — canonical editable chapter prose; chapter text changes are made here
-- `site/book-data.js` — canonical site-facing metadata for part names, chapter membership, summaries, navigation labels, source paths, and reader artwork mappings
+- `site/book-data.js` — canonical site-facing metadata for parts, chapters, workbook stages, navigation, source paths, and reader artwork mappings
 - `site/` — GitHub Pages home page, login page, chapter reader, styling, and rendering logic
 - `manifest.md` — editorial publication record for canonical chapter order, part membership, graphics status, and publication status
 - `assets/` — chapter-specific graphics where available
 - `docs/` — the [canonical running-example ledger](docs/running-example-ledger.md), visual-development plans, character bibles, storyboard source documents, and the implementation backlog
-- `scripts/` — dependency-free repository consistency and numerical checks used locally and by GitHub Actions
+- `scripts/` — dependency-free repository consistency, workbook-metadata, and numerical checks used locally and by GitHub Actions
 - `.github/workflows/pages.yml` — automatic Pages deployment
 - `dist/` — earlier browser distribution pages retained for reference
 - `styles/` — earlier shared chapter styling
@@ -89,20 +89,23 @@ Chapters 8–24 currently use equations, tables, text diagrams, and worked calcu
 
 These sources have separate responsibilities: `src/` owns prose, `site/book-data.js` drives the published site structure, and `manifest.md` records editorial and production status. Their chapter titles, order, and part membership must remain aligned.
 
-## Validate book structure and the running example
+## Validate book structure, workbook metadata, and the running example
 
-Run both checks from the repository root:
+Run all checks from the repository root:
 
 ```bash
 node scripts/check-book-consistency.mjs
+node scripts/check-workbook-metadata.mjs
 node scripts/verify-running-example.mjs
 ```
 
 The structure check evaluates `site/book-data.js` without a browser and verifies ordered, contiguous and unique parts and chapters; one-part-only chapter membership; source-file existence; previous/next lookup behaviour; and the required desktop/mobile part-navigation integration.
 
+The workbook check verifies that Chapters 1–11 have complete stage metadata, ledger-backed shapes, valid detailed-calculation headings and anchors, and that later chapters safely expose `stage: null`.
+
 The numerical check reads [`docs/running-example-ledger.md`](docs/running-example-ledger.md), validates every declared shape and source heading, and independently recomputes the `THE CAT SAT` path from Query, Key and Value projections through the final vocabulary probabilities. It exits with a precise object-level error when a value drifts beyond the documented tolerance.
 
-The GitHub Pages workflow runs both commands before assembling the published site, so invalid book metadata or numerical drift blocks deployment.
+The GitHub Pages workflow runs all three commands before assembling the published site, so invalid book metadata, workbook drift, or numerical drift blocks deployment.
 
 ## Current workspace status
 

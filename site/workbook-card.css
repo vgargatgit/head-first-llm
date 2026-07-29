@@ -1,0 +1,270 @@
+.workbook-card {
+  position: relative;
+  margin: -1.2rem 0 2.5rem;
+  padding: clamp(18px, 3vw, 28px);
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(101, 70, 168, .07), transparent 46%),
+    #fbfaf7;
+  border: 1px solid rgba(101, 70, 168, .28);
+  border-radius: 20px;
+  box-shadow: 0 10px 28px rgba(42, 35, 57, .08);
+}
+
+.workbook-card::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: var(--purple);
+  content: '';
+}
+
+.workbook-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+}
+
+.workbook-heading-group { min-width: 0; }
+
+.workbook-eyebrow {
+  margin: 0 0 5px;
+  color: var(--purple);
+  font-size: .72rem !important;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.chapter-content .workbook-title {
+  margin: 0;
+  padding: 0;
+  color: var(--ink);
+  border: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: clamp(1.28rem, 2.4vw, 1.75rem);
+  line-height: 1.25;
+}
+
+.workbook-detail-link {
+  color: var(--purple-dark);
+  font-size: .88rem;
+  font-weight: 800;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.workbook-progress {
+  display: grid;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 0;
+  margin: 21px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workbook-progress-item {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.workbook-progress-item:not(:last-child)::after {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: calc(50% + 13px);
+  width: calc(100% - 20px);
+  height: 2px;
+  background: #d9d1e7;
+  content: '';
+  transform: translateY(-50%);
+}
+
+.workbook-progress-item.is-complete:not(:last-child)::after {
+  background: rgba(101, 70, 168, .55);
+}
+
+.workbook-progress-marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: #5c5f6b;
+  background: #fff;
+  border: 1px solid #cbc3d8;
+  border-radius: 50%;
+  font-size: .76rem;
+  font-weight: 850;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.workbook-progress-item.is-complete .workbook-progress-marker {
+  color: var(--purple-dark);
+  background: var(--purple-pale);
+  border-color: rgba(101, 70, 168, .4);
+}
+
+.workbook-progress-item.is-current .workbook-progress-marker {
+  color: #fff;
+  background: var(--purple);
+  border-color: var(--purple);
+  box-shadow: 0 0 0 4px rgba(101, 70, 168, .14);
+}
+
+.workbook-progress-marker:hover { border-color: var(--purple); }
+
+.workbook-object-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.workbook-panel {
+  min-width: 0;
+  padding: 16px;
+  background: rgba(255, 255, 255, .78);
+  border: 1px solid rgba(101, 70, 168, .16);
+  border-radius: 14px;
+}
+
+.chapter-content .workbook-panel-title {
+  margin: 0 0 11px;
+  color: var(--purple-dark);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: .82rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.workbook-object-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chapter-content .workbook-object {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  min-width: 0;
+  font-size: .91rem;
+}
+
+.chapter-content .workbook-object-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.chapter-content code.workbook-object-name {
+  padding: 2px 7px;
+  color: var(--purple-dark);
+  background: var(--purple-pale);
+  font-size: .9rem;
+  font-weight: 750;
+}
+
+.workbook-object-shape {
+  flex: 0 0 auto;
+  padding: 1px 7px;
+  color: var(--muted);
+  background: #f1eee8;
+  border-radius: 999px;
+  font-size: .75rem;
+  white-space: nowrap;
+}
+
+.chapter-content .workbook-operation {
+  margin: 16px 0 0;
+  padding: 13px 15px;
+  color: #3f4350;
+  background: rgba(242, 236, 255, .65);
+  border-radius: 11px;
+  font-size: .95rem;
+}
+
+.workbook-operation strong { color: var(--purple-dark); }
+
+.workbook-handoff {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 14px 0 0;
+}
+
+.workbook-handoff-item {
+  margin: 0;
+  padding: 13px 15px;
+  background: rgba(255, 255, 255, .72);
+  border: 1px solid rgba(101, 70, 168, .13);
+  border-radius: 11px;
+}
+
+.workbook-handoff-label {
+  color: var(--purple-dark);
+  font-size: .75rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.chapter-content .workbook-handoff-text {
+  margin: 5px 0 0;
+  color: #4b4f5c;
+  font-size: .91rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 620px) {
+  .workbook-card {
+    margin-top: -.6rem;
+    padding: 18px 15px 17px 19px;
+    border-radius: 16px;
+  }
+
+  .workbook-card-header,
+  .workbook-object-grid,
+  .workbook-handoff {
+    grid-template-columns: 1fr;
+  }
+
+  .workbook-card-header { gap: 9px; align-items: start; }
+  .workbook-detail-link { justify-self: start; white-space: normal; }
+  .workbook-progress { gap: 3px; margin: 18px 0; }
+  .workbook-progress-marker { width: 25px; height: 25px; font-size: .67rem; }
+  .workbook-progress-item:not(:last-child)::after {
+    left: calc(50% + 10px);
+    width: calc(100% - 14px);
+  }
+  .workbook-panel { padding: 14px; }
+  .chapter-content .workbook-object { font-size: .87rem; }
+}
+
+@media print {
+  .workbook-card {
+    break-inside: avoid;
+    margin: 1rem 0;
+    padding: 14px;
+    background: #fff;
+    border: 1px solid #777;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .workbook-card::before { display: none; }
+  .workbook-detail-link { display: none; }
+  .workbook-progress-marker { box-shadow: none !important; }
+  .workbook-panel,
+  .workbook-operation,
+  .workbook-handoff-item { background: #fff; }
+}

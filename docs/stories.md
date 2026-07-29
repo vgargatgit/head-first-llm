@@ -552,7 +552,7 @@ Read the end of Chapter 8, opening of Chapter 9 and opening of Chapter 10 as one
 
 ## COH-2.4 — Plan and integrate a position bridge illustration
 
-**Status:** Planned
+**Status:** Complete
 
 ### User story
 

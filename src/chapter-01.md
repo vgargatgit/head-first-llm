@@ -228,6 +228,8 @@ For the calculations in Chapters 1–8, treat the provided matrix $X$ as the sta
 
 The tensor still preserves row alignment: row 2 belongs to `CAT`. That is bookkeeping. The learned projections receive the row's numerical values; they do not automatically receive a rich semantic feature saying “I am position 2.” A positional mechanism must make location or relative distance available to the computation.
 
+![SAT carries a token-embedding card labelled E while a Position Registrar supplies an address card labelled P; the two contributions form an initial hidden-state passport X zero that enters the first attention block](../assets/chapter-01/05_position_bridge.svg)
+
 After many layers, positional information need not remain as a separately identifiable subvector. It can be mixed into the evolving hidden state with token and contextual information.
 
 **Chapter 9 opens this position box fully**, comparing learned absolute positions, sinusoidal encodings, relative methods, and RoPE.

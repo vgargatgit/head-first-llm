@@ -738,9 +738,45 @@ Implemented composition:
 
 Purpose:
 
-Distinguish the original embedding from the current hidden state at a later layer. The existing passport also supplies the minimum position bridge: identity and positional treatment are present at the model entrance, while Chapter 9 opens the architecture-specific mechanisms in detail. This prose update does not add or prescribe a new illustration; the dedicated position-bridge artwork remains a separate visual-production story.
+Distinguish the original embedding from the current hidden state at a later layer. The passport introduces identity and position at the model entrance; the dedicated position bridge below now makes the additive teaching model explicit while Chapter 9 opens the architecture-specific mechanisms in detail.
 
-### Scene 4 — Before and after attention
+### Scene 4 — The position bridge
+
+Current asset:
+
+```text
+assets/chapter-01/05_position_bridge.svg
+```
+
+Approved scene plan:
+
+```text
+docs/chapter-01/position-bridge-scene-plan.md
+```
+
+Implemented composition:
+
+- SAT carries a token-embedding card labelled `E`;
+- the Position Registrar supplies an address card labelled `P₃`;
+- the two contributions appear in one initial-state passport labelled `X⁽⁰⁾`;
+- the prepared passport points into the first attention block;
+- the bottom banner states that `X⁽⁰⁾ = E + P` is one common additive teaching model;
+- the architecture note points readers to Chapter 9 for non-additive approaches.
+
+Purpose:
+
+Provide a compact, mobile-readable visual anchor for the Chapter 1 positional scaffold without teaching the detailed formulas or implying that every architecture adds a positional vector.
+
+Technical guardrail:
+
+The token character is the token occurrence. `E`, `P`, and `X⁽⁰⁾` are cards representing numerical contributions or states. The `P₃` card is supplied by the architecture; it must not suggest that projection matrices automatically interpret the tensor row number as a semantic position feature.
+
+Approved alt text:
+
+> SAT carries a token-embedding card labelled E. A Position Registrar supplies an address card labelled P. The two contributions form an initial hidden-state passport labelled X zero, which enters the first attention block. A note says that this additive view is one teaching model and that other architectures inject position differently.
+
+
+### Scene 5 — Before and after attention
 
 Current asset:
 

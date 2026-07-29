@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
 
+# Trigger after workflow registration on main.
 jobs:
   create-running-example-ledger:
     runs-on: ubuntu-latest

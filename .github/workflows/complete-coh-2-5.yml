@@ -29,6 +29,7 @@ jobs:
 
       - name: Commit completed story
         run: |
+          # The guarded script preserves all existing display equations and image targets.
           rm .github/scripts/coh-2-5.py
           rm .github/workflows/complete-coh-2-5.yml
           git config user.name 'github-actions[bot]'

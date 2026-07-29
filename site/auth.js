@@ -2,29 +2,46 @@
   'use strict';
 
   const SESSION_KEY = 'llms-inside-out-preview-session';
-  const SESSION_VERSION = 1;
+  const SESSION_VERSION = 2;
   const SESSION_DURATION_MS = 8 * 60 * 60 * 1000;
-  const CREDENTIAL_SALT = 'llms-inside-out-preview-v1';
-  const EXPECTED_CREDENTIAL_HASH = '6712a0aefbdd48d8a2331943699ad213a936b20b773d19fcbc32a2410b040989';
+  const CONFIG = Object.freeze({
+    hash: 'SHA-256',
+    iterations: 1200000,
+    salt: 'PuFKJcg5B6IFHZd9eqEKs1AAB0yGXLC0KQkvTUlfdWE=',
+    verifier: '7F/CURC/Ommq1ugtkSfgGjCeWifK3JFQWtV3zwiS/vg='
+  });
+
+  let failures = 0;
+
+  const fromBase64 = value => Uint8Array.from(atob(value), character => character.charCodeAt(0));
+
+  function constantTimeEqual(left, right) {
+    let difference = left.length ^ right.length;
+    const length = Math.max(left.length, right.length);
+    for (let index = 0; index < length; index += 1) {
+      difference |= (left[index] || 0) ^ (right[index] || 0);
+    }
+    return difference === 0;
+  }
 
   function readSession() {
     try {
-      const rawSession = localStorage.getItem(SESSION_KEY);
+      const rawSession = sessionStorage.getItem(SESSION_KEY);
       if (!rawSession) return null;
 
       const session = JSON.parse(rawSession);
-      const isValid = session.version === SESSION_VERSION
+      const valid = session.version === SESSION_VERSION
         && Number.isFinite(session.expiresAt)
         && session.expiresAt > Date.now();
 
-      if (!isValid) {
-        localStorage.removeItem(SESSION_KEY);
+      if (!valid) {
+        sessionStorage.removeItem(SESSION_KEY);
         return null;
       }
 
       return session;
     } catch (_error) {
-      localStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
       return null;
     }
   }
@@ -33,44 +50,43 @@
     return Boolean(readSession());
   }
 
-  function toHex(buffer) {
-    return Array.from(new Uint8Array(buffer), byte => byte.toString(16).padStart(2, '0')).join('');
-  }
-
-  async function sha256(value) {
-    if (!window.crypto?.subtle) {
-      throw new Error('This browser does not support the required authentication API.');
+  async function deriveVerifier(userValue, secretValue) {
+    if (!window.crypto?.subtle || !window.isSecureContext) {
+      throw new Error('A secure browser context with Web Crypto is required.');
     }
 
-    const bytes = new TextEncoder().encode(value);
-    return toHex(await window.crypto.subtle.digest('SHA-256', bytes));
+    const normalizedUser = String(userValue || '').trim().toLowerCase();
+    const normalizedSecret = String(secretValue || '');
+    const material = new TextEncoder().encode(`${normalizedUser}\0${normalizedSecret}`);
+    const keyMaterial = await crypto.subtle.importKey('raw', material, 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({
+      name: 'PBKDF2',
+      hash: CONFIG.hash,
+      salt: fromBase64(CONFIG.salt),
+      iterations: CONFIG.iterations
+    }, keyMaterial, 256);
+
+    return new Uint8Array(bits);
   }
 
-  function constantTimeEqual(left, right) {
-    if (left.length !== right.length) return false;
+  async function authenticate(userValue, secretValue) {
+    const supplied = await deriveVerifier(userValue, secretValue);
+    const authenticated = constantTimeEqual(supplied, fromBase64(CONFIG.verifier));
 
-    let difference = 0;
-    for (let index = 0; index < left.length; index += 1) {
-      difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
-    }
-    return difference === 0;
-  }
-
-  async function authenticate(username, password) {
-    const normalizedUsername = String(username || '').trim();
-    const suppliedPassword = String(password || '');
-    const credential = `${CREDENTIAL_SALT}\0${normalizedUsername}\0${suppliedPassword}`;
-    const suppliedHash = await sha256(credential);
-    const authenticated = constantTimeEqual(suppliedHash, EXPECTED_CREDENTIAL_HASH);
-
-    if (authenticated) {
-      localStorage.setItem(SESSION_KEY, JSON.stringify({
-        version: SESSION_VERSION,
-        expiresAt: Date.now() + SESSION_DURATION_MS
-      }));
+    if (!authenticated) {
+      failures += 1;
+      const delay = Math.min(5000, 500 * (2 ** Math.min(failures, 4)));
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return false;
     }
 
-    return authenticated;
+    failures = 0;
+    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+      version: SESSION_VERSION,
+      expiresAt: Date.now() + SESSION_DURATION_MS
+    }));
+    return true;
   }
 
   function buildLoginUrl() {
@@ -81,27 +97,19 @@
   }
 
   function requireAuthentication() {
-    if (!isAuthenticated()) {
-      window.location.replace(buildLoginUrl());
-    }
+    if (!isAuthenticated()) window.location.replace(buildLoginUrl());
   }
 
   function logout() {
+    sessionStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(SESSION_KEY);
     window.location.replace(new URL('login.html', window.location.href).href);
   }
 
-  window.BookAuth = Object.freeze({
-    authenticate,
-    isAuthenticated,
-    logout,
-    requireAuthentication
-  });
+  window.BookAuth = Object.freeze({ authenticate, isAuthenticated, logout, requireAuthentication });
 
-  const isLoginPage = /\/login\.html$/.test(window.location.pathname);
-  if (!isLoginPage) {
-    requireAuthentication();
-  }
+  const isLoginPage = /(?:^|\/)login\.html$/.test(window.location.pathname);
+  if (!isLoginPage) requireAuthentication();
 
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-logout]').forEach(button => {

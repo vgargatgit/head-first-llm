@@ -9,10 +9,11 @@
     { id: 'part-5', number: 5, numeral: 'V', title: 'Efficient and Trustworthy Systems', summary: 'Reduce serving cost and evaluate the capability, reliability, safety, and operational behaviour of the complete system.', learningOutcome: 'Reason about the trade-offs required to deploy and continuously evaluate an LLM system.', chapterNumbers: [23, 24] }
   ];
 
-  function makeChapter(number, title, summary, partId, partPosition, options = {}) {
+  function makeChapter(number, title, navLabel, summary, partId, partPosition, options = {}) {
     return {
       number,
       title,
+      navLabel,
       summary,
       source: `src/chapter-${String(number).padStart(2, '0')}.md`,
       partId,
@@ -27,8 +28,8 @@
   }
 
   const chapters = [
-    makeChapter(1, 'A Token Enters the Dating World', 'Hidden states, context, and why a token needs attention.', 'part-1', 1, { assetFrom: ['chapter_1_graphics/', 'chapter-1-graphics/', '../assets/chapter-01/', '/assets/chapter-01/'], assetTo: 'assets/chapter-01/' }),
-    makeChapter(2, 'Meet the Question Coach', 'How a token converts its current state into a Query.', 'part-1', 2, {
+    makeChapter(1, 'A Token Enters the Dating World', 'Context', 'Hidden states, context, and why a token needs attention.', 'part-1', 1, { assetFrom: ['chapter_1_graphics/', 'chapter-1-graphics/', '../assets/chapter-01/', '/assets/chapter-01/'], assetTo: 'assets/chapter-01/' }),
+    makeChapter(2, 'Meet the Question Coach', 'Queries', 'How a token converts its current state into a Query.', 'part-1', 2, {
       assetFrom: ['chapter_2_graphics/', 'chapter-2-graphics/', '../assets/chapter-02/', '/assets/chapter-02/'],
       assetTo: 'assets/chapter-02/',
       assetAliases: {
@@ -37,14 +38,14 @@
         'assets/chapter-02/06_handoff_to_keys.png': 'assets/chapter-02/07_handoff_to_keys.png'
       }
     }),
-    makeChapter(3, 'Meet the Profile Writer', 'How every token creates a searchable Key.', 'part-1', 3, { assetFrom: ['chapter_3_graphics/', 'chapter-3-graphics/', '../assets/chapter-03/', '/assets/chapter-03/'], assetTo: 'assets/chapter-03/' }),
-    makeChapter(4, 'When Queries Meet Keys', 'Dot products, scaling, causal masking, and row-wise softmax.', 'part-1', 4, { assetFrom: ['../assets/chapter-04/', '/assets/chapter-04/'], assetTo: 'assets/chapter-04/' }),
-    makeChapter(5, 'Meet the Information Courier', "How Values and attention weights create one head's output.", 'part-1', 5, { assetFrom: ['../assets/chapter-05/', '/assets/chapter-05/'], assetTo: 'assets/chapter-05/' }),
-    makeChapter(6, 'Many Specialists at Work', 'How multiple attention heads learn different matching and retrieval systems.', 'part-1', 6, { assetFrom: ['../assets/chapter-06/', '/assets/chapter-06/'], assetTo: 'assets/chapter-06/' }),
-    makeChapter(7, 'The Team Lead Combines the Reports', 'Output projection, residual connections, LayerNorm, and pre-norm variants.', 'part-1', 7, { assetFrom: ['../assets/chapter-07/', '/assets/chapter-07/'], assetTo: 'assets/chapter-07/' }),
-    makeChapter(8, 'The Private Thinking Room', 'How the position-wise MLP completes one Transformer block.', 'part-1', 8),
-    makeChapter(9, 'Every Token Needs an Address', 'Absolute positions, sinusoidal encodings, and RoPE geometry.', 'part-2', 1),
-    makeChapter(10, 'The Residual Stream Climbs the Stack', 'How deep blocks refine hidden states and maintain per-layer KV caches.', 'part-2', 2, {
+    makeChapter(3, 'Meet the Profile Writer', 'Keys', 'How every token creates a searchable Key.', 'part-1', 3, { assetFrom: ['chapter_3_graphics/', 'chapter-3-graphics/', '../assets/chapter-03/', '/assets/chapter-03/'], assetTo: 'assets/chapter-03/' }),
+    makeChapter(4, 'When Queries Meet Keys', 'Attention', 'Dot products, scaling, causal masking, and row-wise softmax.', 'part-1', 4, { assetFrom: ['../assets/chapter-04/', '/assets/chapter-04/'], assetTo: 'assets/chapter-04/' }),
+    makeChapter(5, 'Meet the Information Courier', 'Values', "How Values and attention weights create one head's output.", 'part-1', 5, { assetFrom: ['../assets/chapter-05/', '/assets/chapter-05/'], assetTo: 'assets/chapter-05/' }),
+    makeChapter(6, 'Many Specialists at Work', 'Multi-head', 'How multiple attention heads learn different matching and retrieval systems.', 'part-1', 6, { assetFrom: ['../assets/chapter-06/', '/assets/chapter-06/'], assetTo: 'assets/chapter-06/' }),
+    makeChapter(7, 'The Team Lead Combines the Reports', 'Residuals', 'Output projection, residual connections, LayerNorm, and pre-norm variants.', 'part-1', 7, { assetFrom: ['../assets/chapter-07/', '/assets/chapter-07/'], assetTo: 'assets/chapter-07/' }),
+    makeChapter(8, 'The Private Thinking Room', 'MLP', 'How the position-wise MLP completes one Transformer block.', 'part-1', 8),
+    makeChapter(9, 'Every Token Needs an Address', 'Position', 'Absolute positions, sinusoidal encodings, and RoPE geometry.', 'part-2', 1),
+    makeChapter(10, 'The Residual Stream Climbs the Stack', 'Deep stack', 'How deep blocks refine hidden states and maintain per-layer KV caches.', 'part-2', 2, {
       assetFrom: ['../assets/chapter-10/', '/assets/chapter-10/'],
       assetTo: 'assets/chapter-10/',
       artwork: [
@@ -60,20 +61,20 @@
         { afterHeading: 'Coming next: the final audition', src: 'assets/chapter-10/10_chapter_11_from_final_state_to_next_token.png', alt: 'Chapter 10 hands the final hidden state to Chapter 11 and the vocabulary head.' }
       ]
     }),
-    makeChapter(11, 'The Final Audition', 'Vocabulary logits, softmax, temperature, sampling, and next-token generation.', 'part-2', 3),
-    makeChapter(12, 'The Answer Key Moves One Step Ahead', 'Shifted labels, teacher forcing, masks, padding, and packed sequences.', 'part-3', 1),
-    makeChapter(13, 'Meet the Scorekeeper', 'Negative log-likelihood, cross-entropy, masked means, and perplexity.', 'part-3', 2),
-    makeChapter(14, 'The Blame Travels Backward', 'Chain-rule gradients through the output head, blocks, attention, and optimiser updates.', 'part-3', 3),
-    makeChapter(15, 'The Training Factory Never Sees the Whole Library', 'Effective batches, data mixtures, schedules, validation, and resumable checkpoints.', 'part-3', 4),
-    makeChapter(16, 'The Model Outgrows One Machine', 'Data parallelism, state sharding, tensor parallelism, pipelines, and memory trade-offs.', 'part-3', 5),
-    makeChapter(17, 'From Completion Machine to Helpful Assistant', 'Supervised fine-tuning, preference optimisation, RLHF, DPO, and LoRA.', 'part-3', 6),
-    makeChapter(18, 'Three Transformer Families Move In', 'Encoder-only, decoder-only, and encoder–decoder models compared by information flow and real-world use.', 'part-4', 1),
-    makeChapter(19, 'The Decoder Borrows the Encoder’s Notes', 'A full cross-attention calculation from decoder Query to encoder-side retrieval.', 'part-4', 2),
-    makeChapter(20, 'From Pretraining to Specialisation', 'Foundation models, base checkpoints, continued pretraining, tuning, adapters, and runtime conditioning.', 'part-4', 3),
-    makeChapter(21, 'Open Book, Closed Book, or Tool Belt?', 'Parametric memory, RAG, citations, external memory, and safe tool use.', 'part-4', 4),
-    makeChapter(22, 'Pictures, Audio, and Other Modalities', 'Vision and audio encoders, projectors, cross-attention, and multimodal alignment.', 'part-4', 5),
-    makeChapter(23, 'Smaller, Faster, Cheaper', 'Quantisation, distillation, MoE, batching, caching, and serving trade-offs.', 'part-5', 1),
-    makeChapter(24, 'Trust, but Verify', 'Evaluation, calibration, hallucination, bias, privacy, safety, and production monitoring.', 'part-5', 2)
+    makeChapter(11, 'The Final Audition', 'Prediction', 'Vocabulary logits, softmax, temperature, sampling, and next-token generation.', 'part-2', 3),
+    makeChapter(12, 'The Answer Key Moves One Step Ahead', 'Targets', 'Shifted labels, teacher forcing, masks, padding, and packed sequences.', 'part-3', 1),
+    makeChapter(13, 'Meet the Scorekeeper', 'Loss', 'Negative log-likelihood, cross-entropy, masked means, and perplexity.', 'part-3', 2),
+    makeChapter(14, 'The Blame Travels Backward', 'Backprop', 'Chain-rule gradients through the output head, blocks, attention, and optimiser updates.', 'part-3', 3),
+    makeChapter(15, 'The Training Factory Never Sees the Whole Library', 'Training run', 'Effective batches, data mixtures, schedules, validation, and resumable checkpoints.', 'part-3', 4),
+    makeChapter(16, 'The Model Outgrows One Machine', 'Scale', 'Data parallelism, state sharding, tensor parallelism, pipelines, and memory trade-offs.', 'part-3', 5),
+    makeChapter(17, 'From Completion Machine to Helpful Assistant', 'Post-training', 'Supervised fine-tuning, preference optimisation, RLHF, DPO, and LoRA.', 'part-3', 6),
+    makeChapter(18, 'Three Transformer Families Move In', 'Families', 'Encoder-only, decoder-only, and encoder–decoder models compared by information flow and real-world use.', 'part-4', 1),
+    makeChapter(19, 'The Decoder Borrows the Encoder’s Notes', 'Cross-attention', 'A full cross-attention calculation from decoder Query to encoder-side retrieval.', 'part-4', 2),
+    makeChapter(20, 'From Pretraining to Specialisation', 'Adaptation', 'Foundation models, base checkpoints, continued pretraining, tuning, adapters, and runtime conditioning.', 'part-4', 3),
+    makeChapter(21, 'Open Book, Closed Book, or Tool Belt?', 'RAG & tools', 'Parametric memory, RAG, citations, external memory, and safe tool use.', 'part-4', 4),
+    makeChapter(22, 'Pictures, Audio, and Other Modalities', 'Multimodality', 'Vision and audio encoders, projectors, cross-attention, and multimodal alignment.', 'part-4', 5),
+    makeChapter(23, 'Smaller, Faster, Cheaper', 'Efficiency', 'Quantisation, distillation, MoE, batching, caching, and serving trade-offs.', 'part-5', 1),
+    makeChapter(24, 'Trust, but Verify', 'Evaluation', 'Evaluation, calibration, hallucination, bias, privacy, safety, and production monitoring.', 'part-5', 2)
   ];
 
   function deepFreeze(value) {
@@ -115,7 +116,7 @@
       if (!Number.isInteger(chapter.number) || chapter.number < 1) errors.push(`${location}.number must be a positive integer.`);
       if (chapterNumbers.has(chapter.number)) errors.push(`Duplicate chapter number: ${chapter.number}.`);
       chapterNumbers.add(chapter.number);
-      if (!chapter.title || !chapter.summary || !chapter.source) errors.push(`${location} is missing title, summary, or source.`);
+      if (!chapter.title || !chapter.navLabel || !chapter.summary || !chapter.source) errors.push(`${location} is missing title, navLabel, summary, or source.`);
       if (sourcePaths.has(chapter.source)) errors.push(`Duplicate chapter source: ${chapter.source}.`);
       sourcePaths.add(chapter.source);
       if (!partIds.has(chapter.partId)) errors.push(`${location}.partId does not reference a known part: ${chapter.partId}.`);

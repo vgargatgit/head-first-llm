@@ -6,7 +6,7 @@ lang: en
 
 # The question this chapter answers
 
-The previous chapters began with a matrix of token states:
+Chapters 1–8 worked with a current hidden-state matrix that was already prepared for the attention block:
 
 $$
 X=
@@ -36,9 +36,23 @@ from:
 
 </div>
 
-# A deliberate rewind
+# Open the position box
 
-Chapter 8 completed one Transformer block. This chapter steps backward to expose an assumption already built into our running matrix.
+Chapter 1 gave us a minimum scaffold: token IDs become token embeddings, and the architecture makes position available before or inside attention. Chapters 1–8 then treated the supplied $X$ as the current hidden-state matrix already prepared for the block, rather than pausing to unpack the position mechanism.
+
+Now we can open that labelled box. The timing is **pedagogical, not computational**. Position was not added after the block completed in Chapter 8; it entered the computation wherever the target architecture defines it.
+
+Why teach the details now? We already understand Queries, Keys, Query–Key scores, and causal masking. That makes the architectural differences precise:
+
+- additive methods alter the initial hidden state;
+- RoPE acts directly on Query and Key coordinate pairs;
+- relative-position biases alter attention logits.
+
+We can also keep three ideas separate:
+
+- **row alignment** is tensor bookkeeping;
+- **causal visibility** controls which positions a Query may use;
+- a **positional mechanism** makes location or relative distance available to learned computation.
 
 Before the first block, a decoder-only Transformer begins with token IDs and creates token embeddings:
 
@@ -61,7 +75,7 @@ Common approaches include:
 - relative-position biases;
 - rotary position embeddings, usually called **RoPE**.
 
-The mechanism is architecture-specific, but the requirement is universal: the model needs information that distinguishes one ordering from another.
+This list is a menu of architecture choices, not a universal pipeline in which every method is applied. A target model may use one approach or a documented combination. The shared requirement is that the computation can distinguish one ordering from another.
 
 # Token embeddings alone do not know order
 
@@ -109,6 +123,8 @@ A decoder-only model normally needs both.
 
 # Approach 1: learned absolute positional embeddings
 
+Start with the additive model introduced as Chapter 1's compact teaching bridge. In this architecture family, a position vector has model width and is added to the token embedding. This is one positional design, not a mandatory step that must also occur before RoPE.
+
 One direct solution is to learn one vector for each supported position.
 
 For position \(t\):
@@ -143,9 +159,11 @@ $$
 
 The token embedding contributes identity. The positional embedding contributes location.
 
-# Recovering our running input matrix
+# Unpacking one additive version of our running matrix
 
-The first eight chapters used:
+Chapters 1–8 used the following $X^{(0)}$ as the prepared state entering the first block. They did not require us to decompose it. To make learned absolute positions concrete, suppose this particular toy matrix came from $E+P$. This is an illustrative reconstruction of the additive approach, not a claim that a RoPE-based architecture would also create $X^{(0)}$ by adding $P$.
+
+The prepared matrix was:
 
 $$
 X^{(0)}=
@@ -847,7 +865,7 @@ In our story:
 
 # Coming next: the residual stream climbs the stack
 
-One Transformer block produces another matrix with the same outer shape:
+With the target architecture's positional treatment now explicit, the prepared token states can flow through the Transformer stack. One Transformer block produces another matrix with the same outer shape:
 
 $$
 X^{(1)}\in\mathbb{R}^{n\times d_{\text{model}}}

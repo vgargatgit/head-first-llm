@@ -500,7 +500,7 @@ Search all seven files for `embedding`, `position`, `row`, `state`, `causal` and
 
 ## COH-2.3 — Reframe Chapter 9 as opening the position mechanism
 
-**Status:** Planned
+**Status:** Complete
 
 ### User story
 

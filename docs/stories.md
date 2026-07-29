@@ -446,7 +446,7 @@ Editorial review against Chapter 9 terminology and the Chapter 1 section “The 
 
 ## COH-2.2 — Standardise positional wording across Chapters 2–8
 
-**Status:** Planned
+**Status:** Complete
 
 ### User story
 

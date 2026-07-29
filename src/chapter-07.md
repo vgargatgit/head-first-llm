@@ -5,7 +5,7 @@ lang: en
 ---
 
 <!-- chapter-07-art:hero:start -->
-![The Team Lead receives concatenated specialist reports while the original token states continue along a residual highway toward separate normalisation booths.](../assets/chapter-07/01_chapter_hero_team_lead.webp){.hero}
+![The Team Lead receives concatenated specialist reports while the incoming token states continue along a residual highway toward separate normalisation booths.](../assets/chapter-07/01_chapter_hero_team_lead.webp){.hero}
 <!-- chapter-07-art:hero:end -->
 
 # The question this chapter answers
@@ -240,7 +240,7 @@ The output projection mixes the retrieved feature coordinates at each token posi
 </div>
 
 <!-- chapter-07-art:residual-highway:start -->
-![The output-projection update joins the original token state on a residual highway before the token proceeds to normalisation.](../assets/chapter-07/04_residual_highway.webp)
+![The output-projection update joins the incoming token state on a residual highway before the token proceeds to normalisation.](../assets/chapter-07/04_residual_highway.webp)
 <!-- chapter-07-art:residual-highway:end -->
 
 # The residual highway
@@ -253,7 +253,7 @@ $$
 R=X+Y
 $$
 
-The original input is:
+The incoming hidden-state matrix is:
 
 $$
 X=
@@ -314,7 +314,7 @@ The attention mechanism does not need to reconstruct everything already present 
 
 ## Information has a direct path
 
-If the attention update is small, much of the original representation remains available.
+If the attention update is small, much of the incoming representation remains available.
 
 ## Optimisation becomes easier
 
@@ -626,7 +626,7 @@ These architectures are related because information bypasses transformations, bu
 
 | Story element | ML meaning |
 |---|---|
-| original case file | input representation $x$ |
+| incoming case file | input representation $x$ |
 | straight highway | identity skip path |
 | specialist office | learned branch $F$ |
 | amendment sheet | residual update $F(x)$ |
@@ -1065,7 +1065,7 @@ $$
 
 In our story:
 
-> **The specialists produce separate reports. The Team Lead combines them. The residual highway keeps the original case file available, and normalisation keeps the updated file numerically manageable.**
+> **The specialists produce separate reports. The Team Lead combines them. The residual highway keeps the incoming case file available, and normalisation keeps the updated file numerically manageable.**
 
 # Coming next: private processing inside each token
 

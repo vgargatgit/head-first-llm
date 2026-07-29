@@ -10,7 +10,7 @@ lang: en
 
 # The question this chapter answers
 
-The previous chapters created two learned views of every token state:
+The previous chapters created two learned views of every token's current hidden state:
 
 $$
 Q=XW^Q
@@ -419,7 +419,9 @@ those positions naturally receive zero probability during softmax.
 
 # The mask is different for every row
 
-Causal masking is based on position, not token identity.
+Causal masking is based on **row position in the sequence tensor**, not token identity.
+
+That row-order rule controls which earlier positions a Query may use. It is a visibility constraint, not a complete positional representation of absolute location or relative distance.
 
 The rule for row \(i\) and column \(j\) is:
 

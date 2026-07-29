@@ -127,7 +127,7 @@ $$
 
 # The exact SAT calculation
 
-We use the same four-dimensional SAT state:
+We use the same four-dimensional current hidden state for SAT:
 
 $$
 x_{\text{sat}}

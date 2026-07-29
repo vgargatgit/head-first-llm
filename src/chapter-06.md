@@ -50,7 +50,7 @@ Our sequence is still:
 
 > **The cat sat**
 
-Imagine that two specialists inspect the same three token states.
+Imagine that two specialists inspect the same three current hidden states.
 
 The first specialist uses:
 
@@ -64,7 +64,7 @@ $$
 W_2^Q,\quad W_2^K,\quad W_2^V
 $$
 
-Both specialists receive the same input matrix:
+Both specialists receive the same current hidden-state matrix:
 
 $$
 X=
@@ -254,7 +254,7 @@ $$
 4\times2
 $$
 
-The same four-dimensional token state is therefore projected into a different two-dimensional space for this head.
+The same four-dimensional current hidden state is therefore projected into a different two-dimensional space for this head.
 
 <!-- chapter-06-art:head2-calculation:start -->
 ![Head 2 projects the same input into different Query, Key, and Value vectors, then computes SAT's raw compatibility score with THE as 0.092696.](../assets/chapter-06/03_head2_exact_calculation.webp)

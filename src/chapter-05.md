@@ -174,7 +174,7 @@ are generally different even though they begin with the same \(x_t\).
 
 # The Value projection for our example
 
-We continue with the hidden-state matrix used throughout the book:
+We continue with the current hidden-state matrix entering this attention block:
 
 $$
 X=

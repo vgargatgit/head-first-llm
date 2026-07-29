@@ -143,7 +143,7 @@ for any token position $t$.
 
 # The exact size-4 calculation
 
-We will use the same four-dimensional SAT state from Chapter 1:
+We will use the same four-dimensional current hidden state for SAT from Chapter 1:
 
 $$
 x_{\text{sat}}

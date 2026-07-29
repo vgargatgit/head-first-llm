@@ -47,6 +47,8 @@ The same room is used for every token, but each token enters with a different ve
 
 # The position-wise MLP
 
+Here, **position-wise** means that the same MLP is applied independently to each token row. It does not mean that the MLP supplies positional information or replaces the architecture's positional mechanism.
+
 For one token row \(n_t\), a simple two-layer feed-forward network is:
 
 $$

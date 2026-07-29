@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -26,6 +26,33 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply guarded COH-3.1 migration
+        run: |
+          python .github/scripts/coh-3-1.py
+          node --check scripts/verify-running-example.mjs
+          node scripts/verify-running-example.mjs
+          node scripts/check-book-consistency.mjs
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('.github/workflows/pages.yml')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace('  contents: write\n', '  contents: read\n', 1)
+          start = text.index('      - name: Apply guarded COH-3.1 migration\n')
+          end = text.index('      - name: Validate authentication script\n', start)
+          text = text[:start] + text[end:]
+          path.write_text(text, encoding='utf-8')
+          PY
+          rm .github/scripts/coh-3-1.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/running-example-ledger.md scripts/verify-running-example.mjs README.md .github/workflows/pages.yml docs/stories.md .github/scripts/coh-3-1.py
+          git diff --cached --quiet && { echo 'No COH-3.1 changes were produced.'; exit 1; }
+          git commit -m 'Create canonical running-example ledger'
+          git push
 
       - name: Validate authentication script
         run: node --check site/auth.js

@@ -135,7 +135,7 @@ But the learned operations work on the **contents of the row vector**. They do n
 
 > “You are row 1.”
 
-We will return to this distinction when we study positional encoding. For now, the important point is simply:
+Chapter 9 will return to this distinction when it opens the positional mechanism in detail. For now, the important point is simply:
 
 > One row is the model’s current representation of one token occurrence.
 
@@ -171,11 +171,7 @@ A hidden-state vector is not a little database row containing named fields such 
 
 Not necessarily.
 
-At the entrance to the first Transformer layer, a token state begins from something approximately like:
-
-$$
-\text{token information} + \text{position information}
-$$
+At the entrance to the first Transformer layer, the initial state combines token identity with whatever positional treatment the architecture uses.
 
 But after several Transformer layers, the vector has already received updates from previous attention and MLP sublayers.
 
@@ -207,6 +203,34 @@ Its state may contain signals useful for recognising:
 - what information it should help predict next.
 
 These descriptions are human interpretations. Internally, the model still carries a vector.
+
+# Where does the initial hidden state come from?
+
+At the model entrance, the tokenizer produces token IDs. An embedding table maps each token ID to a **token embedding**. Token identity alone, however, does not tell the learned computation where that occurrence appears in the sequence.
+
+In one common additive teaching model, the architecture also supplies a positional contribution:
+
+$$
+X^{(0)} = E + P
+$$
+
+| Object | Meaning | Shape in the running example |
+|---|---|---|
+| $E$ | token embeddings | $3 \times 4$ |
+| $P$ | simple positional contribution | $3 \times 4$ |
+| $X^{(0)}$ | initial hidden states | $3 \times 4$ |
+
+Here, $E$ contributes token identity and $P$ makes position available. The addition is possible because the two matrices have the same shape.
+
+This is a **useful teaching bridge, not a universal recipe**. Learned absolute positions and fixed sinusoidal encodings can be added to token embeddings. Other architectures inject position differently. RoPE, for example, normally rotates Query and Key coordinate pairs, while relative-position methods can modify attention scores.
+
+For the calculations in Chapters 1–8, treat the provided matrix $X$ as the state entering the attention block, with the architecture's positional treatment already accounted for where applicable. We do not need to separate its displayed numbers back into a token-only part and a position-only part.
+
+The tensor still preserves row alignment: row 2 belongs to `CAT`. That is bookkeeping. The learned projections receive the row's numerical values; they do not automatically receive a rich semantic feature saying “I am position 2.” A positional mechanism must make location or relative distance available to the computation.
+
+After many layers, positional information need not remain as a separately identifiable subvector. It can be mixed into the evolving hidden state with token and contextual information.
+
+**Chapter 9 opens this position box fully**, comparing learned absolute positions, sinusoidal encodings, relative methods, and RoPE.
 
 # What does “contextual” mean?
 

@@ -640,7 +640,7 @@ The chapter sequence is pedagogical, not a literal execution trace.
 ## 9.1 Book teaching order
 
 ```text
-Chapter 1: current hidden states
+Chapter 1: current hidden states and the minimum token-plus-position scaffold
 Chapter 2: Queries
 Chapter 3: Keys
 Chapter 4: scores, scaling, masking, softmax
@@ -648,7 +648,7 @@ Chapter 5: Values and one-head output
 Chapter 6: multiple heads
 Chapter 7: output projection, residual, normalisation
 Chapter 8: MLP and completed block
-Chapter 9: rewind to positional information
+Chapter 9: open and compare positional mechanisms in detail
 Chapter 10: stack many blocks and reuse KV caches
 Chapter 11: vocabulary logits and next-token decoding
 ```
@@ -670,7 +670,7 @@ token IDs
     -> append token and repeat
 ```
 
-Chapter 9 intentionally rewinds to an earlier computational stage. Its opening artwork must make that rewind explicit so the reader does not think position information is first added after a completed block.
+Chapter 1 now labels the earlier computational stage with a minimum scaffold: token identity and an architecture-specific positional treatment prepare the state that enters the first block. Chapter 9 remains later in the teaching sequence because readers can then understand how learned absolute positions, sinusoidal encodings, relative methods, and RoPE affect the computation. The transition should feel like opening a previously labelled position box, not introducing position after a completed block.
 
 ---
 
@@ -738,7 +738,7 @@ Implemented composition:
 
 Purpose:
 
-Distinguish the original embedding from the current hidden state at a later layer.
+Distinguish the original embedding from the current hidden state at a later layer. The existing passport also supplies the minimum position bridge: identity and positional treatment are present at the model entrance, while Chapter 9 opens the architecture-specific mechanisms in detail. This prose update does not add or prescribe a new illustration; the dedicated position-bridge artwork remains a separate visual-production story.
 
 ### Scene 4 — Before and after attention
 

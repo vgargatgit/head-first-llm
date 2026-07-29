@@ -383,7 +383,7 @@ Readers should understand from Chapter 1 that the initial hidden-state matrix co
 
 ## COH-2.1 — Add the minimum positional scaffold to Chapter 1
 
-**Status:** Planned
+**Status:** Complete
 
 ### User story
 

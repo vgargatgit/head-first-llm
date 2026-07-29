@@ -37,6 +37,9 @@ jobs:
       - name: Validate workbook stage metadata
         run: node scripts/check-workbook-metadata.mjs
 
+      - name: Validate workbook card rendering
+        run: node scripts/check-workbook-rendering.mjs
+
       - name: Verify canonical running example
         run: node scripts/verify-running-example.mjs
 

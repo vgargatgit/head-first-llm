@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Read LLMs from the Inside Out online.">
   <title>LLMs from the Inside Out — Chapter</title>
-  <link rel="stylesheet" href="site.css?v=20260728.12">
+  <link rel="stylesheet" href="site.css?v=20260729.2">
+  <link rel="stylesheet" href="chapter-progress.css?v=20260729.3">
   <link rel="stylesheet" href="auth.css?v=20260728.12">
   <script src="auth.js?v=20260728.12"></script>
   <script>
@@ -20,8 +21,9 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script defer src="book-data.js?v=20260729.1"></script>
+  <script defer src="book-data.js?v=20260729.3"></script>
   <script defer src="app.js?v=20260729.1"></script>
+  <script defer src="chapter-progress.js?v=20260729.3"></script>
   <script defer src="chapter-07-artwork.js?v=20260728.14"></script>
   <script defer src="chapter-08-artwork.js?v=20260728.13"></script>
   <script defer src="chapter-11-artwork.js?v=20260728.15"></script>
@@ -31,39 +33,16 @@
   <header class="site-header reader-header">
     <a class="brand" href="./">LLMs from the Inside Out</a>
     <div class="reader-actions">
-      <nav class="chapter-nav" aria-label="Chapter navigation">
-        <a href="chapter.html?chapter=1&amp;v=20260728.12">1</a>
-        <a href="chapter.html?chapter=2&amp;v=20260728.12">2</a>
-        <a href="chapter.html?chapter=3&amp;v=20260728.12">3</a>
-        <a href="chapter.html?chapter=4&amp;v=20260728.12">4</a>
-        <a href="chapter.html?chapter=5&amp;v=20260728.12">5</a>
-        <a href="chapter.html?chapter=6&amp;v=20260728.12">6</a>
-        <a href="chapter.html?chapter=7&amp;v=20260728.14">7</a>
-        <a href="chapter.html?chapter=8&amp;v=20260728.12">8</a>
-        <a href="chapter.html?chapter=9&amp;v=20260728.12">9</a>
-        <a href="chapter.html?chapter=10&amp;v=20260728.12">10</a>
-        <a href="chapter.html?chapter=11&amp;v=20260728.15">11</a>
-        <a href="chapter.html?chapter=12&amp;v=20260728.12">12</a>
-        <a href="chapter.html?chapter=13&amp;v=20260728.12">13</a>
-        <a href="chapter.html?chapter=14&amp;v=20260728.12">14</a>
-        <a href="chapter.html?chapter=15&amp;v=20260728.12">15</a>
-        <a href="chapter.html?chapter=16&amp;v=20260728.12">16</a>
-        <a href="chapter.html?chapter=17&amp;v=20260728.12">17</a>
-        <a href="chapter.html?chapter=18&amp;v=20260728.12">18</a>
-        <a href="chapter.html?chapter=19&amp;v=20260728.12">19</a>
-        <a href="chapter.html?chapter=20&amp;v=20260728.12">20</a>
-        <a href="chapter.html?chapter=21&amp;v=20260728.12">21</a>
-        <a href="chapter.html?chapter=22&amp;v=20260728.12">22</a>
-        <a href="chapter.html?chapter=23&amp;v=20260728.12">23</a>
-        <a href="chapter.html?chapter=24&amp;v=20260728.12">24</a>
-      </nav>
+      <a class="reader-all-parts" href="./#book-parts">All parts</a>
       <button class="logout-button" type="button" data-logout>Sign out</button>
     </div>
   </header>
 
+  <nav id="part-progress" class="part-progress" aria-label="Book-part progress" hidden></nav>
+
   <div class="reader-layout">
     <aside class="reader-sidebar">
-      <a href="./" class="back-link">← All chapters</a>
+      <a href="./#book-parts" class="back-link">← All parts</a>
       <p class="sidebar-label">IN THIS CHAPTER</p>
       <nav id="toc" class="toc" aria-label="Table of contents"></nav>
     </aside>

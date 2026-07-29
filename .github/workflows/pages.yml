@@ -34,6 +34,9 @@ jobs:
       - name: Validate book structure and navigation
         run: node scripts/check-book-consistency.mjs
 
+      - name: Validate workbook stage metadata
+        run: node scripts/check-workbook-metadata.mjs
+
       - name: Verify canonical running example
         run: node scripts/verify-running-example.mjs
 

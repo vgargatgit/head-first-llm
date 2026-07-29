@@ -321,7 +321,7 @@ As a contributor, I want the README and chapter manifest to use the same part st
 
 ## COH-1.5 — Validate part navigation and responsive behaviour
 
-**Status:** Planned
+**Status:** Complete
 
 ### User story
 

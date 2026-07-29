@@ -274,7 +274,7 @@ The component should:
 
 ## COH-1.4 — Align repository documentation with the five-part structure
 
-**Status:** Planned
+**Status:** Complete
 
 ### User story
 

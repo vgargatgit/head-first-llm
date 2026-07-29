@@ -106,6 +106,16 @@ async function main() {
   expect(cardSource, /Already available/, 'Workbook card must label the incoming objects.');
   expect(cardSource, /Created or made explicit here/, 'Workbook card must label this chapter’s outputs.');
   expect(cardSource, /MutationObserver/, 'Workbook card integration must wait for asynchronously rendered Markdown.');
+  expect(
+    cardSource,
+    /createObjectPanel\(['"]workbook-available['"]/, 
+    'Workbook card must mark the incoming-object panel with workbook-available.'
+  );
+  expect(
+    cardSource,
+    /createObjectPanel\(['"]workbook-creates['"]/, 
+    'Workbook card must mark the created-object panel with workbook-creates.'
+  );
 
   const metadataIndex = chapterHtml.indexOf('book-data.js');
   const appIndex = chapterHtml.indexOf('app.js');
@@ -117,8 +127,7 @@ async function main() {
 
   for (const selector of [
     '.workbook-card',
-    '.workbook-available',
-    '.workbook-creates',
+    '.workbook-panel',
     '.workbook-progress',
     '.workbook-operation',
     '.workbook-handoff'

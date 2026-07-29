@@ -1,5 +1,6 @@
 name: Apply and validate COH-2.3
 
+# Retriggered after correcting guarded LaTeX matching.
 on:
   push:
     branches: [main]

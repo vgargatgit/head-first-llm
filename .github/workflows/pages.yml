@@ -26,6 +26,9 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Validate authentication script
+        run: node --check site/auth.js
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 

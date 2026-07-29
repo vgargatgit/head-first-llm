@@ -863,15 +863,17 @@ In our story:
 
 > **The token embedding gives each character an identity. The positional mechanism gives each character an address. Attention can then reason about both who is present and where everyone stands.**
 
-# Coming next: the residual stream climbs the stack
+# Coming next: carry the prepared state through depth
 
-With the target architecture's positional treatment now explicit, the prepared token states can flow through the Transformer stack. One Transformer block produces another matrix with the same outer shape:
+Chapter 1 introduced the minimum scaffold, Chapters 2–8 showed what one block does with a prepared input, and this chapter made the architecture-specific positional treatment explicit. The stack now has a well-defined starting state: $X^{(0)}$ is the prepared hidden-state matrix entering the first block.
+
+The first block produces another matrix with the same outer shape:
 
 $$
 X^{(1)}\in\mathbb{R}^{n\times d_{\text{model}}}
 $$
 
-That matrix enters another block, and then another:
+That output becomes the next block's input, and refinement continues:
 
 $$
 X^{(0)}
@@ -883,4 +885,4 @@ X^{(1)}
 X^{(L)}
 $$
 
-Chapter 10 follows token representations through depth and shows why every layer owns its own attention, MLP, normalisation, and KV-cache state.
+Chapter 10 can therefore begin directly with depth: it follows the residual stream through the stack and shows why every layer owns its own attention, MLP, normalisation, and KV-cache state.

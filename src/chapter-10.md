@@ -6,9 +6,9 @@ lang: en
 
 # The question this chapter answers
 
-Chapter 8 completed one simplified Transformer block.
+Chapter 9 made the architecture's positional treatment explicit. We now take $X^{(0)}$ as the prepared, position-aware hidden-state matrix entering the stack and move directly to depth.
 
-For the three-token sequence, its output was:
+Chapter 8 calculated the output of the first simplified Transformer block. For the three-token sequence, that output was:
 
 $$
 X^{(1)}
@@ -40,7 +40,7 @@ What happens when the output of one block becomes the input to the next block, d
 
 # One block is one refinement step
 
-Let the initial representation entering the stack be:
+Use the prepared starting state established in Chapter 9:
 
 $$
 X^{(0)}

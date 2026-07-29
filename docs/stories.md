@@ -610,7 +610,7 @@ Technical review against Chapter 9 and the inference visual master plan.
 
 ## COH-2.5 — Review the Chapter 8→9→10 continuity
 
-**Status:** Planned
+**Status:** Complete
 
 ### User story
 

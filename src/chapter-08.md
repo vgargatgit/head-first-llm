@@ -991,15 +991,17 @@ In our story:
 
 > **Attention is the group meeting. The MLP is private thinking. Residual connections preserve the evolving case file while each sublayer adds what it has learned.**
 
-# Coming next: stack the blocks and predict a token
+# Coming next: open the position box, then climb the stack
 
-We have completed one Transformer block, but an LLM normally contains many such blocks.
+We have completed the computation inside one simplified Transformer block. Throughout Chapters 1–8, however, the supplied $X$ was treated as already prepared for that block, with the target architecture's positional treatment accounted for.
 
-The next stage of the book can follow:
+The next chapter opens that earlier assumption and compares how architectures make order and relative distance available. This is a change in **teaching focus**, not a later step in the forward pass: positional treatment belongs before or inside attention, depending on the architecture.
 
-- how hidden states evolve through a stack of layers;
-- how the final position is converted into vocabulary logits;
-- how softmax creates next-token probabilities;
-- how greedy decoding, sampling, temperature, top-k, and top-p choose the next token.
+Once that box is open, the book can follow the prepared hidden states through:
 
-The reader now has all the machinery needed to connect attention mechanics to actual text generation.
+- repeated refinement across a stack of blocks;
+- conversion of the final position into vocabulary logits;
+- softmax and next-token probabilities;
+- greedy decoding, sampling, temperature, top-k, and top-p.
+
+> **First complete the block, then inspect how its input was prepared, then follow the residual stream through depth and prediction.**

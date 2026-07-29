@@ -20,6 +20,12 @@ The Pages site includes a browser-side preview login. This is suitable only as a
 
 ## Current chapters
 
+The published book follows five learning parts. Part membership and reader navigation are defined in `site/book-data.js`; the chapter links below follow that same structure.
+
+### Part I — Build One Transformer Block (Chapters 1–8)
+
+Follow hidden states through attention, residual paths, normalisation, and the position-wise MLP. **Learning outcome:** Trace the complete data flow through one simplified decoder-style Transformer block.
+
 1. [A Token Enters the Dating World](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=1)
 2. [Meet the Question Coach](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=2)
 3. [Meet the Profile Writer](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=3)
@@ -28,67 +34,74 @@ The Pages site includes a browser-side preview login. This is suitable only as a
 6. [Many Specialists at Work](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=6)
 7. [The Team Lead Combines the Reports](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=7)
 8. [The Private Thinking Room](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=8)
+
+### Part II — From Position to Prediction (Chapters 9–11)
+
+Add positional information, stack blocks, reuse KV caches, and generate the next token. **Learning outcome:** Explain how a trained decoder-only Transformer turns an ordered token sequence into a next-token distribution.
+
 9. [Every Token Needs an Address](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=9)
 10. [The Residual Stream Climbs the Stack](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=10)
 11. [The Final Audition](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=11)
+
+### Part III — How the Model Learns (Chapters 12–17)
+
+Create training targets and loss, propagate gradients, run large training jobs, and shape assistant behaviour. **Learning outcome:** Connect one next-token error to parameter updates, distributed training, and post-training methods.
+
 12. [The Answer Key Moves One Step Ahead](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=12)
 13. [Meet the Scorekeeper](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=13)
 14. [The Blame Travels Backward](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=14)
 15. [The Training Factory Never Sees the Whole Library](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=15)
 16. [The Model Outgrows One Machine](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=16)
 17. [From Completion Machine to Helpful Assistant](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=17)
+
+### Part IV — Transformer Families and Applications (Chapters 18–22)
+
+Compare Transformer families and extend the core model through cross-attention, adaptation, retrieval, tools, and other modalities. **Learning outcome:** Choose and explain the architecture and adaptation pattern behind common language and multimodal systems.
+
 18. [Three Transformer Families Move In](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=18)
 19. [The Decoder Borrows the Encoder’s Notes](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=19)
 20. [From Pretraining to Specialisation](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=20)
 21. [Open Book, Closed Book, or Tool Belt?](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=21)
 22. [Pictures, Audio, and Other Modalities](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=22)
+
+### Part V — Efficient and Trustworthy Systems (Chapters 23–24)
+
+Reduce serving cost and evaluate the capability, reliability, safety, and operational behaviour of the complete system. **Learning outcome:** Reason about the trade-offs required to deploy and continuously evaluate an LLM system.
+
 23. [Smaller, Faster, Cheaper](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=23)
 24. [Trust, but Verify](https://vgargatgit.github.io/head-first-llm/chapter.html?chapter=24)
 
-Chapters 8–24 currently use equations, tables, text diagrams, and worked calculations without final illustration assets. Detailed production specifications are complete for Chapters 8–17; the later arc is ready for visual planning.
+Chapters 8–24 currently use equations, tables, text diagrams, and worked calculations without final illustration assets. Detailed production specifications are complete for Chapters 8–17; Parts IV and V are ready for visual planning.
 
 ## Repository layout
 
+- `src/` — canonical editable chapter prose; chapter text changes are made here
+- `site/book-data.js` — canonical site-facing metadata for part names, chapter membership, summaries, navigation labels, source paths, and reader artwork mappings
 - `site/` — GitHub Pages home page, login page, chapter reader, styling, and rendering logic
-- `src/` — canonical editable Markdown for each chapter
+- `manifest.md` — editorial publication record for canonical chapter order, part membership, graphics status, and publication status
 - `assets/` — chapter-specific graphics where available
-- `docs/` — visual-development plans, character bibles, and storyboard source documents
+- `docs/` — visual-development plans, character bibles, storyboard source documents, and the implementation backlog
 - `.github/workflows/pages.yml` — automatic Pages deployment
 - `dist/` — earlier browser distribution pages retained for reference
 - `styles/` — earlier shared chapter styling
 - `CHANGELOG.md` — chronological project updates
-- `manifest.md` — canonical chapter order and publication status
+
+These sources have separate responsibilities: `src/` owns prose, `site/book-data.js` drives the published site structure, and `manifest.md` records editorial and production status. Their chapter titles, order, and part membership must remain aligned.
 
 ## Current workspace status
 
 The complete Chapter 1–24 Markdown sources and the GitHub Pages reader are committed on `main`.
 
-Chapters 1–8 build one Transformer block from hidden states, Query/Key/Value projections, causal attention, multiple heads, residual paths, normalisation, and the MLP.
-
-Chapters 9–11 complete inference through positional information, stacked blocks, KV caches, vocabulary logits, decoding, and autoregressive generation.
-
-Chapters 12–14 begin learning through shifted targets, teacher forcing, cross-entropy, perplexity, backpropagation, and optimiser updates.
-
-Chapters 15–17 expand that one update into a complete model-development system:
-
-- effective token batches, gradient accumulation, data mixtures, learning-rate schedules, validation, and resumable checkpoints;
-- data parallelism, model-state sharding, tensor parallelism, pipeline parallelism, activation checkpointing, and distributed communication;
-- chat templates, supervised fine-tuning, response-only loss, preference data, reward modelling, RLHF, DPO, LoRA, and post-training evaluation.
-
-Chapters 18–24 add the broader system map:
-
-- encoder-only, decoder-only, and encoder–decoder architecture families with public model examples;
-- a complete numerical encoder–decoder cross-attention calculation;
-- foundation models, pretraining, continued pretraining, fine-tuning, instruction tuning, adapters, prompting, and retrieval;
-- RAG, citations, external memory, tool orchestration, access controls, and prompt-injection risks;
-- multimodal encoders, projectors, cross-attention, visual tokens, audio features, and alignment objectives;
-- quantisation, distillation, sparsity, MoE, KV caches, continuous batching, speculative decoding, and serving trade-offs;
-- hallucination, calibration, contamination, bias, privacy, safety, release gates, and production monitoring.
+- **Part I — Build One Transformer Block (Chapters 1–8):** hidden states, Query/Key/Value projections, causal attention, multiple heads, output projection, residual paths, normalisation, and the MLP. Readers should be able to trace one simplified Transformer block end to end.
+- **Part II — From Position to Prediction (Chapters 9–11):** positional information, stacked blocks, per-layer KV caches, vocabulary logits, decoding, and autoregressive generation. Readers should be able to explain how an ordered token sequence becomes a next-token distribution.
+- **Part III — How the Model Learns (Chapters 12–17):** shifted targets, teacher forcing, loss, perplexity, backpropagation, optimiser updates, controlled training runs, distributed training, and post-training. Readers should be able to connect one prediction error to model updates and assistant behaviour.
+- **Part IV — Transformer Families and Applications (Chapters 18–22):** architecture families, numerical cross-attention, model adaptation, retrieval, tools, and multimodality. Readers should be able to select and explain common architecture and adaptation patterns.
+- **Part V — Efficient and Trustworthy Systems (Chapters 23–24):** quantisation, distillation, MoE and serving techniques followed by evaluation, calibration, safety, privacy, release gates, and monitoring. Readers should be able to reason about production efficiency and trustworthiness trade-offs.
 
 ## Visual development plans
 
-- [`docs/inference-loop-scene-master-plan.md`](docs/inference-loop-scene-master-plan.md) — canonical visual reference for Chapters 1–11, grounded in the implemented Chapters 1–3 artwork.
-- [`docs/training-loop-scene-master-plan.md`](docs/training-loop-scene-master-plan.md) — canonical character bible and storyboard map for Chapters 12–17.
+- [`docs/inference-loop-scene-master-plan.md`](docs/inference-loop-scene-master-plan.md) — canonical visual reference for Parts I and II (Chapters 1–11), grounded in the implemented Chapters 1–3 artwork.
+- [`docs/training-loop-scene-master-plan.md`](docs/training-loop-scene-master-plan.md) — canonical character bible and storyboard map for Part III (Chapters 12–17).
 
 ### Chapter production specifications
 

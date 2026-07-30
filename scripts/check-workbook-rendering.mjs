@@ -7,7 +7,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const EDITION_VERSION = '20260730.2';
+const EDITION_VERSION = '20260730.3';
 
 function fail(message) {
   throw new Error(message);

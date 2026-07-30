@@ -34,6 +34,7 @@ CONFIG = {
     5: {"from": ["../assets/chapter-05/", "/assets/chapter-05/"], "to": "assets/chapter-05/", "aliases": {}},
     6: {"from": ["../assets/chapter-06/", "/assets/chapter-06/"], "to": "assets/chapter-06/", "aliases": {}},
     7: {"from": ["../assets/chapter-07/", "/assets/chapter-07/"], "to": "assets/chapter-07/", "aliases": {}},
+    18: {"from": ["../assets/chapter-18/", "/assets/chapter-18/"], "to": "assets/chapter-18/", "aliases": {}},
 }
 
 
@@ -67,7 +68,8 @@ else:
     out.append("| Chapter | Source target | Reader-resolved path | Exists? | Alt text |\n")
     out.append("|---:|---|---|:---:|---|\n")
     for chapter, source, resolved, exists, alt in rows:
-        out.append(f"| {chapter} | `{source}` | `{resolved}` | {'Yes' if exists else '**No**'} | {alt.replace('|', '\\|')} |\n")
+        escaped_alt = alt.replace("|", "\\|")
+        out.append(f"| {chapter} | `{source}` | `{resolved}` | {'Yes' if exists else '**No**'} | {escaped_alt} |\n")
 
 (AUDIT / "asset-audit.md").write_text("".join(out), encoding="utf-8")
 print(f"Checked {len(rows)} image references")

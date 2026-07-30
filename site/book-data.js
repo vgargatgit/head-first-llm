@@ -265,7 +265,10 @@
       assetTo: 'assets/chapter-16/'
     }),
     makeChapter(17, 'From Completion Machine to Helpful Assistant', 'Post-training', 'Supervised fine-tuning, preference optimisation, RLHF, DPO, and LoRA.', 'part-3', 6),
-    makeChapter(18, 'Three Transformer Families Move In', 'Families', 'Encoder-only, decoder-only, and encoder–decoder models compared by information flow and real-world use.', 'part-4', 1),
+    makeChapter(18, 'Three Transformer Families Move In', 'Families', 'Encoder-only, decoder-only, and encoder–decoder models compared by information flow and real-world use.', 'part-4', 1, {
+      assetFrom: ['../assets/chapter-18/', '/assets/chapter-18/'],
+      assetTo: 'assets/chapter-18/'
+    }),
     makeChapter(19, 'The Decoder Borrows the Encoder’s Notes', 'Cross-attention', 'A full cross-attention calculation from decoder Query to encoder-side retrieval.', 'part-4', 2),
     makeChapter(20, 'From Pretraining to Specialisation', 'Adaptation', 'Foundation models, base checkpoints, continued pretraining, tuning, adapters, and runtime conditioning.', 'part-4', 3),
     makeChapter(21, 'Open Book, Closed Book, or Tool Belt?', 'RAG & tools', 'Parametric memory, RAG, citations, external memory, and safe tool use.', 'part-4', 4),

@@ -20,6 +20,8 @@ How does a training system organise data, combine many small pieces into one opt
 
 </div>
 
+![A Data Librarian selects documents from several corpus shelves according to a mixture recipe and sends one microbatch cart into the training factory.](../assets/chapter-15/01_chapter_hero_training_factory.png)
+
 # Cold open: the model attends one shift at a time
 
 Imagine a library containing billions of tokens.
@@ -72,6 +74,8 @@ It may mean 32 sequences, 32 examples, or 32 items per device. Without sequence 
 
 # Local batch, microbatch, and global batch
 
+![Sequences form per-device microbatches, and gradients from four devices and eight accumulation steps combine before one optimizer update.](../assets/chapter-15/02_microbatch_accumulation_global_batch.png)
+
 Suppose each accelerator processes:
 
 - \(B_{\mathrm{device}}\) sequences per forward pass;
@@ -98,6 +102,8 @@ $$
 Padding and masked labels can reduce the number of valid targets.
 
 # A complete effective-batch calculation
+
+![Two sequences per device across four devices and eight accumulation steps produce 64 sequences and 32,768 nominal tokens per optimizer step.](../assets/chapter-15/03_exact_effective_batch_calculation.png)
 
 Suppose:
 
@@ -159,6 +165,8 @@ However, all eight forward and backward computations still occur. Accumulation s
 
 # Mean the loss consistently
 
+![Microbatch losses are weighted by their valid-token counts so every scored token contributes equally to the final mean of 1.166667.](../assets/chapter-15/04_valid_token_weighted_mean.png)
+
 Suppose microbatch \(m\) contains \(N_m\) valid target tokens and token-loss sum \(L_m\).
 
 The correct effective-batch mean is:
@@ -195,6 +203,8 @@ $$
 The second value gives every valid target equal weight.
 
 # Shuffle without losing structure
+
+![Complete examples are shuffled while their token order stays intact, and short sequences are packed with explicit document boundaries.](../assets/chapter-15/05_sequence_packing_and_shuffling.png)
 
 Training data should not always arrive in the same highly correlated order.
 
@@ -309,6 +319,8 @@ or about 327.68 million token positions before accounting for ignored labels or 
 
 # The learning rate changes during training
 
+![The learning-rate dial rises through warmup and later decays as global optimizer steps advance; step 250 uses a rate of 7.5 × 10^-5.](../assets/chapter-15/06_warmup_and_decay.png)
+
 Chapter 14 used one fixed learning rate to expose the update sign.
 
 Practical training commonly uses a schedule.
@@ -393,6 +405,8 @@ The exact schedule is a training-recipe choice, not a requirement of the Transfo
 
 # Training loss is not enough
 
+![Training data produces gradients and parameter updates, while held-out validation data follows a separate blue no-update lane that reports metrics.](../assets/chapter-15/07_training_vs_validation.png)
+
 Training loss is measured on data used to compute updates.
 
 A model can improve its training loss while becoming worse at generalising to unseen examples.
@@ -434,6 +448,8 @@ Contamination can occur through:
 Deduplication and provenance tracking are part of evaluation quality, not merely storage hygiene.
 
 # Checkpoints freeze a complete training state
+
+![A Checkpoint Archivist saves model, optimizer, scheduler, scaler, random states, data cursor, configuration, and counters in one resumable snapshot.](../assets/chapter-15/08_complete_checkpoint.png)
 
 A useful training checkpoint normally includes more than model weights.
 
@@ -629,6 +645,8 @@ In our story:
 > **The model never receives the whole library at once. The training factory delivers carefully mixed pages in measured batches, adjusts the teaching pace, checks an unseen exam, and bookmarks every state needed to continue.**
 
 # Coming next: the factory needs more than one machine
+
+![A training dashboard monitors optimization and system health before the factory opens onto several distributed worker stations in Chapter 16.](../assets/chapter-15/09_dashboard_and_distributed_handoff.png)
 
 Even a well-designed batch may not fit on one accelerator, and a large model's parameters and optimiser state can exceed one device's memory.
 

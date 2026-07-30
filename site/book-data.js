@@ -249,7 +249,10 @@
       assetTo: 'assets/chapter-13/'
     }),
     makeChapter(14, 'The Blame Travels Backward', 'Backprop', 'Chain-rule gradients through the output head, blocks, attention, and optimiser updates.', 'part-3', 3),
-    makeChapter(15, 'The Training Factory Never Sees the Whole Library', 'Training run', 'Effective batches, data mixtures, schedules, validation, and resumable checkpoints.', 'part-3', 4),
+    makeChapter(15, 'The Training Factory Never Sees the Whole Library', 'Training run', 'Effective batches, data mixtures, schedules, validation, and resumable checkpoints.', 'part-3', 4, {
+      assetFrom: ['../assets/chapter-15/', '/assets/chapter-15/'],
+      assetTo: 'assets/chapter-15/'
+    }),
     makeChapter(16, 'The Model Outgrows One Machine', 'Scale', 'Data parallelism, state sharding, tensor parallelism, pipelines, and memory trade-offs.', 'part-3', 5, {
       assetFrom: ['../assets/chapter-16/', '/assets/chapter-16/'],
       assetTo: 'assets/chapter-16/'

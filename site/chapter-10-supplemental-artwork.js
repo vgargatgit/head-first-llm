@@ -7,7 +7,7 @@
   const article = document.getElementById('chapter');
   if (!article) return;
 
-  const buildVersion = '20260730.6';
+  const buildVersion = '20260730.7';
   const artwork = [
     {
       beforeHeading: 'Modern pre-norm stack notation',

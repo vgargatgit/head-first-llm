@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260729.2';
+  const BUILD_VERSION = '20260730.7';
   const partsContainer = document.getElementById('book-parts');
   const errorBox = document.getElementById('home-error');
   const startBookLink = document.getElementById('start-book-link');

@@ -4,6 +4,8 @@ subtitle: "How modality encoders, projectors, shared token spaces, and cross-att
 lang: en
 ---
 
+![A Senses Department converts images, audio, video, and documents into vector sequences and connects them to a language model.](../assets/chapter-22/01_chapter_hero_senses_department.png){.hero}
+
 # The question this chapter answers
 
 A text model begins with token IDs.
@@ -65,6 +67,8 @@ The model may consume several modalities, produce several modalities, or both.
 
 # Images become sequences of vectors
 
+![A 224-pixel square image divides into 196 sixteen-pixel-square patches that become an ordered sequence of visual vectors.](../assets/chapter-22/02_image_to_patch_vectors.png)
+
 A vision Transformer commonly divides an image into patches.
 
 Suppose an image has height $H$, width $W$, and patch size $P\mathbin{×}P$.
@@ -103,6 +107,8 @@ pixels
 
 # Audio becomes time–frequency features
 
+![Audio is transformed into time–frequency features and encoded as an ordered sequence that may carry speech and non-verbal information.](../assets/chapter-22/03_audio_to_time_frequency_vectors.png)
+
 Raw audio is a one-dimensional waveform.
 
 Many speech systems transform it into a time–frequency representation such as a log-Mel spectrogram.
@@ -124,6 +130,8 @@ A text decoder can then generate transcription tokens while cross-attending to t
 This is an encoder–decoder pattern with different input and output modalities.
 
 # Four common connection patterns
+
+![Multimodal systems may project features into language width, use cross-attention, compress them through learned queries, or train a unified token or latent space.](../assets/chapter-22/04_four_multimodal_connector_patterns.png)
 
 ## Pattern 1: projector into language-token space
 
@@ -191,6 +199,8 @@ A model may encode several modalities into one shared sequence or latent represe
 The details can include modality-type embeddings, separate input stems, shared blocks, or modality-specific output heads.
 
 # A tiny projector calculation
+
+![A learned linear projector maps one modality feature vector into the language model width, but dimensional compatibility alone does not establish semantic alignment.](../assets/chapter-22/05_exact_projector_calculation.png)
 
 Suppose a vision encoder produces one feature vector:
 
@@ -274,6 +284,8 @@ Shape compatibility is necessary. Semantic alignment is learned.
 
 # Multimodal training objectives
 
+![Contrastive, generative, matching, reconstruction, and instruction objectives teach different parts of multimodal alignment and behaviour.](../assets/chapter-22/06_multimodal_training_objectives.png)
+
 A multimodal system may combine several objectives.
 
 ## Contrastive alignment
@@ -324,6 +336,8 @@ No single objective guarantees every multimodal capability.
 
 # Frozen and trainable components
 
+![Multimodal training may freeze large encoders and language models while training a connector, or may update selected components depending on the design.](../assets/chapter-22/07_frozen_and_trainable_components.png)
+
 A practical system may begin with strong pretrained parts.
 
 ```text
@@ -368,6 +382,8 @@ This is the same information-flow pattern studied in Chapter 19, with acoustic s
 
 # Early, middle, and late fusion
 
+![Early, middle, and late fusion differ in whether modalities interact near input representation, inside the model, or after separate predictions.](../assets/chapter-22/08_fusion_timing_comparison.png)
+
 ## Early fusion
 
 Modalities are combined near the input.
@@ -392,6 +408,8 @@ Independent models produce predictions or scores that are combined near the outp
 Late fusion is modular but may miss fine-grained cross-modal relationships.
 
 # Spatial information is fragile
+
+![Multimodal representations must preserve spatial layout, document structure, video time, and non-verbal audio cues where those details matter.](../assets/chapter-22/09_modality_structure_and_resolution.png)
 
 An image encoder must preserve enough information about location and relationships.
 
@@ -475,6 +493,8 @@ A language model may plan or condition the output without directly producing fin
 
 # Grounding and hallucination
 
+![A grounding inspector checks generated claims against modality evidence and flags conflicts instead of treating fluent descriptions as proof of accurate perception.](../assets/chapter-22/10_grounding_conflict_and_generation.png)
+
 A multimodal model can hallucinate objects, text, relationships, or events.
 
 Possible causes include:
@@ -510,6 +530,8 @@ TASK: Report what is visible and note disagreement.
 Without source boundaries, the model may blend the claim and evidence.
 
 # Safety and privacy expand with modalities
+
+![A multimodal evaluation line tests each modality, connector, generation, robustness, privacy, and grounding before the system enters deployment optimisation.](../assets/chapter-22/11_multimodal_evaluation_safety_handoff.png)
 
 Multimodal systems can expose:
 

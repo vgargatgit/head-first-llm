@@ -268,7 +268,10 @@
     }),
     makeChapter(20, 'From Pretraining to Specialisation', 'Adaptation', 'Foundation models, base checkpoints, continued pretraining, tuning, adapters, and runtime conditioning.', 'part-4', 3),
     makeChapter(21, 'Open Book, Closed Book, or Tool Belt?', 'RAG & tools', 'Parametric memory, RAG, citations, external memory, and safe tool use.', 'part-4', 4),
-    makeChapter(22, 'Pictures, Audio, and Other Modalities', 'Multimodality', 'Vision and audio encoders, projectors, cross-attention, and multimodal alignment.', 'part-4', 5),
+    makeChapter(22, 'Pictures, Audio, and Other Modalities', 'Multimodality', 'Vision and audio encoders, projectors, cross-attention, and multimodal alignment.', 'part-4', 5, {
+      assetFrom: ['../assets/chapter-22/', '/assets/chapter-22/'],
+      assetTo: 'assets/chapter-22/'
+    }),
     makeChapter(23, 'Smaller, Faster, Cheaper', 'Efficiency', 'Quantisation, distillation, MoE, batching, caching, and serving trade-offs.', 'part-5', 1),
     makeChapter(24, 'Trust, but Verify', 'Evaluation', 'Evaluation, calibration, hallucination, bias, privacy, safety, and production monitoring.', 'part-5', 2)
   ];

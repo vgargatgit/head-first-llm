@@ -21,7 +21,7 @@
 | 17 | Not Applicable | ☑ |
 | 18 | Not Applicable | ☑ |
 | 19 | N/A | ☑ |
-| 20 | ☐ | ☐ |
+| 20 | N/A | ☑ |
 | 21 | N/A | ☑ |
 | 22 | N/A | ☑ |
 | 23 | ☐ | ☐ |

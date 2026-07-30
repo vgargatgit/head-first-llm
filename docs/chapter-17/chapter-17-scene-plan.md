@@ -9,6 +9,9 @@
 
 This document is the canonical production specification for all Chapter 17 graphics. Final artwork belongs under `assets/chapter-17/`.
 
+All eleven production assets were generated, numerically reviewed, normalized
+to 1448 × 1086, and integrated into `src/chapter-17.md`.
+
 The chapter moves the trained base model from the pretraining factory into a Post-Training Studio. It introduces the Fine-Tuning Coach, Chat Template Stage Manager, Preference Judge, frozen Reference Model, and Adapter Technician.
 
 ---
@@ -442,17 +445,17 @@ SFT, RLHF, DPO, and LoRA are separate concepts:
 
 # 7. Production checklist
 
-- [ ] The Fine-Tuning Coach is visually distinct from the Question Coach.
-- [ ] Chat templates include explicit role and boundary tokens.
-- [ ] Response-only masks hide loss terms, not prompt context.
-- [ ] Preference labels use a visible rubric.
-- [ ] Current and reference policies are clearly separated.
-- [ ] DPO uses relative chosen/rejected margins.
-- [ ] Frozen base parameters remain active in computation.
-- [ ] LoRA adapters receive gradients while the base remains locked.
-- [ ] Parameter-count arithmetic is exact.
-- [ ] Evaluation includes regressions and multiple measurement methods.
-- [ ] Every scene has verified typography and alt text.
+- [x] The Fine-Tuning Coach is visually distinct from the Question Coach.
+- [x] Chat templates include explicit role and boundary tokens.
+- [x] Response-only masks hide loss terms, not prompt context.
+- [x] Preference labels use a visible rubric.
+- [x] Current and reference policies are clearly separated.
+- [x] DPO uses relative chosen/rejected margins.
+- [x] Frozen base parameters remain active in computation.
+- [x] LoRA adapters receive gradients while the base remains locked.
+- [x] Parameter-count arithmetic is exact.
+- [x] Evaluation includes regressions and multiple measurement methods.
+- [x] Every scene has verified typography and alt text.
 
 ---
 
@@ -466,5 +469,6 @@ Chapter 17 graphics are complete only when all eleven assets are approved, commi
 
 - Detailed scene planning: complete.
 - Post-training characters, props, and exact numerical panels specified.
-- Final artwork generation: not started.
-- Integration and website review: pending final artwork.
+- Final artwork generation and numerical review: complete.
+- Manuscript integration and alt text: complete.
+- Website render review: pending.

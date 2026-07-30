@@ -4,6 +4,8 @@ subtitle: "Quantisation, distillation, sparsity, mixture-of-experts routing, bat
 lang: en
 ---
 
+![A Deployment Workshop measures weight memory, activation and cache memory, compute, bandwidth, latency, and throughput before choosing optimisations.](../assets/chapter-23/01_chapter_hero_deployment_workshop.png){.hero}
+
 # The question this chapter answers
 
 A model may be accurate enough in a notebook and still be impractical in production.
@@ -70,6 +72,8 @@ A system can improve throughput with larger batches while making an individual r
 
 # Weight memory calculation
 
+![Seven billion weights require about 14 GB at 16 bits or 3.5 GB at 4 bits before quantisation metadata and runtime memory.](../assets/chapter-23/02_exact_weight_memory.png)
+
 Suppose a model has 7 billion parameters.
 
 At 16 bits, each parameter uses 2 bytes.
@@ -102,6 +106,8 @@ These are raw weight estimates.
 Actual memory also includes scales, zero points, embeddings, temporary buffers, framework overhead, and possibly higher-precision copies of selected tensors.
 
 # Quantisation
+
+![Quantisation maps continuous values into discrete low-bit bins using scale parameters, introducing approximation whose severity depends partly on scale granularity.](../assets/chapter-23/03_quantisation_scales_and_error.png)
 
 Quantisation represents values with fewer bits.
 
@@ -137,6 +143,8 @@ $$
 The goal is to reduce storage and bandwidth while keeping the resulting model useful.
 
 # Weight-only versus activation quantisation
+
+![Quantisation may target weights, activations, or cache and may be applied after training or simulated during training, but speed depends on supported hardware kernels and overhead.](../assets/chapter-23/04_quantisation_variants_and_hardware.png)
 
 ## Weight-only quantisation
 
@@ -221,6 +229,8 @@ Measure end-to-end performance on the deployment hardware.
 
 # Distillation
 
+![A smaller student learns from a larger teacher's output distribution, often alongside ground-truth training, and must be evaluated for capability loss.](../assets/chapter-23/05_distillation_teacher_student.png)
+
 Knowledge distillation trains a smaller **student** model to imitate a larger **teacher**.
 
 For classification logits, a temperature-softened teacher distribution is:
@@ -264,6 +274,8 @@ A language-model student may imitate:
 The student can become much cheaper, but it has less capacity. It may lose rare knowledge, long-tail robustness, multilingual breadth, or complex reasoning.
 
 # Pruning and sparsity
+
+![Pruning creates unstructured or hardware-friendly structured sparsity, while a mixture-of-experts router activates only selected experts from a larger total parameter pool.](../assets/chapter-23/06_sparsity_and_moe.png)
 
 Pruning removes or disables parameters, channels, heads, blocks, or activations judged less important.
 
@@ -322,6 +334,8 @@ Report both total and active parameters.
 
 # Prompt processing and token decoding
 
+![Prefill processes the prompt and fills the KV cache, while decoding repeatedly reads that cache and appends one new position per generated token.](../assets/chapter-23/07_prefill_decode_kv_cache.png)
+
 Autoregressive inference has two phases.
 
 ## Prefill
@@ -368,6 +382,8 @@ Cache memory grows linearly with batch size and sequence length.
 
 # Multi-query and grouped-query attention
 
+![Grouped and multi-query attention reduce KV-head storage, prefix caching reuses compatible prompt work, and paged management allocates cache in flexible blocks.](../assets/chapter-23/08_kv_cache_and_prefix_optimisations.png)
+
 Standard multi-head attention can use separate Keys and Values for every Query head.
 
 Multi-query attention shares one set of KV heads across many Query heads.
@@ -392,6 +408,8 @@ Prefix caching stores intermediate state for the shared prefix so later requests
 The cache key must include every input that affects computation: model version, adapters, tokenisation, position handling, and relevant settings.
 
 # Batching
+
+![Static batching wastes work on padding and waits for long sequences, while continuous batching replaces finished requests to improve utilisation and throughput.](../assets/chapter-23/09_continuous_batching_and_padding.png)
 
 Batching combines requests so hardware performs larger, more efficient matrix operations.
 
@@ -424,6 +442,8 @@ Paged approaches divide cache memory into blocks and map logical token positions
 This allows flexible growth, sharing, and reclamation, at the cost of bookkeeping and specialised kernels.
 
 # Speculative decoding
+
+![Speculative decoding uses a fast draft model to propose tokens that the target model verifies, while inference parallelism divides tensors, stages, experts, or independent requests.](../assets/chapter-23/10_speculative_decoding_and_parallelism.png)
 
 Speculative decoding uses a smaller draft model to propose several tokens.
 
@@ -470,6 +490,8 @@ Runs independent model copies for different requests.
 More devices can provide capacity while adding communication and scheduling overhead.
 
 # Throughput calculation
+
+![A bottleneck-first dashboard measures speed, memory, cost, tail latency, and several quality dimensions before the optimised system enters final verification.](../assets/chapter-23/11_efficiency_dashboard_and_handoff.png)
 
 Suppose a server produces 1,200 output tokens per second across a batch of 24 active sequences.
 

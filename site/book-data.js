@@ -281,7 +281,10 @@
       assetFrom: ['../assets/chapter-22/', '/assets/chapter-22/'],
       assetTo: 'assets/chapter-22/'
     }),
-    makeChapter(23, 'Smaller, Faster, Cheaper', 'Efficiency', 'Quantisation, distillation, MoE, batching, caching, and serving trade-offs.', 'part-5', 1),
+    makeChapter(23, 'Smaller, Faster, Cheaper', 'Efficiency', 'Quantisation, distillation, MoE, batching, caching, and serving trade-offs.', 'part-5', 1, {
+      assetFrom: ['../assets/chapter-23/', '/assets/chapter-23/'],
+      assetTo: 'assets/chapter-23/'
+    }),
     makeChapter(24, 'Trust, but Verify', 'Evaluation', 'Evaluation, calibration, hallucination, bias, privacy, safety, and production monitoring.', 'part-5', 2)
   ];
 

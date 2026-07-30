@@ -134,6 +134,14 @@
   border-radius: 14px;
 }
 
+.workbook-available {
+  border-top: 3px solid rgba(101, 70, 168, .34);
+}
+
+.workbook-creates {
+  border-top: 3px solid rgba(67, 132, 101, .34);
+}
+
 .chapter-content .workbook-panel-title {
   margin: 0 0 11px;
   color: var(--purple-dark);

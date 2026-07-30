@@ -4,6 +4,8 @@ subtitle: "How supervised fine-tuning, preference optimisation, and LoRA shape p
 lang: en
 ---
 
+![A pretrained completion model enters a Post-Training Studio containing chat-template, demonstration, preference, adapter, and evaluation stations.](../assets/chapter-17/01_chapter_hero_post_training_studio.png){.hero}
+
 # The question this chapter answers
 
 Pretraining teaches a decoder-only model to predict the next token across broad text collections.
@@ -47,6 +49,8 @@ The distinctions matter more than any one recipe.
 
 # Supervised fine-tuning uses demonstrations
 
+![Curated demonstrations pass through chat formatting, shifted targets, masked cross-entropy, gradients, and optimizer updates while the Fine-Tuning Coach stays away from parameter controls.](../assets/chapter-17/05_supervised_fine_tuning_coach.png)
+
 A supervised example can look like:
 
 ```text
@@ -62,6 +66,8 @@ The model still receives shifted next-token targets and cross-entropy loss.
 The new ingredient is the curated behaviour represented by the response.
 
 # Chat templates make roles explicit
+
+![A Stage Manager inserts model-specific role and boundary markers into a conversation before the serialized sequence enters the tokenizer and becomes ordered token IDs.](../assets/chapter-17/02_chat_template_roles.png)
 
 A chat model does not receive coloured message bubbles. The application converts roles and boundaries into tokens, conceptually like:
 
@@ -91,6 +97,8 @@ Using a different template at inference can place the model in a token pattern i
 
 # Complete-sequence loss versus response-only loss
 
+![System and user tokens remain visible as causal context while their target-loss boxes are masked and only assistant-response targets print loss receipts.](../assets/chapter-17/03_response_only_loss_mask.png)
+
 Some supervised recipes score every next-token label in the serialized conversation.
 
 Others keep the prompt as context but score only assistant-response labels.
@@ -116,6 +124,8 @@ $$
 Masked prompt labels do not receive direct loss, but prompt tokens still affect assistant hidden states through attention.
 
 # An exactly aligned response-mask example
+
+![Ten conversation tokens align with ten target-mask entries, and the two scored assistant targets with losses 0.30 and 0.10 average to an SFT loss of 0.20.](../assets/chapter-17/04_exact_sft_loss.png)
 
 Suppose the sequence has ten conceptual tokens.
 
@@ -189,6 +199,8 @@ Preference data supplies comparisons.
 
 # Preference pairs and rubrics
 
+![A neutral Preference Judge compares chosen and rejected sky explanations using correctness, helpfulness, clarity, safety, instruction following, and calibrated uncertainty.](../assets/chapter-17/06_preference_judge.png)
+
 A preference example contains:
 
 - prompt \(x\);
@@ -227,6 +239,8 @@ $$
 Long responses contain more summed terms, so implementations must define masking and length treatment explicitly.
 
 # Reward modelling and RLHF
+
+![Preference pairs train a separate reward model, which scores current-policy responses in an optimization loop constrained relative to an icy-blue frozen reference policy.](../assets/chapter-17/07_reward_model_and_rlhf.png)
 
 One family of methods trains a reward model:
 
@@ -309,6 +323,8 @@ $$
 The policy is rewarded for preferring the chosen response more strongly than the reference does.
 
 # A small DPO calculation
+
+![Current and frozen reference policies form chosen-versus-rejected log-probability margins; their scaled difference is 0.04 and the resulting DPO loss is approximately 0.673347.](../assets/chapter-17/08_dpo_relative_margin.png)
 
 Suppose:
 
@@ -399,6 +415,8 @@ The frozen base still participates in forward and backward computation because s
 
 # LoRA adds a low-rank update
 
+![A LoRA technician connects input to both an active frozen base matrix and a trainable low-rank A-to-B path, then adds their outputs while gradients update only A and B.](../assets/chapter-17/09_lora_adapter_technician.png)
+
 For a frozen matrix:
 
 $$
@@ -445,6 +463,8 @@ $$
 The base \(W_0\) remains frozen. Gradients update \(A\) and \(B\).
 
 # Why low rank saves parameters
+
+![A 4096-by-4096 frozen base matrix is compared with rank-16 A and B adapter plates containing 131,072 trainable parameters, or 0.78125 percent of the base matrix.](../assets/chapter-17/10_exact_lora_parameter_count.png)
 
 A square projection with width 4096 contains:
 
@@ -517,6 +537,8 @@ Training still needs forward activations, backward signals, adapter gradients, a
 Long contexts and large microbatches can still make activation memory dominant.
 
 # Evaluate improvements and regressions
+
+![Human evaluation and automated tests measure several behavioral dimensions and retained capabilities before the updated model returns to ordinary inference with no gradients or optimizer.](../assets/chapter-17/11_evaluation_and_reconnection.png)
 
 Post-training can improve instruction following while causing:
 

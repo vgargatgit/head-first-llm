@@ -4,6 +4,8 @@ subtitle: "How Transformers represent order with positional embeddings and rotar
 lang: en
 ---
 
+![The story rewinds from a completed Transformer block to the model entrance, where token positions receive address information before attention begins.](../assets/chapter-09/01_chapter_hero_position_registry.png){.hero}
+
 # The question this chapter answers
 
 Chapters 1–8 worked with a current hidden-state matrix that was already prepared for the attention block:
@@ -109,6 +111,8 @@ A causal mask does introduce an ordering constraint because earlier rows are all
 
 ## Causal order and positional representation are different
 
+![A causal gate, position badge, and relative-distance ruler answer different questions about visibility, location, and separation.](../assets/chapter-09/04_visibility_vs_address.png)
+
 The causal mask answers:
 
 > Which positions may this Query use?
@@ -160,6 +164,8 @@ $$
 The token embedding contributes identity. The positional embedding contributes location.
 
 # Unpacking one additive version of our running matrix
+
+![CAT’s token embedding and position-two embedding are added coordinate by coordinate to recover the initial hidden-state row used earlier in the book.](../assets/chapter-09/03_additive_position_embeddings.png)
 
 Chapters 1–8 used the following $X^{(0)}$ as the prepared state entering the first block. They did not require us to decompose it. To make learned absolute positions concrete, suppose this particular toy matrix came from $E+P$. This is an illustrative reconstruction of the additive approach, not a claim that a RoPE-based architecture would also create $X^{(0)}$ by adding $P$.
 
@@ -228,6 +234,8 @@ $$
 That is exactly the CAT row used in the earlier calculations.
 
 # The same token at a different position
+
+![The same CAT token receives different position cards at positions two and five, producing different initial hidden states.](../assets/chapter-09/02_same_token_different_position.png)
 
 The token embedding for CAT remains:
 
@@ -312,6 +320,8 @@ there is no automatically learned vector for position \(N+1\).
 Architectures can extend or interpolate such systems, but the basic learned table does not provide unlimited positions by itself.
 
 # Approach 2: sinusoidal position encodings
+
+![Clock hands turning at different speeds create a distributed sinusoidal signature for each token position.](../assets/chapter-09/05_sinusoidal_position_clocks.png)
 
 The original Transformer used fixed sine and cosine functions.
 
@@ -451,6 +461,8 @@ $$
 
 # Exact RoPE calculation
 
+![RoPE rotates a Query pair by its position angle and a Key pair by its own position angle before their compatibility is calculated.](../assets/chapter-09/06_rope_query_key_rotation.png)
+
 Use:
 
 $$
@@ -523,6 +535,8 @@ $$
 $$
 
 # Shift both positions together
+
+![Two Query–Key pairs shifted together retain the same relative separation and relative rotary angle, while changing the separation changes their comparison.](../assets/chapter-09/07_rope_relative_distance.png)
 
 Move both vectors one position later:
 
@@ -702,6 +716,8 @@ This differs from RoPE:
 - relative-position bias adds a term after the dot product.
 
 # Position methods compared
+
+![Several positional mechanisms are compared before the address-aware token states enter the first floor of the Transformer tower.](../assets/chapter-09/08_position_variants_and_handoff.png)
 
 | Method | Where position enters | Learned? | Main intuition |
 |---|---|---:|---|

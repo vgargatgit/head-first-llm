@@ -1,6 +1,6 @@
 # Reader-resolved asset audit
 
-Checked **161** image references after applying the current website reader's prefix rewrites and aliases. **36** resolve to files that are absent from the repository checkout.
+Checked **169** image references after applying the current website reader's prefix rewrites and aliases. **36** resolve to files that are absent from the repository checkout.
 
 | Chapter | Source target | Reader-resolved path | Exists? | Alt text |
 |---:|---|---|:---:|---|
@@ -51,6 +51,14 @@ Checked **161** image references after applying the current website reader's pre
 | 7 | `../assets/chapter-07/06_per_token_layernorm.webp` | `assets/chapter-07/06_per_token_layernorm.webp` | **No** | THE, CAT, and SAT enter separate LayerNorm booths, each calculating its own mean and variance across four feature coordinates before learned scale and shift. |
 | 7 | `../assets/chapter-07/07_exact_sat_layernorm.webp` | `assets/chapter-07/07_exact_sat_layernorm.webp` | **No** | SAT's residual row is normalised with mean 0.064982 and variance 0.174902, producing approximately negative 0.066680, negative 0.316240, 1.573850, and negative 1.190930. |
 | 7 | `../assets/chapter-07/08_norm_variants_and_handoff.webp` | `assets/chapter-07/08_norm_variants_and_handoff.webp` | **No** | Post-norm and pre-norm block orderings are compared, LayerNorm is distinguished from RMSNorm, and THE, CAT, and SAT head toward separate Chapter 8 private thinking rooms. |
+| 9 | `../assets/chapter-09/01_chapter_hero_position_registry.png` | `assets/chapter-09/01_chapter_hero_position_registry.png` | Yes | The story rewinds from a completed Transformer block to the model entrance, where token positions receive address information before attention begins. |
+| 9 | `../assets/chapter-09/04_visibility_vs_address.png` | `assets/chapter-09/04_visibility_vs_address.png` | Yes | A causal gate, position badge, and relative-distance ruler answer different questions about visibility, location, and separation. |
+| 9 | `../assets/chapter-09/03_additive_position_embeddings.png` | `assets/chapter-09/03_additive_position_embeddings.png` | Yes | CAT’s token embedding and position-two embedding are added coordinate by coordinate to recover the initial hidden-state row used earlier in the book. |
+| 9 | `../assets/chapter-09/02_same_token_different_position.png` | `assets/chapter-09/02_same_token_different_position.png` | Yes | The same CAT token receives different position cards at positions two and five, producing different initial hidden states. |
+| 9 | `../assets/chapter-09/05_sinusoidal_position_clocks.png` | `assets/chapter-09/05_sinusoidal_position_clocks.png` | Yes | Clock hands turning at different speeds create a distributed sinusoidal signature for each token position. |
+| 9 | `../assets/chapter-09/06_rope_query_key_rotation.png` | `assets/chapter-09/06_rope_query_key_rotation.png` | Yes | RoPE rotates a Query pair by its position angle and a Key pair by its own position angle before their compatibility is calculated. |
+| 9 | `../assets/chapter-09/07_rope_relative_distance.png` | `assets/chapter-09/07_rope_relative_distance.png` | Yes | Two Query–Key pairs shifted together retain the same relative separation and relative rotary angle, while changing the separation changes their comparison. |
+| 9 | `../assets/chapter-09/08_position_variants_and_handoff.png` | `assets/chapter-09/08_position_variants_and_handoff.png` | Yes | Several positional mechanisms are compared before the address-aware token states enter the first floor of the Transformer tower. |
 | 13 | `../assets/chapter-13/01_chapter_hero_scorekeeper.png` | `../assets/chapter-13/01_chapter_hero_scorekeeper.png` | **No** | The Scorekeeper receives the known target ON and locates its probability, 0.238931, in the model's next-token distribution even though the period is the highest-probability candidate. |
 | 13 | `../assets/chapter-13/02_correct_target_probability.png` | `../assets/chapter-13/02_correct_target_probability.png` | **No** | Greedy decoding selects the highest-probability candidate, while training instead looks up the probability assigned to the known target ON. |
 | 13 | `../assets/chapter-13/04_log_penalty_gauge.png` | `../assets/chapter-13/04_log_penalty_gauge.png` | **No** | A negative-log gauge shows zero loss at probability one and increasingly large loss as the correct-target probability approaches zero. |

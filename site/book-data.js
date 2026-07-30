@@ -224,7 +224,11 @@
     makeChapter(6, 'Many Specialists at Work', 'Multi-head', 'How multiple attention heads learn different matching and retrieval systems.', 'part-1', 6, { stage: stages[6], assetFrom: ['../assets/chapter-06/', '/assets/chapter-06/'], assetTo: 'assets/chapter-06/' }),
     makeChapter(7, 'The Team Lead Combines the Reports', 'Residuals', 'Output projection, residual connections, LayerNorm, and pre-norm variants.', 'part-1', 7, { stage: stages[7], assetFrom: ['../assets/chapter-07/', '/assets/chapter-07/'], assetTo: 'assets/chapter-07/' }),
     makeChapter(8, 'The Private Thinking Room', 'MLP', 'How the position-wise MLP completes one Transformer block.', 'part-1', 8, { stage: stages[8] }),
-    makeChapter(9, 'Every Token Needs an Address', 'Position', 'Absolute positions, sinusoidal encodings, and RoPE geometry.', 'part-2', 1, { stage: stages[9] }),
+    makeChapter(9, 'Every Token Needs an Address', 'Position', 'Absolute positions, sinusoidal encodings, and RoPE geometry.', 'part-2', 1, {
+      stage: stages[9],
+      assetFrom: ['../assets/chapter-09/', '/assets/chapter-09/'],
+      assetTo: 'assets/chapter-09/'
+    }),
     makeChapter(10, 'The Residual Stream Climbs the Stack', 'Deep stack', 'How deep blocks refine hidden states and maintain per-layer KV caches.', 'part-2', 2, {
       stage: stages[10],
       assetFrom: ['../assets/chapter-10/', '/assets/chapter-10/'],

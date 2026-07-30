@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const EDITION_VERSION = '20260730.10';
+  const EDITION_VERSION = '20260730.11';
 
   function isChapterUrl(url) {
     return /\/chapter\.html$/.test(url.pathname) && url.searchParams.has('chapter');

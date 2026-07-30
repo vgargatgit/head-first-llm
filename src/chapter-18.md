@@ -6,6 +6,8 @@ lang: en
 
 # The question this chapter answers
 
+![Three neighboring Transformer houses reuse the same building blocks but route information through full-input encoding, causal generation, or source encoding followed by conditional decoding.](../assets/chapter-18/01_chapter_hero_three_transformer_houses.png){.hero}
+
 By now, we have followed one decoder-style Transformer from token representations through attention, generation, training, and post-training.
 
 But not every Transformer is built for the same job.
@@ -44,6 +46,8 @@ decoder writes while consulting source memory
 The distinction is not mainly about parameter count.
 
 It is about the attention pattern and the role assigned to the hidden states.
+
+![Encoder positions see the full input, decoder positions see only their permitted prefix, and encoder–decoder targets may inspect the complete encoded source.](../assets/chapter-18/02_family_attention_permission_maps.png)
 
 # Family 1: encoder-only models
 
@@ -84,6 +88,8 @@ The hikers rested beside the bank.
 
 right-side context pushes the same token toward the river-edge sense.
 
+![Full left and right context gives the word bank different contextual representations in financial and river-edge sentences.](../assets/chapter-18/03_encoder_bank_context.png)
+
 Encoder-only models are therefore natural representation builders.
 
 They commonly produce:
@@ -119,6 +125,8 @@ $$
 $$
 
 Only selected target positions receive direct loss, although all visible tokens contribute context.
+
+![A bidirectional encoder reconstructs selected hidden tokens while loss is applied only at selected target positions.](../assets/chapter-18/04_encoder_masked_language_objective.png)
 
 Modern encoder training recipes vary. They may alter masking, replacement strategy, data, position handling, sequence length, or auxiliary objectives. The defining architectural point remains bidirectional encoding rather than autoregressive generation.
 
@@ -184,6 +192,8 @@ prompt
   -> repeat
 ```
 
+![Causal self-attention blocks future tokens and supports a loop that predicts and appends one token at a time.](../assets/chapter-18/05_decoder_causal_generation.png)
+
 # Why decoder-only models dominate open-ended generation
 
 The architecture directly trains the behaviour required at generation time.
@@ -245,6 +255,8 @@ This is a natural architecture for conditional generation.
 
 The model does not need to squeeze the source and target into one undifferentiated causal stream. It first builds a full source representation, then generates while consulting that representation.
 
+![An encoder builds source memory, while a causal decoder generates the target and consults that memory through cross-attention.](../assets/chapter-18/06_encoder_decoder_source_memory.png)
+
 # Encoder–decoder training
 
 Suppose the source is an English sentence and the target is its French translation.
@@ -269,6 +281,8 @@ $$
 $$
 
 Here $x$ is the encoded source and $y_{<t}$ is the target prefix.
+
+![During teacher-forced sequence-to-sequence training, each target token is predicted from the encoded source and the shifted target prefix.](../assets/chapter-18/07_seq2seq_teacher_forcing.png)
 
 # Real encoder–decoder examples
 
@@ -297,6 +311,8 @@ A decoder-only model ordinarily lacks the separate encoder memory and the corres
 
 Both are called decoders, but their internal block layouts are not identical.
 
+![A decoder-only block uses causal self-attention, while an encoder–decoder decoder also contains cross-attention to separate encoder outputs.](../assets/chapter-18/08_two_decoder_block_layouts.png)
+
 # A side-by-side comparison
 
 | Question | Encoder-only | Decoder-only | Encoder–decoder |
@@ -307,6 +323,8 @@ Both are called decoders, but their internal block layouts are not identical.
 | Natural output | Representations or labels | Generated continuation | Generated output conditioned on source |
 | Typical strengths | Understanding, embedding, ranking | Open-ended generation | Translation, summarisation, transcription |
 | Typical limitation | Not naturally autoregressive | Early states lack future context | More moving parts and source–target interface |
+
+![A task signpost routes full-input representation work, open-ended generation, and explicit source-to-target generation toward their most natural Transformer families.](../assets/chapter-18/09_family_task_selection_field_guide.png)
 
 # A task-selection field guide
 
@@ -371,6 +389,8 @@ When the internals are not sufficiently documented, the accurate category is:
 
 A model’s conversational behaviour is not proof that it is decoder-only. A model can expose a chat interface while hiding an encoder, routing system, retrieval layer, or multimodal subsystem.
 
+![A model can carry independent labels for architecture, training stage, interaction behaviour, modality, and numerical format.](../assets/chapter-18/10_architecture_independent_axes.png)
+
 # Common architecture-family mistakes
 
 ## Mistake 1: calling every Transformer an LLM decoder
@@ -396,6 +416,8 @@ Standard decoder-only language models use causal self-attention. Encoder–decod
 ## Mistake 6: classifying proprietary models from marketing language
 
 Use architecture claims only when supported by reliable public documentation.
+
+![A misconception clinic separates architecture families, then the Translator prepares to calculate cross-attention over encoder notes.](../assets/chapter-18/11_family_mistakes_and_handoff.png)
 
 # Checkpoint
 

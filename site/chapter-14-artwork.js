@@ -7,7 +7,7 @@
   const article = document.getElementById('chapter');
   if (!article) return;
 
-  const buildVersion = '20260730.1';
+  const buildVersion = '20260730.2';
   const artwork = [
     {
       placement: 'start',

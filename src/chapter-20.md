@@ -6,6 +6,8 @@ lang: en
 
 # The question this chapter answers
 
+![A model lifecycle begins with broad pretraining, branches into persistent adaptations, and can later receive temporary prompts, retrieved documents, and tool results.](../assets/chapter-20/01_chapter_hero_model_lifecycle.png){.hero}
+
 The words surrounding modern models are easy to blur together.
 
 A model may be described as pretrained, foundational, base, instruct, chat, fine-tuned, aligned, adapted, retrieved, or prompted.
@@ -49,6 +51,8 @@ The map is still useful because it asks the right question at every step:
 > **Did the model weights change, or did the application only change the context?**
 
 # Pretraining
+
+![Broad pretraining adjusts distributed parameters and produces a reusable base checkpoint that may not yet follow a stable assistant interaction contract.](../assets/chapter-20/02_pretraining_to_base_checkpoint.png)
 
 Pretraining learns broad statistical structure from large datasets using a scalable objective.
 
@@ -130,6 +134,8 @@ A building foundation is valuable because other structures depend on it. It is a
 
 # Architecture and lifecycle are different axes
 
+![One checkpoint can simultaneously be decoder-only, instruction-tuned, multimodal, quantised, and used as a foundation for downstream applications.](../assets/chapter-20/03_lifecycle_label_axes.png)
+
 Consider these labels:
 
 ```text
@@ -181,6 +187,8 @@ This is often called domain-adaptive or task-adaptive pretraining when the data 
 
 # Continued pretraining versus fine-tuning
 
+![Continued pretraining extends modelling of a data distribution, while fine-tuning targets a narrower task, format, or behaviour.](../assets/chapter-20/04_continued_pretraining_vs_fine_tuning.png)
+
 The boundary is sometimes fuzzy, but the intent differs.
 
 | Question | Continued pretraining | Fine-tuning |
@@ -226,6 +234,8 @@ The difference from pretraining is the data, objective, scale, and intended beha
 Full fine-tuning offers high adaptation capacity but requires substantial memory for gradients and optimiser state and produces a complete new checkpoint.
 
 # Supervised fine-tuning
+
+![Supervised fine-tuning learns from desired outputs, instruction tuning broadens the task mix, and chat tuning serialises role-based conversations.](../assets/chapter-20/05_supervised_adaptation_family.png)
 
 Supervised fine-tuning, or SFT, learns from input–target examples.
 
@@ -274,6 +284,8 @@ A chat template converts those roles into model-specific tokens.
 Chat is therefore not a new architecture family. It is an interface and training distribution layered on top of an architecture.
 
 # Preference tuning
+
+![Preference data determines the learning signal, while PEFT controls which small parameter set stores the update and QLoRA keeps the frozen base quantised.](../assets/chapter-20/06_preference_and_peft.png)
 
 Preference tuning uses comparisons or reward signals to favour some responses over others.
 
@@ -332,6 +344,8 @@ The technique can reduce memory pressure for adaptation, but it does not make tr
 
 # Prompting
 
+![Prompts and in-context examples alter the current token context while leaving the checkpoint weights unchanged.](../assets/chapter-20/07_runtime_conditioning_no_weight_change.png)
+
 Prompting supplies instructions, examples, or context at runtime without updating weights.
 
 ```text
@@ -367,6 +381,8 @@ In-context learning is therefore runtime adaptation, not fine-tuning.
 
 # Retrieval-augmented generation
 
+![Retrieval supplies external evidence to the prompt, while tools perform validated operations outside the model and return results as runtime context.](../assets/chapter-20/08_rag_and_tools_runtime.png)
+
 Retrieval-augmented generation, or RAG, fetches external documents and adds relevant material to the model context.
 
 The weights remain unchanged during ordinary retrieval and generation.
@@ -398,6 +414,8 @@ Tool use is an orchestration pattern. It is not proof that the model weights con
 
 # What changes the weights?
 
+![Pretraining and full tuning alter model weights, PEFT alters adapter weights, and prompting, RAG, and tools supply temporary runtime context.](../assets/chapter-20/09_weight_change_comparison.png)
+
 | Method | Weights change? | New information persists without context? | Typical purpose |
 |---|---:|---:|---|
 | Pretraining | Yes | Yes, imperfectly | Broad capability |
@@ -411,6 +429,8 @@ Tool use is an orchestration pattern. It is not proof that the model weights con
 | Tool use | No model-weight change | Tool result is runtime context | External action or computation |
 
 # A decision tree
+
+![A decision tree selects runtime or training mechanisms based on information freshness, behavioural persistence, data quality, reuse, and regression risk.](../assets/chapter-20/10_adaptation_decision_tree.png)
 
 Ask these questions in order.
 
@@ -461,6 +481,8 @@ Trying to solve every requirement through prompting could produce inconsistent b
 A layered design assigns each problem to the mechanism best suited for it.
 
 # Catastrophic forgetting
+
+![Lifecycle stages carry data-governance and regression obligations before the model reaches four possible sources of support at runtime.](../assets/chapter-20/11_governance_regressions_and_handoff.png)
 
 Fine-tuning on a narrow distribution can reduce performance elsewhere.
 

@@ -266,7 +266,10 @@
       assetFrom: ['../assets/chapter-19/', '/assets/chapter-19/'],
       assetTo: 'assets/chapter-19/'
     }),
-    makeChapter(20, 'From Pretraining to Specialisation', 'Adaptation', 'Foundation models, base checkpoints, continued pretraining, tuning, adapters, and runtime conditioning.', 'part-4', 3),
+    makeChapter(20, 'From Pretraining to Specialisation', 'Adaptation', 'Foundation models, base checkpoints, continued pretraining, tuning, adapters, and runtime conditioning.', 'part-4', 3, {
+      assetFrom: ['../assets/chapter-20/', '/assets/chapter-20/'],
+      assetTo: 'assets/chapter-20/'
+    }),
     makeChapter(21, 'Open Book, Closed Book, or Tool Belt?', 'RAG & tools', 'Parametric memory, RAG, citations, external memory, and safe tool use.', 'part-4', 4, {
       assetFrom: ['../assets/chapter-21/', '/assets/chapter-21/'],
       assetTo: 'assets/chapter-21/'

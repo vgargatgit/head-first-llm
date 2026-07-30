@@ -264,7 +264,10 @@
       assetFrom: ['../assets/chapter-16/', '/assets/chapter-16/'],
       assetTo: 'assets/chapter-16/'
     }),
-    makeChapter(17, 'From Completion Machine to Helpful Assistant', 'Post-training', 'Supervised fine-tuning, preference optimisation, RLHF, DPO, and LoRA.', 'part-3', 6),
+    makeChapter(17, 'From Completion Machine to Helpful Assistant', 'Post-training', 'Supervised fine-tuning, preference optimisation, RLHF, DPO, and LoRA.', 'part-3', 6, {
+      assetFrom: ['../assets/chapter-17/', '/assets/chapter-17/'],
+      assetTo: 'assets/chapter-17/'
+    }),
     makeChapter(18, 'Three Transformer Families Move In', 'Families', 'Encoder-only, decoder-only, and encoder–decoder models compared by information flow and real-world use.', 'part-4', 1, {
       assetFrom: ['../assets/chapter-18/', '/assets/chapter-18/'],
       assetTo: 'assets/chapter-18/'

@@ -267,7 +267,10 @@
       assetTo: 'assets/chapter-19/'
     }),
     makeChapter(20, 'From Pretraining to Specialisation', 'Adaptation', 'Foundation models, base checkpoints, continued pretraining, tuning, adapters, and runtime conditioning.', 'part-4', 3),
-    makeChapter(21, 'Open Book, Closed Book, or Tool Belt?', 'RAG & tools', 'Parametric memory, RAG, citations, external memory, and safe tool use.', 'part-4', 4),
+    makeChapter(21, 'Open Book, Closed Book, or Tool Belt?', 'RAG & tools', 'Parametric memory, RAG, citations, external memory, and safe tool use.', 'part-4', 4, {
+      assetFrom: ['../assets/chapter-21/', '/assets/chapter-21/'],
+      assetTo: 'assets/chapter-21/'
+    }),
     makeChapter(22, 'Pictures, Audio, and Other Modalities', 'Multimodality', 'Vision and audio encoders, projectors, cross-attention, and multimodal alignment.', 'part-4', 5, {
       assetFrom: ['../assets/chapter-22/', '/assets/chapter-22/'],
       assetTo: 'assets/chapter-22/'

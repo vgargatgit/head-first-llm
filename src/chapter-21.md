@@ -6,6 +6,8 @@ lang: en
 
 # The question this chapter answers
 
+![A language model can answer from parameter patterns, supplied prompt notes, retrieved evidence, or validated external tool results.](../assets/chapter-21/01_chapter_hero_four_support_sources.png){.hero}
+
 A language model can answer from patterns encoded in its parameters, from information supplied in the prompt, from documents retrieved at runtime, or from results returned by external tools.
 
 Those sources are easy to mix together because they all arrive at the same final act: the model generates tokens.
@@ -75,6 +77,8 @@ The tool performs the operation. The language model decides how to request and e
 
 # Parametric memory
 
+![Parametric memory is distributed and hard to trace, while prompt context is explicit working memory available only for the current request.](../assets/chapter-21/02_parametric_memory_vs_context.png)
+
 During training, gradients adjust parameters so that contexts map to useful token probabilities.
 
 The result can encode facts and associations, but not as neat rows in a database.
@@ -118,6 +122,8 @@ A long context window increases capacity, but it does not guarantee perfect use 
 
 # Retrieval-augmented generation
 
+![RAG prepares indexed chunks in advance, then retrieves, filters, reranks, and assembles evidence before answer generation and citation verification.](../assets/chapter-21/03_rag_preparation_and_question_pipeline.png)
+
 Retrieval-augmented generation, or RAG, combines a generator with an external information-retrieval system.
 
 A common pipeline is:
@@ -144,6 +150,8 @@ question
 RAG is not one algorithm. It is a family of system designs.
 
 # Why split documents into chunks?
+
+![Chunks that are too small lose context, chunks that are too large dilute relevance, and structure-aware boundaries balance meaning and retrieval precision.](../assets/chapter-21/04_chunking_tradeoffs.png)
 
 A retriever usually ranks manageable units rather than entire books or databases.
 
@@ -188,6 +196,8 @@ $$
 If vectors are already normalised to unit length, cosine similarity becomes the dot product.
 
 # A tiny retrieval calculation
+
+![Dot products rank the second document first with similarity 0.96, but that ranking does not prove its contents are correct.](../assets/chapter-21/05_exact_retrieval_similarity.png)
 
 Suppose the normalised query vector is:
 
@@ -245,6 +255,8 @@ The retriever ranks $d_2$ first.
 That does not prove that $d_2$ contains the correct answer. It only says the representation considers it the closest candidate among these documents.
 
 # Dense, lexical, and hybrid retrieval
+
+![Lexical and dense retrieval produce candidates that are permission-filtered, reranked, and deduplicated before prompt assembly.](../assets/chapter-21/06_hybrid_retrieval_reranking.png)
 
 ## Lexical retrieval
 
@@ -307,6 +319,8 @@ Permission checks should happen before protected text reaches the model context.
 
 # Context assembly
 
+![Citation validation confirms a cited source was supplied, while a separate support check asks whether that source actually entails the associated claim.](../assets/chapter-21/07_context_assembly_and_citations.png)
+
 Retrieved passages must be turned into a prompt.
 
 A useful structure is:
@@ -365,6 +379,8 @@ Retrieval reduces some knowledge problems while creating new system problems.
 
 # Retrieval evaluation
 
+![Retrieval and generation receive separate metrics, while rewritten and decomposed searches retain the original question for answering and audit.](../assets/chapter-21/08_retrieval_evaluation_and_query_rewriting.png)
+
 Evaluate retrieval separately from generation.
 
 ## Retrieval metrics
@@ -422,6 +438,8 @@ This helps when one embedding cannot represent every part of the question equall
 
 # External memory
 
+![External memory stores selected application facts under explicit ownership, retention, correction, deletion, sensitivity, relevance, and provenance controls.](../assets/chapter-21/09_external_memory_governance.png)
+
 An application may store conversation facts, user preferences, task state, or summaries outside the model.
 
 At request time, selected memory is retrieved and inserted into context.
@@ -439,6 +457,8 @@ External memory should have:
 “Memory” is not automatically benign. Remembering too much can be intrusive, unsafe, or simply annoying.
 
 # Tool use
+
+![A model proposes a structured calculator call, the application validates and executes it, and stronger confirmation protects tools that change the outside world.](../assets/chapter-21/10_tool_call_safety_pipeline.png)
 
 A tool-using system separates language generation from external execution.
 
@@ -508,6 +528,8 @@ Examples:
 Write tools require stronger controls because a fluent explanation cannot undo an irreversible action.
 
 # Prompt injection through retrieved content
+
+![Retrieved prompt-injection text remains untrusted data behind layered controls as the evidence system prepares to accept image and audio modalities.](../assets/chapter-21/11_prompt_injection_and_handoff.png)
 
 A retrieved document may contain text such as:
 

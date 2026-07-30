@@ -245,19 +245,9 @@
     makeChapter(11, 'The Final Audition', 'Prediction', 'Vocabulary logits, softmax, temperature, sampling, and next-token generation.', 'part-2', 3, { stage: stages[11] }),
     makeChapter(12, 'The Answer Key Moves One Step Ahead', 'Targets', 'Shifted labels, teacher forcing, masks, padding, and packed sequences.', 'part-3', 1),
     makeChapter(13, 'Meet the Scorekeeper', 'Loss', 'Negative log-likelihood, cross-entropy, masked means, and perplexity.', 'part-3', 2, {
-  assetFrom: ['../assets/chapter-13/', '/assets/chapter-13/'],
-  assetTo: 'assets/chapter-13/',
-  artwork: [
-    { placement: 'start', src: 'assets/chapter-13/01_chapter_hero_scorekeeper.png', alt: 'The Scorekeeper receives the correct target ON and locates its 0.238931 probability on the Chapter 11 distribution.' },
-    { afterHeading: "Return to Chapter 11's distribution", src: 'assets/chapter-13/02_correct_target_probability.png', alt: 'The same model distribution supports decoding and training, but training looks up the probability assigned to the known target ON.' },
-    { afterHeading: 'From one-hot targets to cross-entropy', src: 'assets/chapter-13/03_exact_cross_entropy_calculation.png', alt: 'The correct-target probability 0.238931 enters the negative natural logarithm and produces loss 1.431580.' },
-    { afterHeading: 'Why use a logarithm?', src: 'assets/chapter-13/04_log_penalty_gauge.png', alt: 'A negative-log gauge shows zero loss at probability one and increasingly large loss as correct-target probability approaches zero.' },
-    { afterHeading: 'Masked cross-entropy', src: 'assets/chapter-13/05_masked_mean_loss_receipts.png', alt: 'Eight valid token-loss receipts sum to 8.334872 and divide by eight to produce mean loss 1.041859.' },
-    { afterHeading: 'Perplexity', src: 'assets/chapter-13/06_perplexity_and_bits.png', alt: 'Mean cross-entropy is converted into perplexity 2.834481 and 1.503085 bits per token, with comparability warnings.' },
-    { afterHeading: 'The gradient signal begins at the logits', src: 'assets/chapter-13/07_probability_minus_target.png', alt: 'Subtracting the one-hot target from the probability row produces the five-coordinate logit gradient used by backpropagation.' },
-    { afterHeading: 'Exact logit gradient for Chapter 11', src: 'assets/chapter-13/08_loss_accuracy_and_handoff.png', alt: 'A comparison distinguishes loss from top-token accuracy before the Scorekeeper gives the correction envelope to the Gradient Courier.' }
-  ]
-}),
+      assetFrom: ['../assets/chapter-13/', '/assets/chapter-13/'],
+      assetTo: 'assets/chapter-13/'
+    }),
     makeChapter(14, 'The Blame Travels Backward', 'Backprop', 'Chain-rule gradients through the output head, blocks, attention, and optimiser updates.', 'part-3', 3),
     makeChapter(15, 'The Training Factory Never Sees the Whole Library', 'Training run', 'Effective batches, data mixtures, schedules, validation, and resumable checkpoints.', 'part-3', 4),
     makeChapter(16, 'The Model Outgrows One Machine', 'Scale', 'Data parallelism, state sharding, tensor parallelism, pipelines, and memory trade-offs.', 'part-3', 5, {

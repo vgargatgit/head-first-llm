@@ -10,7 +10,8 @@
 This document is the canonical production specification for all Chapter 10 graphics.
 It expands the relevant master-plan entry into a scene-by-scene brief. Final artwork belongs under `assets/chapter-10/`.
 
-The Chapter 1–3 illustrations remain the visual reference standard.
+The Chapter 1–3 illustrations remain the visual reference standard. The
+implemented package contains ten core panels and four supplemental panels.
 
 ---
 
@@ -75,7 +76,8 @@ During cached generation, only the newest token travels through every floor whil
 
 # 4. Scene inventory
 
-The planned Chapter 10 set contains **8 artwork files**.
+The Chapter 10 set contains **14 artwork files**: ten core panels and four
+supplemental clarification panels.
 
 ---
 
@@ -84,7 +86,7 @@ The planned Chapter 10 set contains **8 artwork files**.
 ### Asset
 
 ```text
-assets/chapter-10/01_chapter_hero_transformer_tower.png
+assets/chapter-10/01_the_transformer_tower_explained.png
 ```
 
 ### Intended placement
@@ -132,7 +134,7 @@ Introduce depth as repeated refinement rather than one giant attention operation
 ### Asset
 
 ```text
-assets/chapter-10/02_one_floor_refinement.png
+assets/chapter-10/02_one_floor_at_a_time_transformer_layer.png
 ```
 
 ### Intended placement
@@ -187,7 +189,7 @@ X^(l)=Block_l(X^(l-1)); X^(l) in R^(n x d_model)
 ### Asset
 
 ```text
-assets/chapter-10/03_sat_case_file_through_layers.png
+assets/chapter-10/03_sat_state_evolution_cartoon_diagram.png
 ```
 
 ### Intended placement
@@ -243,7 +245,7 @@ x_sat^(3)=[0.076373,-0.023686,1.517529,-1.230215]
 ### Asset
 
 ```text
-assets/chapter-10/04_layers_have_separate_parameters.png
+assets/chapter-10/04_layers_and_parameters_explained_visually.png
 ```
 
 ### Intended placement
@@ -296,7 +298,7 @@ W_1^Q != W_2^Q != ... != W_L^Q
 ### Asset
 
 ```text
-assets/chapter-10/05_later_layers_use_contextual_states.png
+assets/chapter-10/05_context_grows_with_visible_tokens.png
 ```
 
 ### Intended placement
@@ -349,7 +351,7 @@ Q^(l)=X^(l-1)W_l^Q; K^(l)=X^(l-1)W_l^K; V^(l)=X^(l-1)W_l^V
 ### Asset
 
 ```text
-assets/chapter-10/06_per_layer_kv_cache.png
+assets/chapter-10/06_key_value_memory_in_neural_layers.png
 ```
 
 ### Intended placement
@@ -404,7 +406,7 @@ per-layer cache contains prior K and V tensors by token position
 ### Asset
 
 ```text
-assets/chapter-10/07_new_token_uses_existing_cache.png
+assets/chapter-10/07_decoding_with_cached_keys_and_values.png
 ```
 
 ### Intended placement
@@ -448,12 +450,15 @@ Show how KV caching avoids recomputing earlier token projections at each generat
 
 ---
 
-## Scene 08 — Cache growth, final norm, and handoff
+## Scenes 08–10 — Cache growth, final norm, and handoff
 
 ### Asset
 
 ```text
-assets/chapter-10/08_cache_growth_final_norm_handoff.png
+assets/chapter-10/08_token_generation_growth_in_transformers.png
+assets/chapter-10/08b_sat_final_layernorm_example.png
+assets/chapter-10/09_final_output_path_diagram_with_mascot.png
+assets/chapter-10/10_chapter_11_from_final_state_to_next_token.png
 ```
 
 ### Intended placement
@@ -508,14 +513,20 @@ h_sat_final ≈ [-0.008859,-0.111600,1.470933,-1.350474]
 
 | Order | Asset | Role |
 |---:|---|---|
-| 1 | `01_chapter_hero_transformer_tower.png` | Hero |
-| 2 | `02_one_floor_refinement.png` | Mechanism |
-| 3 | `03_sat_case_file_through_layers.png` | Exact depth example |
-| 4 | `04_layers_have_separate_parameters.png` | Misconception guardrail |
-| 5 | `05_later_layers_use_contextual_states.png` | Repeated contextualisation |
-| 6 | `06_per_layer_kv_cache.png` | Cache object definition |
-| 7 | `07_new_token_uses_existing_cache.png` | Cache reuse mechanism |
-| 8 | `08_cache_growth_final_norm_handoff.png` | Memory, variant, and handoff |
+| 1 | `01_the_transformer_tower_explained.png` | Hero |
+| 2 | `02_one_floor_at_a_time_transformer_layer.png` | Shape-preserving block mechanism |
+| 3 | `02b_why_residual_connections_help.png` | Residual clarification |
+| 4 | `02c_why_layernorm.png` | LayerNorm clarification |
+| 5 | `02d_pre_norm_vs_post_norm.png` | Norm-order contrast |
+| 6 | `03_sat_state_evolution_cartoon_diagram.png` | Exact depth example |
+| 7 | `04_layers_and_parameters_explained_visually.png` | Parameter-ownership guardrail |
+| 8 | `05_context_grows_with_visible_tokens.png` | Contextual-state and causal-mask guardrail |
+| 9 | `06_key_value_memory_in_neural_layers.png` | Cache object definition |
+| 10 | `07_decoding_with_cached_keys_and_values.png` | Prefill and cache reuse mechanism |
+| 11 | `08_token_generation_growth_in_transformers.png` | Cache memory growth |
+| 12 | `08b_sat_final_layernorm_example.png` | Exact final LayerNorm |
+| 13 | `09_final_output_path_diagram_with_mascot.png` | Logits-to-probabilities handoff |
+| 14 | `10_chapter_11_from_final_state_to_next_token.png` | Chapter 11 banner |
 
 ---
 
@@ -588,6 +599,10 @@ Chapter 10 graphics are complete only when:
 
 - Detailed scene planning: complete.
 - Reusable prop specification: complete.
-- Final artwork generation: not started.
-- Asset integration into the chapter: not started.
-- Website and mobile review: pending final artwork.
+- Final artwork generation: complete.
+- Asset integration into the chapter: complete through `site/book-data.js` and
+  `site/chapter-10-supplemental-artwork.js`.
+- Technical correction review: complete for causal visibility, residual shape,
+  per-layer parameter ownership, cached decoding, cache growth, final
+  LayerNorm, and the vocabulary-output path.
+- Website and mobile review: pending deployment preview.

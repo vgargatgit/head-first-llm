@@ -1,6 +1,8 @@
-Chapter 10 complete image package — 14 images
+Chapter 10 complete image package — 14 production images
 
-Place these PNG files inside assets/chapter-10/ in the project repository.
+All files are present under `assets/chapter-10/` and integrated into the
+reader. The core panels are registered in `site/book-data.js`; supplemental
+panels are registered in `site/chapter-10-supplemental-artwork.js`.
 
 Core images:
 01_the_transformer_tower_explained.png

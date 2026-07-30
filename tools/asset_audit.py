@@ -36,6 +36,7 @@ CONFIG = {
     7: {"from": ["../assets/chapter-07/", "/assets/chapter-07/"], "to": "assets/chapter-07/", "aliases": {}},
     17: {"from": ["../assets/chapter-17/", "/assets/chapter-17/"], "to": "assets/chapter-17/", "aliases": {}},
     18: {"from": ["../assets/chapter-18/", "/assets/chapter-18/"], "to": "assets/chapter-18/", "aliases": {}},
+    19: {"from": ["../assets/chapter-19/", "/assets/chapter-19/"], "to": "assets/chapter-19/", "aliases": {}},
 }
 
 

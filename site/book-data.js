@@ -262,7 +262,10 @@
       assetFrom: ['../assets/chapter-18/', '/assets/chapter-18/'],
       assetTo: 'assets/chapter-18/'
     }),
-    makeChapter(19, 'The Decoder Borrows the Encoder’s Notes', 'Cross-attention', 'A full cross-attention calculation from decoder Query to encoder-side retrieval.', 'part-4', 2),
+    makeChapter(19, 'The Decoder Borrows the Encoder’s Notes', 'Cross-attention', 'A full cross-attention calculation from decoder Query to encoder-side retrieval.', 'part-4', 2, {
+      assetFrom: ['../assets/chapter-19/', '/assets/chapter-19/'],
+      assetTo: 'assets/chapter-19/'
+    }),
     makeChapter(20, 'From Pretraining to Specialisation', 'Adaptation', 'Foundation models, base checkpoints, continued pretraining, tuning, adapters, and runtime conditioning.', 'part-4', 3),
     makeChapter(21, 'Open Book, Closed Book, or Tool Belt?', 'RAG & tools', 'Parametric memory, RAG, citations, external memory, and safe tool use.', 'part-4', 4),
     makeChapter(22, 'Pictures, Audio, and Other Modalities', 'Multimodality', 'Vision and audio encoders, projectors, cross-attention, and multimodal alignment.', 'part-4', 5),

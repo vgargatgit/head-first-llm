@@ -6,6 +6,8 @@ lang: en
 
 # The question this chapter answers
 
+![A target-side Translator forms a Query and consults a fixed wall of encoder-prepared source Keys and Values.](../assets/chapter-19/01_chapter_hero_translator_note_wall.png){.hero}
+
 In self-attention, Queries, Keys, and Values are projected from the same sequence of hidden states.
 
 Cross-attention breaks that symmetry.
@@ -49,6 +51,8 @@ The two attention sublayers have different jobs.
 
 # Self-attention and cross-attention are not interchangeable
 
+![Decoder self-attention obtains Queries, Keys, and Values from decoder states, while cross-attention obtains only Queries there and obtains Keys and Values from encoder outputs.](../assets/chapter-19/02_self_vs_cross_attention_provenance.png)
+
 For decoder self-attention:
 
 $$
@@ -86,6 +90,8 @@ The Query comes from the decoder side. The Keys and Values come from the encoder
 That source split is the defining fact of cross-attention.
 
 # Shape bookkeeping
+
+![Cross-attention combines T decoder Queries with S encoder Keys to form a T-by-S score matrix and returns T Value-width outputs.](../assets/chapter-19/03_cross_attention_shapes.png)
 
 Let:
 
@@ -142,6 +148,8 @@ Every row corresponds to one target position.
 Every column corresponds to one source position.
 
 # The full cross-attention equation
+
+![Cross-attention compares Queries and Keys, scales and masks the scores, normalises across source positions, and uses the weights to mix source Values.](../assets/chapter-19/04_cross_attention_equation_pipeline.png)
 
 Ignoring multi-head reshaping for the moment:
 
@@ -209,6 +217,8 @@ d_k=2
 $$
 
 # Step 1: compare the decoder Query with every encoder Key
+
+![The decoder Query dotted with three encoder Keys produces raw compatibility scores 0.25, 1.03, and 0.37.](../assets/chapter-19/05_exact_cross_attention_dot_products.png)
 
 The raw dot products are:
 
@@ -319,6 +329,8 @@ After softmax, the padding position would receive weight zero.
 
 # Step 4: turn scores into attention weights
 
+![Scaling by square root of two and applying row-wise softmax gives source weights about 0.261473, 0.453899, and 0.284628.](../assets/chapter-19/06_exact_scale_mask_softmax.png)
+
 Apply softmax across the source positions:
 
 $$
@@ -348,6 +360,8 @@ $$
 The decoder position pays the most attention to `CAT`, while still retrieving information from the other source positions.
 
 # Step 5: retrieve a weighted mixture of encoder Values
+
+![The three weighted encoder Values combine into the cross-attention output vector approximately 0.143033 and 0.481601.](../assets/chapter-19/07_exact_weighted_value_retrieval.png)
 
 The cross-attention output is:
 
@@ -426,6 +440,8 @@ Values: What information should each source position contribute?
 
 # Extending from one target position to many
 
+![Each target position has its own distribution across source positions, producing a target-by-source attention matrix and one retrieved vector per target row.](../assets/chapter-19/08_many_target_positions_directionality.png)
+
 Suppose the decoder currently contains four target positions.
 
 Then:
@@ -476,6 +492,8 @@ This is one reason encoder–decoder inference can reuse source-side computation
 
 # Source Keys and Values can be cached
 
+![Cross-attention source Keys and Values remain fixed for one encoded input, while decoder self-attention cache entries grow with the generated target.](../assets/chapter-19/09_source_and_target_cache_lifetimes.png)
+
 For each cross-attention layer, the encoder memory is fixed during generation of one target sequence.
 
 The projected source Keys and Values can therefore be computed once and reused.
@@ -493,6 +511,8 @@ self-attention KV cache
 Keeping these caches conceptually separate prevents many implementation mistakes.
 
 # Multi-head cross-attention
+
+![Multiple cross-attention heads project the same decoder and encoder states differently, while encoder padding, decoder causality, and cross-attention source validity use distinct masks.](../assets/chapter-19/10_multihead_cross_attention_and_masks.png)
 
 As with self-attention, a real block usually uses multiple heads.
 
@@ -581,6 +601,8 @@ Prevents decoder Queries from attending to padded or forbidden encoder positions
 The cross-attention source mask usually follows source validity, not target causality.
 
 # Common cross-attention mistakes
+
+![A clinic corrects common cross-attention errors before the completed architecture moves to a model-lifecycle map.](../assets/chapter-19/11_cross_attention_mistakes_and_handoff.png)
 
 ## Mistake 1: projecting all Q, K, and V from the decoder
 

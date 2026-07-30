@@ -768,7 +768,7 @@ Valid token receipts enter the calculator. Ignored or padded positions remain co
 ### Core Scene 6 — Perplexity branching gauge
 
 ```text
-assets/chapter-13/06_perplexity_branching_gauge.png
+assets/chapter-13/06_perplexity_and_bits.png
 ```
 
 Show perplexity derived from average loss while warning that it is not literally the vocabulary size or the exact number of choices at each token.
@@ -784,7 +784,7 @@ Show the probability tickets compared with a one-hot target card, creating the `
 ### Misconception panel
 
 ```text
-assets/chapter-13/08_highest_probability_is_not_the_scoring_rule.png
+assets/chapter-13/08_loss_accuracy_and_handoff.png
 ```
 
 Contrast “which token had the highest probability?” with “what probability was assigned to the actual target?”

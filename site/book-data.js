@@ -260,7 +260,10 @@
 }),
     makeChapter(14, 'The Blame Travels Backward', 'Backprop', 'Chain-rule gradients through the output head, blocks, attention, and optimiser updates.', 'part-3', 3),
     makeChapter(15, 'The Training Factory Never Sees the Whole Library', 'Training run', 'Effective batches, data mixtures, schedules, validation, and resumable checkpoints.', 'part-3', 4),
-    makeChapter(16, 'The Model Outgrows One Machine', 'Scale', 'Data parallelism, state sharding, tensor parallelism, pipelines, and memory trade-offs.', 'part-3', 5),
+    makeChapter(16, 'The Model Outgrows One Machine', 'Scale', 'Data parallelism, state sharding, tensor parallelism, pipelines, and memory trade-offs.', 'part-3', 5, {
+      assetFrom: ['../assets/chapter-16/', '/assets/chapter-16/'],
+      assetTo: 'assets/chapter-16/'
+    }),
     makeChapter(17, 'From Completion Machine to Helpful Assistant', 'Post-training', 'Supervised fine-tuning, preference optimisation, RLHF, DPO, and LoRA.', 'part-3', 6),
     makeChapter(18, 'Three Transformer Families Move In', 'Families', 'Encoder-only, decoder-only, and encoder–decoder models compared by information flow and real-world use.', 'part-4', 1),
     makeChapter(19, 'The Decoder Borrows the Encoder’s Notes', 'Cross-attention', 'A full cross-attention calculation from decoder Query to encoder-side retrieval.', 'part-4', 2),

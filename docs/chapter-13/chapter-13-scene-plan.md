@@ -366,15 +366,15 @@ The focused `on` example and the separate eight-position illustration must be la
 
 # 7. Production checklist
 
-- [ ] Final Audition continuity matches Chapter 11.
-- [ ] The Scorekeeper uses the actual target probability, not the winning candidate.
-- [ ] Natural logarithm and exact values are correct.
-- [ ] Ignored positions are excluded from both numerator and denominator.
-- [ ] Perplexity is presented as derived from mean cross-entropy.
-- [ ] `p-y` is labelled a logit gradient, not a parameter update.
-- [ ] Loss and accuracy remain distinct.
-- [ ] Mathematical typography is independently verified.
-- [ ] Every scene has useful technical alt text.
+- [x] Final Audition continuity matches Chapter 11.
+- [x] The Scorekeeper uses the actual target probability, not the winning candidate.
+- [x] Natural logarithm and exact values are correct.
+- [x] Ignored positions are excluded from both numerator and denominator.
+- [x] Perplexity is presented as derived from mean cross-entropy.
+- [x] `p-y` is labelled a logit gradient, not a parameter update.
+- [x] Loss and accuracy remain distinct.
+- [x] Mathematical typography is independently verified.
+- [x] Every scene has useful technical alt text.
 
 ---
 
@@ -388,5 +388,6 @@ Chapter 13 graphics are complete only when all eight assets are approved, integr
 
 - Detailed scene planning: complete.
 - Reusable Scorekeeper and scoring-prop specifications: complete.
-- Final artwork generation: not started.
-- Integration and website review: pending final artwork.
+- Final artwork generation: complete.
+- Integration: complete.
+- Website review: pending final desktop and mobile render checks.

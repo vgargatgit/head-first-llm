@@ -4,6 +4,8 @@ subtitle: "How cross-entropy turns next-token predictions into a training loss"
 lang: en
 ---
 
+![The Scorekeeper receives the known target ON and locates its probability, 0.238931, in the model's next-token distribution even though the period is the highest-probability candidate.](../assets/chapter-13/01_chapter_hero_scorekeeper.webp){.hero}
+
 # The question this chapter answers
 
 Chapter 12 created one correct target for every valid prediction row.
@@ -51,6 +53,8 @@ $$
 \mathcal{L}=-\log p_y
 $$
 
+![Greedy decoding selects the highest-probability candidate, while training instead looks up the probability assigned to the known target ON.](../assets/chapter-13/02_correct_target_probability.webp)
+
 # Negative log-likelihood for one target
 
 Using natural logarithms:
@@ -70,6 +74,8 @@ The pattern is deliberate:
 - low correct-token probability gives high loss;
 - probability 1 gives zero loss;
 - probability approaching zero produces a very large penalty.
+
+![A negative-log gauge shows zero loss at probability one and increasingly large loss as the correct-target probability approaches zero.](../assets/chapter-13/04_log_penalty_gauge.webp)
 
 # Why use a logarithm?
 
@@ -127,6 +133,8 @@ $$
 &\approx1.431580
 \end{aligned}
 $$
+
+![The target ON selects probability 0.238931, whose negative natural logarithm produces a per-token loss of approximately 1.431580.](../assets/chapter-13/03_exact_cross_entropy_calculation.webp)
 
 The period had the highest model probability, but the target is `on`.
 
@@ -287,6 +295,8 @@ $$
 
 The denominator counts valid targets, not padded tensor slots.
 
+![Eight valid loss receipts sum to 8.334872 and divide by eight for a mean of 1.041859; a crossed-out example shows why padding must not enter the denominator.](../assets/chapter-13/05_masked_mean_loss_receipts.webp)
+
 # Reduction choices affect scale
 
 A loss function may return:
@@ -369,6 +379,8 @@ $$
 \approx1.503085
 $$
 
+![Mean loss 1.041859 converts to perplexity 2.834481 and 1.503085 bits per token, with warnings about effective branching and tokenizer-dependent comparisons.](../assets/chapter-13/06_perplexity_and_bits.webp)
+
 # Label smoothing changes the target
 
 The basic target is one-hot.
@@ -444,6 +456,8 @@ $$
 }
 $$
 
+![Subtracting the one-hot target from the five-token probability row produces the logit gradient p minus y; gradient descent raises the target logit and lowers the non-target logits.](../assets/chapter-13/07_probability_minus_target.webp)
+
 The negative component for `on` requests upward pressure on its logit.
 
 The largest positive incorrect component belongs to the period because the model assigned the period the most incorrect probability.
@@ -507,6 +521,8 @@ Summed and averaged losses have different scales.
 ## Mistake 8: saying loss directly changes weights
 
 Backpropagation calculates gradients; an optimiser applies updates.
+
+![Examples distinguish top-1 accuracy from cross-entropy loss, introduce optional label smoothing, and hand the logit-gradient envelope to the Chapter 14 Gradient Courier.](../assets/chapter-13/08_loss_accuracy_and_handoff.webp)
 
 # Checkpoint
 

@@ -23,6 +23,8 @@ How can many accelerators cooperate without accidentally training different mode
 
 </div>
 
+![Several coordinated workers process different microbatches, then send their local gradients to a shared collective operation.](../assets/chapter-16/01_chapter_hero_distributed_workers.png)
+
 # Cold open: four workers receive one lesson plan
 
 Suppose four workers each process a different microbatch.
@@ -66,6 +68,8 @@ $$
 $$
 
 Every replica then updates with the same \(\bar{g}\).
+
+![Data-parallel workers process different examples, average their local gradients, and apply the same synchronised update.](../assets/chapter-16/02_data_parallel_all_reduce.png)
 
 # A small gradient-reduction example
 
@@ -122,6 +126,8 @@ $$
 All four replicas use that same result.
 
 The second parameter receives no update from this step because positive and negative evidence cancelled in the global batch.
+
+![Four local two-coordinate gradients are combined and divided by four to produce the average gradient 0.1 and 0.](../assets/chapter-16/03_exact_gradient_average.png)
 
 # Sum or average?
 
@@ -199,6 +205,8 @@ A one-billion-parameter model does not consume only one billion bytes. The bytes
 
 </div>
 
+![Training memory is divided among parameters, gradients, optimiser states, activations, temporary buffers, and communication workspace.](../assets/chapter-16/04_training_memory_components.png)
+
 # An illustrative bytes-per-parameter estimate
 
 Consider one mixed-precision Adam-style training arrangement with approximately:
@@ -229,6 +237,8 @@ $$
 bytes, or roughly 16 GB in decimal units, before activations and temporary buffers.
 
 Actual systems can use different precisions and state layouts, so this is a planning model rather than a universal constant.
+
+![An illustrative Adam-style memory model uses 16 bytes per parameter, so one billion parameters need about 16 GB of persistent state before other memory costs.](../assets/chapter-16/05_exact_bytes_per_parameter.png)
 
 # Sharded data parallelism divides model state
 
@@ -295,6 +305,8 @@ full gradient contributions
 
 Sharded training uses these primitives to make full layers temporarily available while keeping persistent state partitioned.
 
+![Workers permanently own different model-state shards, temporarily gather a layer for computation, and reduce-scatter gradients back to their owners.](../assets/chapter-16/06_sharded_parameter_warehouse.png)
+
 # Tensor parallelism splits a layer's arithmetic
 
 Sharding model state still allows one worker to execute a layer after gathering its parameters.
@@ -329,6 +341,8 @@ $$
 Worker 1 can compute \(XW_1\), worker 2 can compute \(XW_2\), and the partial output features can be concatenated.
 
 Other matrix splits require sums or reductions rather than concatenation.
+
+![Tensor-parallel workers split one large matrix operation across devices and communicate to assemble the full result.](../assets/chapter-16/07_tensor_parallel_matrix_split.png)
 
 # Tensor-parallel communication depends on the split
 
@@ -375,6 +389,8 @@ stage 4: layers 10-12
 ```
 
 Activations move forward from stage to stage. During backpropagation, activation gradients move backward.
+
+![Pipeline stages own different layer groups while microbatch activation and gradient crates move through a schedule containing visible idle bubbles.](../assets/chapter-16/08_pipeline_parallel_bubble.png)
 
 # Why use microbatches in a pipeline?
 
@@ -436,6 +452,8 @@ activation checkpointing:
 This is also called rematerialisation.
 
 It reduces activation memory but increases arithmetic and can lengthen each step.
+
+![Activation checkpointing saves selected intermediate states and recomputes discarded activations during backward to trade compute for memory.](../assets/chapter-16/09_activation_checkpointing.png)
 
 # Parallel strategies can be combined
 
@@ -535,6 +553,8 @@ Stragglers may result from:
 - retries or transient errors.
 
 Monitoring per-worker step time is therefore essential.
+
+![Fast and slow interconnects, communication overlap, and one straggling worker determine the efficiency of synchronous distributed training.](../assets/chapter-16/10_communication_and_stragglers.png)
 
 # Faults and resumable distributed state
 
@@ -672,6 +692,8 @@ Every saving introduces a cost in communication, recomputation, scheduling, or c
 In our story:
 
 > **When the model outgrows one desk, the training organisation does not merely hire more employees. It decides who holds which pages, who performs which calculation, when reports must be exchanged, and how everyone signs the same final update.**
+
+![Four panels distinguish data, sharded-state, tensor, and pipeline parallelism before a distributed checkpoint reconstructs the trained base model for post-training.](../assets/chapter-16/11_parallelism_taxonomy_and_handoff.png)
 
 # Coming next: pretraining is not yet assistant behaviour
 

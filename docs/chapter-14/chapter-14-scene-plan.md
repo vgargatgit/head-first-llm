@@ -9,6 +9,9 @@
 
 This document is the canonical production specification for all Chapter 14 graphics. Final artwork belongs under `assets/chapter-14/`.
 
+All nine production assets were corrected, numerically reviewed, and integrated
+into `src/chapter-14.md`.
+
 The chapter introduces the Gradient Courier and Optimizer Engineer while reusing every forward department already established in Chapters 2–11.
 
 ---
@@ -380,15 +383,15 @@ The full 4 × 5 vocabulary-weight gradient matrix must match `src/chapter-14.md`
 
 # 7. Production checklist
 
-- [ ] Forward and backward arrows are visually distinct.
-- [ ] The loss scalar is not depicted as a substance flowing backward.
-- [ ] Every gradient envelope names its derivative target and shape.
-- [ ] Residual gradients copy to both branches rather than divide by two.
-- [ ] Causal masks block backward paths through forbidden future links.
-- [ ] The Courier never updates parameters.
-- [ ] The Optimizer Engineer acts only after accumulation and safeguards.
-- [ ] Exact numerical panels match the chapter source.
-- [ ] Every scene has useful technical alt text.
+- [x] Forward and backward arrows are visually distinct.
+- [x] The loss scalar is not depicted as a substance flowing backward.
+- [x] Important gradient envelopes name their derivative target and shape.
+- [x] Residual gradients copy to both branches rather than divide by two.
+- [x] Causal masks block backward paths through forbidden future links.
+- [x] The Courier never updates parameters.
+- [x] The Optimizer Engineer acts only after accumulation and safeguards.
+- [x] Exact numerical panels match the chapter source.
+- [x] Every scene has useful technical alt text.
 
 ---
 
@@ -402,5 +405,6 @@ Chapter 14 graphics are complete only when all nine assets are approved, committ
 
 - Detailed scene planning: complete.
 - Gradient Courier, Engineer, envelopes, docks, and gates specified.
-- Final artwork generation: not started.
-- Integration and website review: pending final artwork.
+- Final artwork generation and correction: complete.
+- Manuscript integration and alt text: complete.
+- Website render review: pending.

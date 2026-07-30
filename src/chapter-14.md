@@ -4,6 +4,8 @@ subtitle: "How gradients connect the loss to every learned parameter"
 lang: en
 ---
 
+![The Gradient Courier carries a one-by-five logit-gradient report backward through the Transformer while the Optimizer Engineer waits beside locked parameter controls.](../assets/chapter-14/01_chapter_hero_gradient_courier.png){.hero}
+
 # The question this chapter answers
 
 Chapter 13 produced a loss for the prediction after:
@@ -58,6 +60,8 @@ Each component asks:
 The answers are gradients.
 
 # A computational graph
+
+![A coherent two-class softmax-cross-entropy graph stores forward values and routes derivative envelopes backward, adding contributions when a saved value feeds multiple branches.](../assets/chapter-14/02_forward_graph_backward_reports.png)
 
 The forward path is a graph of dependencies:
 
@@ -182,6 +186,8 @@ g_b=g_y
 $$
 
 # The vocabulary-weight gradient
+
+![SAT's final hidden state and the logit gradient form the canonical four-by-five vocabulary-weight gradient, the bias gradient, and the upstream hidden-state gradient.](../assets/chapter-14/03_exact_vocabulary_gradients.png)
 
 The final hidden state was:
 
@@ -323,6 +329,8 @@ Automatic differentiation records the forward graph and runs each local backward
 
 # Back through a residual connection
 
+![At a residual addition, the incoming gradient is copied unchanged to the direct path and sublayer output; the sublayer contribution is transformed before both contributions add at the shared input.](../assets/chapter-14/04_residual_gradient_fork.png)
+
 A residual sublayer has the form:
 
 $$
@@ -393,6 +401,8 @@ When one activation feeds several operations, every branch can send a gradient c
 </div>
 
 # Back through the MLP
+
+![The Gradient Courier moves right to left through the MLP's contraction, saved activation gate, and expansion, leaving shape-matched parameter-gradient reports at each learned wall.](../assets/chapter-14/05_mlp_backward_path.png)
 
 A simple MLP computes:
 
@@ -483,6 +493,8 @@ Changing one coordinate can affect the normalisation applied to the others, so t
 Normalisation gradients remain within each token row, while shared normalisation parameters accumulate contributions across positions.
 
 # Back through attention retrieval
+
+![Attention gradients branch from the output into Value and attention-weight routes, pass through row-softmax and the causal mask, split toward Query and Key projections, and add across heads only at their shared input.](../assets/chapter-14/06_attention_backward_routes.png)
 
 For one head:
 
@@ -645,6 +657,8 @@ Each block calculates gradients for its own parameters. Ordinary Transformer blo
 
 # Embedding gradients accumulate by token ID
 
+![Sparse input-lookup gradients touch only selected embedding rows, while the tied vocabulary projection contributes a generally dense gradient; both contributions add into one shared parameter update.](../assets/chapter-14/07_embedding_and_tied_gradients.png)
+
 An embedding lookup selects rows from an embedding table.
 
 If token ID 3 appears in a batch, its selected embedding gradient is added to row 3 of the table's gradient buffer.
@@ -695,6 +709,8 @@ $$
 Every valid token target can contribute to the same shared matrices. Over training, updates aggregate evidence from enormous numbers of contexts.
 
 # A simple gradient-descent update
+
+![The Gradient Courier delivers the canonical negative weight gradient, and the Optimizer Engineer applies the learning rate to change the weight from 0.200000 to approximately 0.255974 before handing off to Chapter 15.](../assets/chapter-14/09_exact_weight_update_and_handoff.png)
 
 Basic stochastic gradient descent uses:
 
@@ -777,6 +793,8 @@ Training recipes often exclude selected parameters from weight decay, such as:
 The exact grouping is part of the training recipe.
 
 # Gradient clipping
+
+![Gradient envelopes from several microbatches accumulate, are unscaled and checked, and may be proportionally clipped as one global bundle before a single optimizer step and gradient reset.](../assets/chapter-14/08_accumulation_unscaling_and_clipping.png)
 
 A global norm can be written:
 

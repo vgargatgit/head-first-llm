@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const BUILD_VERSION = '20260730.7';
+  const BUILD_VERSION = '20260730.10';
   const container = document.getElementById('part-progress');
   const footerNav = document.getElementById('chapter-footer-nav');
   const bookData = window.BOOK_DATA;
